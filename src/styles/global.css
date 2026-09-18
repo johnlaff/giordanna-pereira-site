@@ -1,0 +1,170 @@
+@import './tokens.css';
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+html {
+  background: var(--navy-deep);
+}
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  font-size: 17px;
+  line-height: 1.65;
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+}
+body.lock {
+  overflow: hidden;
+}
+::selection {
+  background: var(--sand);
+  color: var(--navy-deep);
+}
+img {
+  max-width: 100%;
+  display: block;
+}
+p {
+  text-wrap: pretty;
+}
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+.serif,
+h1,
+h2,
+h3,
+.brand-name,
+.ftr-cau b {
+  font-variant-numeric: lining-nums;
+}
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+:focus-visible {
+  outline: 2px solid var(--navy);
+  outline-offset: 3px;
+}
+.btn:focus-visible {
+  outline-color: var(--sand);
+}
+.shell {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.serif {
+  font-family: var(--font-serif);
+}
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.skip {
+  position: absolute;
+  left: -9999px;
+  z-index: 100;
+  background: var(--sand);
+  color: var(--navy-deep);
+  padding: 12px 22px;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.skip:focus {
+  left: 16px;
+  top: 16px;
+  position: fixed;
+}
+
+/* ============ PAGE SCAFFOLD ============ */
+main {
+  flex: 1 0 auto;
+}
+.page-head {
+  padding: calc(var(--hdr-h) + var(--sp-page)) 0 clamp(24px, 3.5vh, 36px);
+}
+.page-head h1 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: var(--fs-page);
+  line-height: 1.12;
+  letter-spacing: 0.005em;
+}
+.page-head p {
+  color: var(--ink-soft);
+  max-width: 56ch;
+  margin-top: 14px;
+}
+.page-head p.kind {
+  font-size: 17px;
+  margin-top: 10px;
+}
+.page-head p.wide {
+  max-width: none;
+}
+/* Link em prosa herda a cor do texto; o sublinhado em sand é o único sinal de que é clicável. */
+.page-head a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--sand);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.25s;
+}
+.page-head a:hover {
+  text-decoration-color: currentColor;
+}
+.sec-head {
+  display: flex;
+  align-items: baseline;
+  gap: 22px;
+  padding: clamp(60px, 9vh, 110px) 0 clamp(28px, 4vh, 44px);
+  flex-wrap: wrap;
+}
+.sec-title {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  font-size: var(--fs-sec);
+  line-height: 1.1;
+}
+.sec-rule {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+  align-self: center;
+  min-width: 40px;
+}
+@media (max-width: 640px) {
+  .sec-rule {
+    flex-basis: 100%;
+  }
+}

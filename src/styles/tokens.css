@@ -1,0 +1,63 @@
+/* Tokens de cor, tipografia e espaçamento. --font-serif e --font-sans vêm da Fonts API. */
+:root {
+  --navy: #2e3a48;
+  --navy-deep: #232d38;
+  --paper: #f1f2f0;
+  --sand: #cdbca4;
+  --mist: #afc0cc;
+  --ink: #232d38;
+  --ink-soft: #5a646e;
+  --line: rgba(46, 58, 72, 0.16);
+  --line-light: rgba(242, 239, 233, 0.22);
+  --gutter: 24px;
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --fs-hero: 48px;
+  --fs-page: 40px;
+  --fs-sec: 34px;
+  --fs-about: 32px;
+  --fs-cta: 34px;
+  --fs-form: 28px;
+  --fs-card: 24px;
+  --fs-pn: 20px;
+  --fs-cau: 22px;
+  --fs-lead: 16px;
+  --sp-sec: 64px;
+  --sp-page: 48px;
+  --hdr-h: 86px;
+}
+@media (min-width: 700px) {
+  :root {
+    --gutter: 40px;
+    --fs-hero: 76px;
+    --fs-page: 58px;
+    --fs-sec: 48px;
+    --fs-about: 42px;
+    --fs-cta: 50px;
+    --fs-form: 34px;
+    --fs-card: 28px;
+    --fs-pn: 24px;
+    --fs-cau: 26px;
+    --fs-lead: 17px;
+    --sp-sec: 88px;
+    --sp-page: 64px;
+    --hdr-h: 66px;
+  }
+}
+@media (min-width: 1100px) {
+  :root {
+    --gutter: 52px;
+    --fs-hero: 108px;
+    --fs-page: 76px;
+    --fs-sec: 62px;
+    --fs-about: 54px;
+    --fs-cta: 68px;
+    --fs-form: 40px;
+    --fs-card: 32px;
+    --fs-pn: 30px;
+    --fs-cau: 30px;
+    --fs-lead: 18px;
+    --sp-sec: 120px;
+    --sp-page: 72px;
+    --hdr-h: 66px;
+  }
+}

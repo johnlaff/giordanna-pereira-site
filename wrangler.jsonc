@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "giordanna-pereira-site",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-09-18",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // Rota inexistente responde 404 com a página 404 do site, não 200 com a home.
+    "not_found_handling": "404-page",
+  },
+  "observability": { "enabled": true },
+}
