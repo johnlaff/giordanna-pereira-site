@@ -11,6 +11,10 @@ ci:
       # Cada ticket que cria página acrescenta a rota aqui, como em tests/e2e/rotas.ts.
       - http://localhost:8788/
     numberOfRuns: 3
+    settings:
+      # O Chromium do Playwright não tem o sandbox setuid e o Ubuntu 24.04 do runner bloqueia
+      # user namespaces sem privilégio; sem a flag o zygote aborta com "No usable sandbox".
+      chromeFlags: --no-sandbox
   assert:
     assertions:
       largest-contentful-paint: [error, { maxNumericValue: 2500 }]
