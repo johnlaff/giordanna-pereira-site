@@ -2,7 +2,7 @@
 
 Data: 18/09/2026 · Autor da passagem: sessão Claude (Cowork) que construiu o preview · Destino: sessão Claude Code no repositório `johnlaff/giordanna-pereira-site`.
 
-Este arquivo é a única leitura obrigatória para começar. Ele foi escrito para alimentar, nesta ordem, as skills do plugin `mattpocock-skills`: `/setup-matt-pocock-skills` → `/grill-with-docs` (§3 glossário e §4 ADRs viram `CONTEXT.md` e `docs/adr/`) → `/to-spec` (§5) → `/to-tickets` (§6) → `/implement`.
+Este arquivo é a única leitura obrigatória para começar. Ele foi escrito para alimentar, nesta ordem, as skills do plugin `mattpocock-skills`: `/setup-matt-pocock-skills` → `/grill-with-docs` (`CONTEXT.md` e `docs/adr/`) → `/to-spec` (issue #3) → `/to-tickets` (§6) → `/implement`, um ticket por sessão pela fronteira.
 
 ---
 
@@ -99,21 +99,26 @@ Reconstruir o site aprovado como projeto Astro estático hospedado na Cloudflare
 - Sem requisição a domínios externos além do Turnstile (verificar na aba Network).
 - Nenhum arquivo > 2 MB em `src/assets/`; nenhum segredo no histórico do git.
 
-## 6. Tickets propostos (insumo do `/to-tickets`; tracer bullets verticais)
+## 6. Tickets (issues do GitHub, sub-issues da spec #3)
 
-| # | Ticket | Blocked by | Aceite |
-| --- | --- | --- | --- |
-| 1 | **Esqueleto Astro + uma página de projeto ponta a ponta**: `pnpm create astro@latest` (TS estrito), tokens de CSS e fontes (Fonts API), layout base (header, footer), content collection `projetos` com schema Zod e **um** projeto (GinecoCare) renderizando ficha + galeria estática com `<Picture>` AVIF/WebP | — | página `/projetos/consultorio-ginecocare` idêntica ao preview em 1440 e 375; `astro check` e build verdes; Playwright + axe rodando no CI local |
-| 2 | **Todos os projetos na collection** a partir de `content/conteudo.json` + `assets/`, com `getStaticPaths`, ordem oficial, OG por projeto, JSON-LD `CreativeWork`, navegação anterior/próximo | 1 | 10 páginas geradas; build falha se faltar campo ou imagem; `tests/qa` (fichas, ordem, próximo/anterior) verde |
-| 3 | **Galeria justificada + lightbox**: portar `layoutGallery` (gal-hero, linhas, rebalanceio, `data-cropped`) e PhotoSwipe 5 com `srcset` das variantes, legenda, loop, zoom | 2 | `tests/lb2` verde; lightbox carrega variante 2560 em tela QHD e 1200 no celular; `prefers-reduced-motion` respeitado |
-| 4 | **Home**: hero (variantes por largura, `fetchpriority`), Sobre (retrato com moldura estável), Ferramentas, carrossel infinito de depoimentos (clones, setas, arrasto, `inert` nos dims), CTA | 1 | `tests/qloop`, `qdrag`, `band`, `lum` verdes; Impeccable 0 achados |
-| 5 | **Grade de projetos + navegação**: `/projetos` com regra 3×3/resto, `html.touch`, View Transitions nativas, prefetch, 404, sitemap, robots | 2 | `tests/sweep` (14 rotas × 5 larguras) verde; transição visível em Chrome e navegação normal em Firefox |
-| 6 | **Contato**: página + `POST /api/contato` (adapter Cloudflare, `prerender=false`), Turnstile, honeypot, rate limit, Resend com `reply-to`, mensagens de sucesso/erro, política de privacidade curta | 1 | teste E2E com Resend em modo sandbox/mocado; envio real validado manualmente; `tests/form` verde |
-| 7 | **Sveltia CMS**: `public/admin/`, `config.yml` espelhando o schema (ficha, galeria ordenada, capa), transformações de upload, autenticador em Worker, UI pt-BR, colaboradora com 2FA | 2 | Giordanna cadastra um projeto de teste pelo celular e ele entra no ar via Workers Builds; build falha se ela deixar campo obrigatório vazio (mensagem clara) |
-| 8 | **Esteira**: GitHub Actions (check, build, Playwright, axe, Lighthouse CI), Workers Builds com previews, branch protegida, Renovate, headers de segurança (CSP via Astro), HTTP Observatory | 1 | PR de exemplo com preview URL comentada e todos os checks verdes; Observatory ≥ A |
-| 9 | **Domínio, e-mail e lançamento**: registro.br (titular Giordanna), DNS + DNSSEC na Cloudflare, Email Routing, SPF/DKIM/DMARC, Resend com domínio verificado, Web Analytics, Search Console, troca de links (Behance, LinkedIn, CV) | 6, 7, 8 | site no ar em `https://giordannapereira.arq.br`; e-mail de teste entregue no Gmail e resposta enviada como `contato@`; DMARC em `quarantine` |
+Cada ticket é um tracer bullet vertical com "blocked by" nativo; trabalhe a fronteira (tickets sem bloqueador aberto). Ordem de execução combinada: #4 → #5 → #6 → (#7, #8, #9, #10, #11 em paralelo) → (#12, #13, #14) → #15 → #16 → #17.
 
-Tickets 3, 4, 5 e 6 podem rodar em paralelo depois do 2 (3, 5) e do 1 (4, 6).
+| Issue | Ticket | Blocked by |
+| --- | --- | --- |
+| #4 | Esqueleto Astro + harness de testes | — |
+| #5 | Esteira: CI, Workers Builds, ruleset de main e Renovate | #4 |
+| #6 | Um Projeto ponta a ponta: Consultório GinecoCare | #4 |
+| #7 | Todos os Projetos na collection, com Ordem e estado Em breve | #6 |
+| #8 | Galeria justificada + lightbox | #6 |
+| #9 | Home: hero, Sobre, Familiaridade e CTA | #4 |
+| #10 | Depoimentos: collection e carrossel infinito | #4 |
+| #11 | Contato: página, endpoint no Worker e defesas de aplicação | #4 |
+| #12 | Grade de projetos e navegação entre páginas | #7 |
+| #13 | Compartilhamento e dados estruturados: OG geradas no build e JSON-LD | #7, #9, #11 |
+| #14 | Segurança e analytics: CSP, headers, rate limit e Web Analytics | #5, #11 |
+| #15 | Sveltia CMS em /admin | #5, #7, #10 |
+| #16 | Domínio, e-mail e lançamento | #8, #12, #13, #14, #15 |
+| #17 | Pós-lançamento: Sobre e Familiaridade editáveis no CMS | #16 |
 
 ## 7. Regras inegociáveis (herdadas do trabalho com a Giordanna)
 
@@ -161,23 +166,23 @@ Depoimentos de Valquiria e Mariana · imagens do Mirante CESTES · logo definiti
 
 | Serviço | Quando | Quem | Observação |
 | --- | --- | --- | --- |
-| Cloudflare (conta + zona do domínio) | ticket 8 | João | Workers, Workers Builds, Turnstile, Email Routing, Web Analytics |
-| registro.br | ticket 9 | Giordanna titular, João contatos | `.arq.br`, R$ 40/ano, DNSSEC |
-| Resend | ticket 6 | João | domínio verificado, API key só no Worker |
-| GitHub (conta da Giordanna) | ticket 7 | Giordanna | colaboradora com 2FA para o Sveltia |
-| GitHub OAuth App (para o Sveltia Authenticator) | ticket 7 | João | client id/secret só no Worker do autenticador |
+| Cloudflare (conta + zona do domínio) | #5 | João | Workers, Workers Builds, Turnstile, Email Routing, Web Analytics |
+| registro.br | #16 | Giordanna titular, João contatos | `.arq.br`, R$ 40/ano, DNSSEC |
+| Resend | #11 | João | domínio verificado, API key só no Worker |
+| GitHub (conta da Giordanna) | #15 | Giordanna | colaboradora com 2FA para o Sveltia |
+| GitHub OAuth App (para o Sveltia Authenticator) | #15 | João | client id/secret só no Worker do autenticador |
 
 ## 12. Resoluções do `/grill-with-docs` (insumo do `/to-spec` e do `/to-tickets`)
 
 Glossário em `CONTEXT.md`; decisões estruturais em `docs/adr/`. O que segue é nível de spec e ticket.
 
 - **Publicação pelo CMS** (ADR 0002): ruleset de `main` exige PR + checks com bypass para o papel write; "bloquear force push" e "restringir exclusão" sem bypass. CI roda também em push direto em `main`. `config.yml` marca obrigatórios com `required: true` e valida padrões de área e ano no formulário; o schema Zod é a segunda barreira.
-- **URLs** (ADR 0003): `/projetos` e `/projetos/<slug>`. A suíte migrada troca as rotas no ticket 1; não há redirect a manter.
-- **Vocabulário do modelo**: identificadores em pt-BR sem acento (`titulo`, `tipo`, `capa`, `descricao`, `ferramentas`, `local`, `ano`, `area`, `equipe`, `equipeUrl`, `galeria`, `ordem`); acentos só nos rótulos do `config.yml`. O ticket 2 renomeia as chaves do `conteudo.json` ao gerar a collection.
+- **URLs** (ADR 0003): `/projetos` e `/projetos/<slug>`. A suíte migra com as rotas novas a partir de #6; não há redirect a manter.
+- **Vocabulário do modelo**: identificadores em pt-BR sem acento (`titulo`, `tipo`, `capa`, `descricao`, `ferramentas`, `local`, `ano`, `area`, `equipe`, `equipeUrl`, `galeria`, `ordem`); acentos só nos rótulos do `config.yml`. #7 renomeia as chaves do `conteudo.json` ao gerar a collection.
 - **Ordem**: `ordem` inteiro, obrigatório e único, numerado de 10 em 10. Sveltia: `sortable_fields: [ordem]` e lista ordenada por ele. Build falha em duplicata. `prev/next` derivam dessa ordem.
 - **Equipe**: `equipe` string obrigatória; `equipeUrl` URL https opcional. Sveltia: campos "Equipe" e "Link da equipe". A ficha renderiza link só quando a URL existe. Nenhum campo de conteúdo aceita HTML.
-- **Estado "Em breve"**: `texto` do depoimento opcional; `galeria` vazia e `capa` opcional no projeto. Card, página e imagem OG do projeto renderizam "Imagens em breve" em CSS, com o mesmo desenho do mock atual. Projeto com galeria e sem capa usa a primeira imagem da galeria como capa. `mirante-mock.webp` sai de `src/assets/` no ticket 2.
-- **E-mail exibido**: `giordannapb.arq@gmail.com` até o ticket 9, em constante única em `src/config.ts` (contatos, rodapé e fallback do formulário leem dela). No ticket 9 a troca para `contato@giordannapereira.arq.br` é critério de aceite, com teste que falha se `gmail.com` aparecer no HTML público; Email Routing entra antes de o domínio apontar para o site.
-- **CSP e analytics** (ADR 0005): `script-src` lista Turnstile e `static.cloudflareinsights.com`; `connect-src 'self'`; sem `'strict-dynamic'`. Critério do ticket 8: zero erros de CSP no console e eventos chegando ao painel do Web Analytics a partir do preview.
-- **Conteúdo da home e contatos**: hero, Sobre, Familiaridade, CTA e os quatro contatos vivem em `src/config.ts`, tipado, fora do CMS. Ticket 10 (pós-lançamento): Sobre (parágrafos, formação, credenciais) e Familiaridade (ferramentas por nível) migram para uma file collection do Sveltia, porque são os únicos textos da home que mudam com a carreira dela. Hero, CTA e contatos permanecem em código por decisão.
+- **Estado "Em breve"**: `texto` do depoimento opcional; `galeria` vazia e `capa` opcional no projeto. Card, página e imagem OG do projeto renderizam "Imagens em breve" em CSS, com o mesmo desenho do mock atual. Projeto com galeria e sem capa usa a primeira imagem da galeria como capa. `mirante-mock.webp` sai de `src/assets/` em #7.
+- **E-mail exibido**: `giordannapb.arq@gmail.com` até o lançamento (#16), em constante única em `src/config.ts` (contatos, rodapé e fallback do formulário leem dela). Em #16 a troca para `contato@giordannapereira.arq.br` é critério de aceite, com teste que falha se `gmail.com` aparecer no HTML público; Email Routing entra antes de o domínio apontar para o site.
+- **CSP e analytics** (ADR 0005): `script-src` lista Turnstile e `static.cloudflareinsights.com`; `connect-src 'self'`; sem `'strict-dynamic'`. Critério de #14: zero erros de CSP no console e eventos chegando ao painel do Web Analytics a partir do preview.
+- **Conteúdo da home e contatos**: hero, Sobre, Familiaridade, CTA e os quatro contatos vivem em `src/config.ts`, tipado, fora do CMS. #17 (pós-lançamento): Sobre (parágrafos, formação, credenciais) e Familiaridade (ferramentas por nível) migram para uma file collection do Sveltia, porque são os únicos textos da home que mudam com a carreira dela. Hero, CTA e contatos permanecem em código por decisão.
 - **Marca**: não existe "LOGO AQUI" no preview; cabeçalho e rodapé exibem nome + CAU em texto. O logo definitivo (§10) substitui esse bloco quando existir.
