@@ -65,7 +65,7 @@ gh api repos/johnlaff/giordanna-pereira-site/rulesets --jq '.[] | "\(.id) \(.nam
 
 Para alterar um ruleset existente, `--method PUT repos/johnlaff/giordanna-pereira-site/rulesets/<id>` com o mesmo arquivo. O JSON do repositório é a fonte; o painel do GitHub, o espelho.
 
-Configurações do repositório que completam a proteção: merge só por squash, branch apagada após o merge, auto-merge habilitado (o Renovate usa) e SHA pinning obrigatório para actions.
+Configurações do repositório que completam a proteção: merge só por squash, branch apagada após o merge, auto-merge habilitado (o Renovate usa), SHA pinning obrigatório para actions e alertas do Dependabot ligados (a revisão de dependências do job `audit` exige o dependency graph, que vem junto).
 
 ## Dependências: Renovate
 
