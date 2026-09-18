@@ -1,0 +1,35 @@
+name: Setup
+description: Node da .node-version, pnpm do packageManager, dependências pelo lockfile e, se pedido, o Chromium do Playwright
+
+inputs:
+  chromium:
+    description: Instala o Chromium completo do Playwright (e2e e Lighthouse usam o mesmo motor)
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version-file: .node-version
+        cache: pnpm
+    - run: pnpm install --frozen-lockfile
+      shell: bash
+    - if: inputs.chromium == 'true'
+      id: playwright
+      run: echo "version=$(pnpm exec playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
+      shell: bash
+    - if: inputs.chromium == 'true'
+      id: cache
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+    # Chromium completo, não o headless shell: é o canal que playwright.config.ts usa.
+    - if: inputs.chromium == 'true' && steps.cache.outputs.cache-hit != 'true'
+      run: pnpm exec playwright install --with-deps chromium
+      shell: bash
+    - if: inputs.chromium == 'true' && steps.cache.outputs.cache-hit == 'true'
+      run: pnpm exec playwright install-deps chromium
+      shell: bash

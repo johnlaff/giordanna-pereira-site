@@ -21,11 +21,16 @@ Portfólio de [Giordanna Pereira](https://giordannapereira.arq.br), arquiteta e 
 | `pnpm test:unit` | só o runner de testes do Node (`tests/unit/**/*.test.ts`)                    |
 | `pnpm test:e2e`  | só o Playwright; sobe `wrangler dev` sobre `dist/` sozinho                   |
 | `pnpm test:ui`   | Playwright com interface, para depurar                                       |
+| `pnpm lighthouse` | Lighthouse CI contra o Worker local, com o orçamento de `lighthouserc.yml`  |
 
 ## Estrutura
 
 ```
 astro.config.ts        Astro 7: output static, adapter Cloudflare, Fonts API (Cormorant Garamond e Jost self-hosted)
+lighthouserc.yml       orçamento do Lighthouse CI (LCP, CLS, acessibilidade)
+renovate.json          atualização de dependências: patches com automerge, minors agrupados
+.github/               workflow de CI, action de setup e os rulesets de main (docs/esteira.md)
+scripts/               lighthouse.ts: roda o Lighthouse CI no Chromium do Playwright
 wrangler.jsonc         Worker: assets em dist/, 404 servido pela página 404 do site
 playwright.config.ts   projetos desktop (1440 px) e mobile (375 px); webServer = wrangler dev
 src/
@@ -38,7 +43,7 @@ public/                favicon, apple-touch-icon, imagens Open Graph em og/
 tests/
   e2e/                 Playwright + axe em todas as rotas listadas em rotas.ts
   unit/                testes do Node (schema das collections e configuração)
-docs/                  HANDOFF, ADRs, contexto de domínio (CONTEXT.md na raiz), referência visual e config dos agentes
+docs/                  HANDOFF, ADRs, esteira (CI, deploy, rulesets, Renovate), referência visual e config dos agentes
 ```
 
 ## Testes
@@ -47,6 +52,10 @@ Dois seams:
 
 1. **Página**: Playwright abre cada rota de `tests/e2e/rotas.ts` no site construído, servido por `wrangler dev` (o mesmo runtime de produção), e roda axe-core com as tags WCAG 2.2 AA e best-practice. Também afirma que nenhuma requisição sai do próprio domínio.
 2. **Dados**: o runner de testes do Node valida a configuração tipada e, conforme as collections entram, fixtures do schema Zod.
+
+## Esteira
+
+Todo PR roda `check`, `build`, `e2e`, `lighthouse` e `audit` no GitHub Actions e ganha uma preview URL do Workers Builds; o merge em `main` publica. `main` só aceita PR com os cinco checks verdes, e nunca force push. Detalhes, valores do painel da Cloudflare e como aplicar os rulesets: [`docs/esteira.md`](docs/esteira.md).
 
 ## Regras
 

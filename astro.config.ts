@@ -4,6 +4,8 @@ import { defineConfig, fontProviders } from 'astro/config';
 export default defineConfig({
   site: 'https://giordannapereira.arq.br',
   output: 'static',
+  // Nada usa sessões; sem isto o adapter provisiona um namespace KV a cada deploy.
+  session: false,
   // Imagens geradas no build pelo sharp (AVIF + WebP), não pelo Cloudflare Images.
   adapter: cloudflare({ imageService: 'compile' }),
   image: { layout: 'constrained' },

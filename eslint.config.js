@@ -11,6 +11,7 @@ export default defineConfig([
     '.wrangler/',
     'docs/reference/',
     'playwright-report/',
+    'lighthouse-report/',
     'test-results/',
     'worker-configuration.d.ts',
   ]),

@@ -4,6 +4,8 @@ dist/
 node_modules/
 pnpm-lock.yaml
 playwright-report/
+.lighthouseci/
+lighthouse-report/
 test-results/
 worker-configuration.d.ts
 docs/reference/
