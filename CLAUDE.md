@@ -8,9 +8,9 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 
 - `pnpm install` — Node 24 LTS, pnpm (lockfile commitado)
 - `pnpm dev` — dev server
-- `pnpm check` — `astro check` (tipos) + lint + format check
-- `pnpm build` — build de produção em `dist/`
-- `pnpm test` — Playwright (nível de página) + axe em todas as rotas, contra `dist/` servido localmente
+- `pnpm check` — `astro check` (tipos) + ESLint + Prettier (`pnpm format` corrige)
+- `pnpm build` — build de produção em `dist/` (`dist/client/` são os assets estáticos)
+- `pnpm test` — build → `pnpm test:unit` (runner do Node, `tests/unit/`) → `pnpm test:e2e` (Playwright + axe em todas as rotas de `tests/e2e/rotas.ts`, contra `dist/` servido por `wrangler dev`)
 - `pnpm test:ui` — Playwright com interface, para depurar
 
 ## Regras do projeto
@@ -25,12 +25,15 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 
 ## Estrutura
 
-- `src/pages/` — `index`, `projetos/index`, `projetos/[slug]`, `contato`, `404`, `api/contato.ts` (`prerender = false`)
-- `src/content/` — collections `projetos` e `depoimentos` (schema em `src/content.config.ts`)
-- `src/components/` — Header, Footer, Hero, Sobre, Ferramentas, Depoimentos (carrossel), CardProjeto, Galeria (justificada + PhotoSwipe), Ficha, FormContato
-- `src/styles/` — tokens (cores, tipografia, espaçamento) e global
-- `public/admin/` — Sveltia CMS (`index.html`, `config.yml`); `public/og/` — imagens Open Graph
-- `tests/` — Playwright + axe; `docs/` — HANDOFF, ADRs, `agents/` (config do tracker)
+- `astro.config.ts` — `output: 'static'`, adapter Cloudflare (`imageService: 'compile'`), Fonts API; `wrangler.jsonc` — assets em `dist/`, `not_found_handling: 404-page`
+- `src/config.ts` — configuração tipada fora do CMS: `site`, `marca` (nome + CAU), `emailExibido` (constante única do e-mail) e `contatos`
+- `src/layouts/Base.astro` — casca de toda página (head, fontes, Header, `main`, Footer); props `titulo`, `descricao`, `secao` (item ativo da nav) e `hero` (cabeçalho transparente sobre o hero)
+- `src/pages/` — `index`, `404`. Planejadas: `projetos/index`, `projetos/[slug]`, `contato`, `api/contato.ts` (`prerender = false`)
+- `src/content/` — planejada: collections `projetos` e `depoimentos` (schema em `src/content.config.ts`)
+- `src/components/` — Header, Footer, Marca, Icone. Planejados: Hero, Sobre, Ferramentas, Depoimentos (carrossel), CardProjeto, Galeria (justificada + PhotoSwipe), Ficha, FormContato
+- `src/styles/` — `tokens.css` (cores, tipografia, espaçamento) e `global.css` (reset, scaffold de página)
+- `public/og/` — imagens Open Graph. Planejado: `public/admin/` — Sveltia CMS (`index.html`, `config.yml`)
+- `tests/e2e/` — Playwright + axe (rotas em `rotas.ts`); `tests/unit/` — runner do Node; `docs/` — HANDOFF, ADRs, `agents/` (config do tracker), `reference/` (preview)
 
 ## Fluxo de trabalho
 

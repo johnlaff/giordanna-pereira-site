@@ -1,0 +1,43 @@
+---
+/** Casca de toda página: head, fontes, cabeçalho, main e rodapé. */
+import { Font } from 'astro:assets';
+import Footer from '../components/Footer.astro';
+import Header, { type Secao } from '../components/Header.astro';
+import { site } from '../config';
+import '../styles/global.css';
+
+interface Props {
+  /** Título da aba; o nome do site entra como sufixo, exceto na home. */
+  titulo?: string | undefined;
+  descricao?: string | undefined;
+  secao?: Secao | undefined;
+  /** A página abre com hero escuro sob o cabeçalho (só a home). */
+  hero?: boolean;
+}
+
+const { titulo, descricao = site.descricao, secao, hero = false } = Astro.props;
+const tituloCompleto = titulo ? `${titulo} — ${site.nome}` : site.nome;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{tituloCompleto}</title>
+    <meta name="description" content={descricao} />
+    <meta name="theme-color" content="#232D38" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    {/* Só o subset latin entra no preload: o latin-ext é buscado sob demanda pelo unicode-range. */}
+    <Font cssVariable="--font-serif" preload={[{ subset: 'latin' }]} />
+    <Font cssVariable="--font-sans" preload={[{ subset: 'latin' }]} />
+  </head>
+  <body>
+    <Header secao={secao} hero={hero} />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>
