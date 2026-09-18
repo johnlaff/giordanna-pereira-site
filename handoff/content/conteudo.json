@@ -1,0 +1,374 @@
+{
+ "PROJECTS": [
+  {
+   "slug": "edificio-vitalis",
+   "title": "Edifício Vitalis",
+   "kind": "Comercial · Bem-estar",
+   "cover": "vitalis-torre-sky",
+   "desc": "Edifício comercial dedicado ao bem-estar físico e mental, inspirado na anatomia humana — cada pavimento reflete uma função essencial à saúde. Vista para o Parque do Sabiá e conexão com a malha cicloviária de Uberlândia.",
+   "tools": [
+    "Archicad",
+    "Enscape",
+    "Lumion"
+   ],
+   "local": "Uberlândia · MG",
+   "ano": "2025 (acadêmico)",
+   "area": "9.015,39 m²",
+   "equipe": "<a href=\"https://jaspe.vercel.app/\" target=\"_blank\" rel=\"noopener\">Escritório Jaspe</a>",
+   "equipeHtml": true,
+   "gallery": [
+    "hero",
+    "vitalis-torre-sky",
+    "vitalis-g1",
+    "vitalis-g2",
+    "vitalis-g3",
+    "vitalis-d01",
+    "vitalis-d02",
+    "vitalis-d03",
+    "vitalis-d04",
+    "vitalis-d05",
+    "vitalis-d06",
+    "vitalis-d07",
+    "vitalis-d08",
+    "vitalis-d09",
+    "vitalis-d10",
+    "vitalis-d11",
+    "vitalis-d12",
+    "vitalis-d13",
+    "vitalis-d14",
+    "vitalis-d15",
+    "vitalis-d16",
+    "vitalis-d17",
+    "vitalis-d18",
+    "vitalis-d19",
+    "vitalis-d20",
+    "vitalis-d21",
+    "vitalis-d22",
+    "vitalis-d23",
+    "vitalis-d24",
+    "vitalis-d25",
+    "vitalis-d26"
+   ]
+  },
+  {
+   "slug": "consultorio-ginecocare",
+   "title": "Consultório GinecoCare",
+   "kind": "Consultório · Saúde",
+   "cover": "gineco-r04",
+   "desc": "Consultório ginecológico no Edifício Vitalis, desenvolvido em nível de projeto executivo: layout, marcenaria, revestimentos e memorial descritivo, com perspectivas dos ambientes de atendimento.",
+   "tools": [
+    "Archicad",
+    "Enscape"
+   ],
+   "local": "Uberlândia · MG",
+   "ano": "2025 (acadêmico)",
+   "area": "46,88 m²",
+   "equipe": "Giordanna Pereira",
+   "gallery": [
+    "gineco-r04",
+    "gineco-r01",
+    "gineco-r02",
+    "gineco-r03",
+    "gineco-r05",
+    "gineco-r06",
+    "gineco-r07",
+    "gineco-p01",
+    "gineco-p02",
+    "gineco-p03",
+    "gineco-p04"
+   ]
+  },
+  {
+   "slug": "banheiro-chocolate",
+   "title": "Banheiro Chocolate",
+   "kind": "Residencial",
+   "cover": "banheiro-n04",
+   "desc": "O projeto valoriza a integração entre materiais, iluminação e detalhamento de mobiliário, criando um ambiente acolhedor, funcional e visualmente equilibrado, com soluções específicas para bancada, armazenamento, banho e iluminação decorativa. Banheiro residencial desenvolvido como exercício de domínio das plataformas SketchUp + Layout.",
+   "tools": [
+    "SketchUp",
+    "Layout",
+    "V-Ray",
+    "Adobe Photoshop"
+   ],
+   "local": "Taubaté · SP",
+   "ano": "2024",
+   "area": "5,98 m²",
+   "equipe": "Andressa Martins (projeto) · Giordanna Pereira (documentação)",
+   "gallery": [
+    "banheiro-n04",
+    "banheiro-n01",
+    "banheiro-n02",
+    "banheiro-n03",
+    "banheiro-n05"
+   ]
+  },
+  {
+   "slug": "habitacao-villa-verde",
+   "title": "Habitação Villa Verde",
+   "kind": "Conjunto habitacional",
+   "cover": "vv-r01",
+   "desc": "Conjunto residencial, desenvolvido integralmente em Revit — modelagem, documentação e renderização — como exercício de domínio da plataforma BIM da Autodesk.",
+   "tools": [
+    "Revit",
+    "Lumion"
+   ],
+   "local": "Constitución · Chile",
+   "ano": "2010",
+   "area": "5.688 m²",
+   "equipe": "ELEMENTAL (projeto) · Giordanna Pereira (documentação)",
+   "gallery": [
+    "vv-r01",
+    "vv-r02",
+    "vv-r03",
+    "vv-r04",
+    "vv-r06",
+    "vv-r05",
+    "vv-p01"
+   ]
+  },
+  {
+   "slug": "vila-jasmim-manga",
+   "title": "Vila Jasmim Manga",
+   "kind": "Habitação de interesse social",
+   "cover": "vila-1",
+   "desc": "Conjunto habitacional que trata moradia popular com a dignidade de projeto completo: implantação, paisagismo produtivo nas coberturas e espaços coletivos que devolvem rua e convívio ao conjunto.",
+   "tools": [
+    "Archicad",
+    "Twinmotion",
+    "Adobe InDesign"
+   ],
+   "local": "Uberlândia · MG",
+   "ano": "2024 (acadêmico)",
+   "area": "4.000 m²",
+   "equipe": "Giordanna Pereira e Gabriela Rocha",
+   "gallery": [
+    "vila-r01",
+    "vila-r02",
+    "vila-r03",
+    "vila-r04",
+    "vila-r05",
+    "vila-r06",
+    "vila-r07",
+    "vila-r08",
+    "vila-r09",
+    "vila-r10",
+    "vila-r11",
+    "vila-r12",
+    "vila-r13",
+    "vila-p01",
+    "vila-p02",
+    "vila-p03",
+    "vila-p04",
+    "vila-p05",
+    "vila-p06",
+    "vila-p07",
+    "vila-p08",
+    "vila-b01",
+    "vila-b02"
+   ]
+  },
+  {
+   "slug": "sala-sindicato",
+   "title": "Sala Sindicato",
+   "kind": "Comercial",
+   "cover": "sind-r04",
+   "desc": "Projeto de sala sede de um sindicato, com ambiente de recepção e atendimento, bem como espaço para reuniões e alinhamentos internos. O projeto busca transmitir formalidade, profissionalismo e acolhimento, criando um ambiente adequado à rotina administrativa do sindicato, às reuniões e aos momentos de convivência entre funcionários.",
+   "tools": [
+    "SketchUp",
+    "Layout"
+   ],
+   "local": "Porto Franco · MA",
+   "ano": "2026",
+   "area": "44,65 m²",
+   "equipe": "Whallst Guibson (supervisão) · Giordanna Pereira (elaboração)",
+   "gallery": [
+    "sind-r04",
+    "sind-r01",
+    "sind-r02",
+    "sind-r03",
+    "sind-p01",
+    "sind-p02",
+    "sind-p03",
+    "sind-p04",
+    "sind-p05"
+   ]
+  },
+  {
+   "slug": "mini-casa",
+   "title": "Mini Casa",
+   "kind": "Residencial",
+   "cover": "loft-render",
+   "desc": "Residência compacta com mezanino, desenvolvida integralmente em Revit — implantação, cortes, detalhes de guarda-corpo e painel ripado — como exercício de domínio da plataforma BIM da Autodesk.",
+   "tools": [
+    "Revit"
+   ],
+   "local": "Uberlândia · MG",
+   "ano": "2025",
+   "area": "48 m²",
+   "equipe": "Cursos Construir (projeto) · Giordanna Pereira (documentação)",
+   "gallery": [
+    "loft-render",
+    "loft-prancha"
+   ]
+  },
+  {
+   "slug": "unidade-basica-de-saude",
+   "title": "Unidade Básica de Saúde",
+   "kind": "Hospitalar",
+   "cover": "ubs-r04",
+   "desc": "Unidade Básica de Saúde concebida a partir de princípios de humanização, pertencimento e adaptabilidade, organizada em torno de um pátio central que favorece a iluminação e a ventilação natural. O projeto adota sistemas modulares, estratégias passivas de conforto térmico e espaços destinados ao atendimento geral e específico da comunidade.",
+   "tools": [
+    "Archicad",
+    "Enscape"
+   ],
+   "local": "Uberlândia · MG",
+   "ano": "2025 (acadêmico)",
+   "area": "1.125,54 m²",
+   "equipe": "Franciely Martins, Giordanna Pereira, Kamylle Cristina, Maria Cecília Gomes",
+   "gallery": [
+    "ubs-r04",
+    "ubs-r01",
+    "ubs-r02",
+    "ubs-r07",
+    "ubs-r08",
+    "ubs-r09",
+    "ubs-r10",
+    "ubs-r15",
+    "ubs-r13",
+    "ubs-r05",
+    "ubs-r03",
+    "ubs-r06",
+    "ubs-r12",
+    "ubs-r14",
+    "ubs-p01",
+    "ubs-p02",
+    "ubs-p03",
+    "ubs-p04"
+   ]
+  },
+  {
+   "slug": "espaco-aparecer",
+   "title": "Espaço Aparecer",
+   "kind": "Equipamento multifuncional",
+   "cover": "aparecer-r01",
+   "desc": "Complexo de habitação, comércio, serviços e espaços de trabalho organizado em torno de uma praça pública arborizada, concebido para estimular a caminhabilidade, a permanência, o convívio e a apropriação do espaço pelas pessoas.",
+   "tools": [
+    "Archicad",
+    "Enscape"
+   ],
+   "local": "Uberlândia · MG",
+   "ano": "2023 (acadêmico)",
+   "area": "2.102,61 m²",
+   "equipe": "Giordanna Pereira",
+   "gallery": [
+    "aparecer-r01",
+    "aparecer-r10",
+    "aparecer-r11",
+    "aparecer-r12",
+    "aparecer-r13",
+    "aparecer-r14",
+    "aparecer-r15",
+    "aparecer-r16",
+    "aparecer-r17",
+    "aparecer-r18",
+    "aparecer-r19",
+    "aparecer-r20",
+    "aparecer-r21",
+    "aparecer-r22",
+    "aparecer-r24",
+    "aparecer-r25",
+    "aparecer-r26",
+    "aparecer-r27",
+    "aparecer-r28",
+    "aparecer-r02",
+    "aparecer-r03",
+    "aparecer-r04",
+    "aparecer-r05",
+    "aparecer-r06",
+    "aparecer-r07",
+    "aparecer-r08",
+    "aparecer-r09"
+   ]
+  },
+  {
+   "slug": "mirante-cestes",
+   "title": "Mirante CESTES",
+   "kind": "Comercial",
+   "cover": "mirante-mock",
+   "desc": "A CESTE — Consórcio Estreito Energia solicitou a criação de uma proposta arquitetônica para um mirante de contemplação da Usina Hidrelétrica de Estreito.",
+   "tools": [
+    "Archicad",
+    "Enscape"
+   ],
+   "local": "Estreito · MA",
+   "ano": "2026",
+   "area": "100 m²",
+   "equipe": "Whallst Guibson (supervisão) · Giordanna Pereira (elaboração)",
+   "gallery": [
+    "mirante-mock"
+   ]
+  }
+ ],
+ "QUOTES": [
+  {
+   "name": "Valquiria",
+   "role": "Supervisora, VAE · Projeto e Gerenciamento",
+   "text": ""
+  },
+  {
+   "name": "Mariana",
+   "role": "Cliente, assessoria de TCC",
+   "text": ""
+  },
+  {
+   "name": "Whallst Guibson",
+   "role": "Supervisor, WG Arquitetura",
+   "text": "Excelente profissional, que vem se destacando pela combinação de conhecimento técnico e criatividade em suas entregas. Demonstra atenção aos detalhes, capacidade de solucionar problemas e, ao mesmo tempo, apresenta ideias inovadoras e sensibilidade no desenvolvimento dos projetos. É uma estagiária dedicada, proativa e com grande potencial de crescimento na área de arquitetura."
+  },
+  {
+   "name": "Nathalia",
+   "role": "Supervisora, Estúdio 300 Arquitetura",
+   "text": "Se destacou por demonstrar interesse e pela facilidade com os softwares que utilizamos no escritório. Comunicativa, não deixa de sugerir soluções e melhorias. Recomendo para funções que exijam habilidade técnica e facilidade de aprendizagem."
+  },
+  {
+   "name": "Michele",
+   "role": "Pesquisa, UFU",
+   "text": "Sempre atenta aos prazos e metas estabelecidos, cumpria suas tarefas com eficiência e dedicação. Sua colaboração contribuiu de forma significativa para a qualidade e o andamento do projeto."
+  },
+  {
+   "name": "Leon",
+   "role": "Cliente, setor imobiliário",
+   "text": "Com um olhar atento, analisou aspectos estruturais e avaliou o conforto e a viabilidade de cada ambiente. Sempre clara e paciente, demonstrou conhecimento técnico e sensibilidade para entender minhas necessidades."
+  }
+ ],
+ "SOCIAL": [
+  {
+   "k": "whatsapp",
+   "label": "WhatsApp",
+   "href": "https://wa.me/5534999461403",
+   "text": "+55 34 99946-1403",
+   "ext": true
+  },
+  {
+   "k": "linkedin",
+   "label": "LinkedIn",
+   "href": "https://www.linkedin.com/in/giordannapb",
+   "text": "linkedin.com/in/giordannapb",
+   "ext": true
+  },
+  {
+   "k": "behance",
+   "label": "Behance",
+   "href": "https://behance.net/giordannaborges",
+   "text": "behance.net/giordannaborges",
+   "ext": true
+  },
+  {
+   "k": "mail",
+   "label": "E-mail",
+   "href": "mailto:giordannapb.arq@gmail.com",
+   "text": "giordannapb.arq@gmail.com",
+   "ext": false
+  }
+ ]
+}

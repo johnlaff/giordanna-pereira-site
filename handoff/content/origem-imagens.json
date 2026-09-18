@@ -1,0 +1,546 @@
+{
+ "hero": {
+  "pasta": "native",
+  "arquivo": "hero.png"
+ },
+ "vitalis-torre-sky": {
+  "pasta": "native",
+  "arquivo": "vitalis-torre-sky.png"
+ },
+ "aparecer-r01": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "04.png"
+ },
+ "aparecer-r02": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "05.png"
+ },
+ "aparecer-r03": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "06.png"
+ },
+ "aparecer-r04": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "07.png"
+ },
+ "aparecer-r05": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "08.png"
+ },
+ "aparecer-r06": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "09.png"
+ },
+ "aparecer-r07": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "10.png"
+ },
+ "aparecer-r08": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "11.png"
+ },
+ "aparecer-r09": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "12.png"
+ },
+ "aparecer-r10": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "13.png"
+ },
+ "aparecer-r11": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "14.png"
+ },
+ "aparecer-r12": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "15.png"
+ },
+ "aparecer-r13": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "16.png"
+ },
+ "aparecer-r14": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "17.png"
+ },
+ "aparecer-r15": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "18.png"
+ },
+ "aparecer-r16": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "19.png"
+ },
+ "aparecer-r17": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "20.png"
+ },
+ "aparecer-r18": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "21.png"
+ },
+ "aparecer-r19": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "22.png"
+ },
+ "aparecer-r20": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "23.png"
+ },
+ "aparecer-r21": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "24.png"
+ },
+ "aparecer-r22": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "25.png"
+ },
+ "aparecer-r24": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "27.png"
+ },
+ "aparecer-r25": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "28.png"
+ },
+ "aparecer-r26": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "29.png"
+ },
+ "aparecer-r27": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "30.png"
+ },
+ "aparecer-r28": {
+  "pasta": "espaco-aparecer",
+  "arquivo": "31.png"
+ },
+ "banheiro-n01": {
+  "pasta": "banheiro",
+  "arquivo": "01.png"
+ },
+ "banheiro-n02": {
+  "pasta": "banheiro",
+  "arquivo": "02.png"
+ },
+ "banheiro-n03": {
+  "pasta": "banheiro",
+  "arquivo": "03.png"
+ },
+ "banheiro-n04": {
+  "pasta": "banheiro",
+  "arquivo": "04.png"
+ },
+ "banheiro-n05": {
+  "pasta": "banheiro",
+  "arquivo": "05.png"
+ },
+ "gineco-p01": {
+  "pasta": "vitalis",
+  "arquivo": "027.png"
+ },
+ "gineco-p02": {
+  "pasta": "vitalis",
+  "arquivo": "028.png"
+ },
+ "gineco-p03": {
+  "pasta": "vitalis",
+  "arquivo": "029.png"
+ },
+ "gineco-p04": {
+  "pasta": "vitalis",
+  "arquivo": "030.png"
+ },
+ "gineco-r01": {
+  "pasta": "native",
+  "arquivo": "gineco-r01.png"
+ },
+ "gineco-r02": {
+  "pasta": "native",
+  "arquivo": "gineco-r02.png"
+ },
+ "gineco-r03": {
+  "pasta": "native",
+  "arquivo": "gineco-r03.png"
+ },
+ "gineco-r04": {
+  "pasta": "native",
+  "arquivo": "gineco-r04.png"
+ },
+ "gineco-r05": {
+  "pasta": "native",
+  "arquivo": "gineco-r05.png"
+ },
+ "gineco-r06": {
+  "pasta": "native",
+  "arquivo": "gineco-r06.png"
+ },
+ "gineco-r07": {
+  "pasta": "native",
+  "arquivo": "gineco-r07.png"
+ },
+ "loft-prancha": {
+  "pasta": "assets",
+  "arquivo": "loft-prancha.jpg"
+ },
+ "loft-render": {
+  "pasta": "assets",
+  "arquivo": "loft-render.jpg"
+ },
+ "mirante-mock": {
+  "pasta": "web",
+  "arquivo": "mirante-mock.webp"
+ },
+ "retrato-cv": {
+  "pasta": "assets",
+  "arquivo": "retrato-cv.jpg"
+ },
+ "sind-p01": {
+  "pasta": "sindicato",
+  "arquivo": "05.png"
+ },
+ "sind-p02": {
+  "pasta": "sindicato",
+  "arquivo": "06.png"
+ },
+ "sind-p03": {
+  "pasta": "sindicato",
+  "arquivo": "07.png"
+ },
+ "sind-p04": {
+  "pasta": "sindicato",
+  "arquivo": "08.png"
+ },
+ "sind-p05": {
+  "pasta": "sindicato",
+  "arquivo": "09.png"
+ },
+ "sind-r01": {
+  "pasta": "sindicato",
+  "arquivo": "01.png"
+ },
+ "sind-r02": {
+  "pasta": "sindicato",
+  "arquivo": "02.png"
+ },
+ "sind-r03": {
+  "pasta": "sindicato",
+  "arquivo": "03.png"
+ },
+ "sind-r04": {
+  "pasta": "assets",
+  "arquivo": "comercial-sala.jpg"
+ },
+ "ubs-p01": {
+  "pasta": "ubs",
+  "arquivo": "01.png"
+ },
+ "ubs-p02": {
+  "pasta": "ubs",
+  "arquivo": "02.png"
+ },
+ "ubs-p03": {
+  "pasta": "ubs",
+  "arquivo": "03.png"
+ },
+ "ubs-p04": {
+  "pasta": "ubs",
+  "arquivo": "04.png"
+ },
+ "ubs-r01": {
+  "pasta": "ubs",
+  "arquivo": "05.png"
+ },
+ "ubs-r02": {
+  "pasta": "ubs",
+  "arquivo": "06.png"
+ },
+ "ubs-r03": {
+  "pasta": "ubs",
+  "arquivo": "07.png"
+ },
+ "ubs-r04": {
+  "pasta": "ubs",
+  "arquivo": "08.png"
+ },
+ "ubs-r05": {
+  "pasta": "ubs",
+  "arquivo": "09.png"
+ },
+ "ubs-r06": {
+  "pasta": "ubs",
+  "arquivo": "10.png"
+ },
+ "ubs-r07": {
+  "pasta": "ubs",
+  "arquivo": "11.png"
+ },
+ "ubs-r08": {
+  "pasta": "ubs",
+  "arquivo": "12.png"
+ },
+ "ubs-r09": {
+  "pasta": "ubs",
+  "arquivo": "13.png"
+ },
+ "ubs-r10": {
+  "pasta": "ubs",
+  "arquivo": "14.png"
+ },
+ "ubs-r12": {
+  "pasta": "ubs",
+  "arquivo": "16.png"
+ },
+ "ubs-r13": {
+  "pasta": "ubs",
+  "arquivo": "17.png"
+ },
+ "ubs-r14": {
+  "pasta": "ubs",
+  "arquivo": "18.png"
+ },
+ "ubs-r15": {
+  "pasta": "ubs",
+  "arquivo": "19.png"
+ },
+ "vila-1": {
+  "pasta": "assets",
+  "arquivo": "vila-1.jpg"
+ },
+ "vila-b01": {
+  "pasta": "banner-api-v",
+  "arquivo": "01.jpg"
+ },
+ "vila-b02": {
+  "pasta": "banner-api-v",
+  "arquivo": "02.jpg"
+ },
+ "vila-p01": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "02.jpg"
+ },
+ "vila-p02": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "03.jpg"
+ },
+ "vila-p03": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "04.jpg"
+ },
+ "vila-p04": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "05.jpg"
+ },
+ "vila-p05": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "06.jpg"
+ },
+ "vila-p06": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "07.jpg"
+ },
+ "vila-p07": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "08.jpg"
+ },
+ "vila-p08": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "09.jpg"
+ },
+ "vila-r01": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "10.png"
+ },
+ "vila-r02": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "11.png"
+ },
+ "vila-r03": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "12.png"
+ },
+ "vila-r04": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "13.png"
+ },
+ "vila-r05": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "14.png"
+ },
+ "vila-r06": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "15.png"
+ },
+ "vila-r07": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "16.png"
+ },
+ "vila-r08": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "17.png"
+ },
+ "vila-r09": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "18.png"
+ },
+ "vila-r10": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "19.png"
+ },
+ "vila-r11": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "20.png"
+ },
+ "vila-r12": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "21.png"
+ },
+ "vila-r13": {
+  "pasta": "vila-jasmim-manga",
+  "arquivo": "22.png"
+ },
+ "vitalis-d01": {
+  "pasta": "vitalis",
+  "arquivo": "001.png"
+ },
+ "vitalis-d02": {
+  "pasta": "vitalis",
+  "arquivo": "002.png"
+ },
+ "vitalis-d03": {
+  "pasta": "vitalis",
+  "arquivo": "003.png"
+ },
+ "vitalis-d04": {
+  "pasta": "vitalis",
+  "arquivo": "004.png"
+ },
+ "vitalis-d05": {
+  "pasta": "vitalis",
+  "arquivo": "005.png"
+ },
+ "vitalis-d06": {
+  "pasta": "vitalis",
+  "arquivo": "006.png"
+ },
+ "vitalis-d07": {
+  "pasta": "vitalis",
+  "arquivo": "007.png"
+ },
+ "vitalis-d08": {
+  "pasta": "vitalis",
+  "arquivo": "008.png"
+ },
+ "vitalis-d09": {
+  "pasta": "vitalis",
+  "arquivo": "009.png"
+ },
+ "vitalis-d10": {
+  "pasta": "vitalis",
+  "arquivo": "010.png"
+ },
+ "vitalis-d11": {
+  "pasta": "vitalis",
+  "arquivo": "011.png"
+ },
+ "vitalis-d12": {
+  "pasta": "vitalis",
+  "arquivo": "012.png"
+ },
+ "vitalis-d13": {
+  "pasta": "vitalis",
+  "arquivo": "013.png"
+ },
+ "vitalis-d14": {
+  "pasta": "vitalis",
+  "arquivo": "014.png"
+ },
+ "vitalis-d15": {
+  "pasta": "vitalis",
+  "arquivo": "015.png"
+ },
+ "vitalis-d16": {
+  "pasta": "vitalis",
+  "arquivo": "016.png"
+ },
+ "vitalis-d17": {
+  "pasta": "vitalis",
+  "arquivo": "017.png"
+ },
+ "vitalis-d18": {
+  "pasta": "vitalis",
+  "arquivo": "018.png"
+ },
+ "vitalis-d19": {
+  "pasta": "vitalis",
+  "arquivo": "019.png"
+ },
+ "vitalis-d20": {
+  "pasta": "vitalis",
+  "arquivo": "020.png"
+ },
+ "vitalis-d21": {
+  "pasta": "vitalis",
+  "arquivo": "021.png"
+ },
+ "vitalis-d22": {
+  "pasta": "vitalis",
+  "arquivo": "022.png"
+ },
+ "vitalis-d23": {
+  "pasta": "vitalis",
+  "arquivo": "023.png"
+ },
+ "vitalis-d24": {
+  "pasta": "vitalis",
+  "arquivo": "024.png"
+ },
+ "vitalis-d25": {
+  "pasta": "vitalis",
+  "arquivo": "025.png"
+ },
+ "vitalis-d26": {
+  "pasta": "vitalis",
+  "arquivo": "026.png"
+ },
+ "vitalis-g1": {
+  "pasta": "assets",
+  "arquivo": "vitalis-g1.jpg"
+ },
+ "vitalis-g2": {
+  "pasta": "assets",
+  "arquivo": "vitalis-g2.jpg"
+ },
+ "vitalis-g3": {
+  "pasta": "assets",
+  "arquivo": "vitalis-g3.jpg"
+ },
+ "vv-p01": {
+  "pasta": "villa-verde",
+  "arquivo": "01.png"
+ },
+ "vv-r01": {
+  "pasta": "villa-verde",
+  "arquivo": "02.jpg"
+ },
+ "vv-r02": {
+  "pasta": "villa-verde",
+  "arquivo": "03.jpg"
+ },
+ "vv-r03": {
+  "pasta": "villa-verde",
+  "arquivo": "04.jpg"
+ },
+ "vv-r04": {
+  "pasta": "villa-verde",
+  "arquivo": "05.jpg"
+ },
+ "vv-r05": {
+  "pasta": "villa-verde",
+  "arquivo": "06.jpg"
+ },
+ "vv-r06": {
+  "pasta": "villa-verde",
+  "arquivo": "07.jpg"
+ }
+}

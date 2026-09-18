@@ -1,0 +1,137 @@
+/* ===== páginas ===== */
+const pages={
+  home(){return `
+  <section class="hero" style="--hero-img:${HERO_BG}">
+    <div class="hero-bg" aria-hidden="true"><div class="hero-img"></div></div>
+    <span class="sr">Render do Edifício Vitalis: fachada curva com brises de madeira entre árvores.</span>
+    <nav class="rail" aria-label="Redes sociais">${socialLinks()}</nav>
+    <div class="hero-content">
+      <h1>Espaços projetados<br><em>para viver.</em></h1>
+      <p class="hero-sub">Arquiteta e Urbanista e Técnica em Edificações, integrando metodologia BIM do estudo preliminar ao detalhamento&nbsp;executivo.</p>
+    </div>
+    <div class="hero-foot"><span class="scrollcue"><b></b> Role para explorar</span><span class="hero-cap">Edifício Vitalis, projeto acadêmico na UFU · Uberlândia, MG</span></div>
+  </section>
+
+  <section class="about" id="sobre">
+    <div class="shell"><div class="about-grid">
+      <div class="about-photo rv"><img src="${IMG['retrato-cv']}"${srcAttrs('retrato-cv','(max-width:820px) 340px, 34vw')} alt="Retrato de Giordanna Pereira com capacete de obra" decoding="async"></div>
+      <div class="rv">
+        <h2>Pronta para <em>somar.</em></h2>
+        <p>Arquiteta e Urbanista formada pela Universidade Federal de Uberlândia e Técnica em Edificações pelo CEFET - MG, com três anos de experiência prática em três escritórios, da criação à documentação executiva de projetos residenciais e&nbsp;comerciais.</p>
+        <p>Meu trabalho é pautado pela busca constante por soluções criativas e eficientes, sempre atenta às necessidades específicas e expectativas dos meus clientes. Acredito que a flexibilidade e diversidade são fundamentais, o que me permite desenvolver projetos adaptáveis e personalizados para cada&nbsp;perfil.</p>
+        <div class="cred">
+          <div><b>Formação</b><span>Técnico em Edificações · CEFET - MG<br>Arquitetura e Urbanismo · UFU</span></div>
+          <div><b>Atuação</b><span>Uberlândia, Araxá · presencial, híbrido<br>Brasil · remoto</span></div>
+          <div><b>Projetos</b><span>Residenciais e comerciais</span></div>
+          <div><b>Serviços</b><span>Medição, modelagem, documentação, renderização, consultoria, reforma, interiores</span></div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+
+  <section class="shell tools">
+    <div class="sec-head"><h2 class="sec-title">Ferramentas</h2><span class="sec-rule" aria-hidden="true"></span></div>
+    <ul class="tools-grid rv" aria-label="Ferramentas, da maior para a menor familiaridade">
+      <li class="tool t1">Archicad</li>
+      <li class="tool t2">SketchUp + Layout</li><li class="tool t2">Enscape</li><li class="tool t2">Pacote Office</li>
+      <li class="tool t3">Revit</li><li class="tool t3">AutoCAD</li><li class="tool t3">V-Ray</li><li class="tool t3">Adobe Ai · Ps · Id</li>
+    </ul>
+  </section>
+
+  <section class="quotes" id="depoimentos"><div class="shell">
+    <div class="sec-head"><h2 class="sec-title">Quem já trabalhou comigo</h2><span class="sec-rule" aria-hidden="true"></span></div>
+    <div class="qcar rv" id="qcar" role="region" aria-roledescription="carrossel" aria-label="Depoimentos">
+      <div class="qtrack" id="qtrack" tabindex="0">${QUOTES.map((q,i)=>`<figure class="qcard${q.text?'':' soon'}" data-i="${i}" role="group" aria-roledescription="depoimento" aria-label="${i+1} de ${QUOTES.length}"><p>${q.text?nb(esc(q.text)):'Depoimento em&nbsp;breve.'}</p><figcaption><b>${esc(q.name)}</b><span>${esc(q.role)}</span></figcaption></figure>`).join('')}</div>
+      <button type="button" class="qbtn prev" data-dir="-1" aria-label="Depoimento anterior">${ICO.prev}</button>
+      <button type="button" class="qbtn next" data-dir="1" aria-label="Próximo depoimento">${ICO.next}</button>
+    </div>
+  </div></section>
+
+  <section class="shell cta rv">
+    <h2>Conheça mais <em>do meu trabalho.</em></h2>
+    <a class="btn" href="#/projetos">Ver projetos ${ICO.arrow}</a>
+  </section>`;},
+
+  projetos(){return `
+  <div class="shell">
+    <div class="page-head"><h1>Projetos</h1><p class="wide">Arquitetura, habitação, interiores e documentação executiva. Cada projeto com sua ficha técnica e&nbsp;galeria.</p></div>
+    <div class="grid">${PROJECTS.map((p,i,all)=>{const r=all.length%3; const cls=((r===1&&i===0)?' rem1':(r===2&&i<2)?' rem2':'')+((all.length%2===1&&i===0)?' first-odd':'');
+      const sizes=cls.includes('rem1')?'(min-width:1001px) min(1200px, 100vw), 100vw':cls.includes('rem2')?'(min-width:1001px) min(600px, 50vw), (min-width:561px) 50vw, 100vw':'(min-width:1001px) min(400px, 33vw), (min-width:561px) 50vw, 100vw'; return `
+      <div class="card-wrap rv${cls}">
+        <a class="card" href="#/projeto/${p.slug}" aria-label="${esc(p.title)} — ${esc(p.kind)}">
+          <img src="${IMG[p.cover]}"${srcAttrs(p.cover,sizes)} alt="" decoding="async"${i>2?' loading="lazy"':''}>
+          <span class="card-veil" aria-hidden="true"></span>
+          <span class="card-ov" aria-hidden="true"><span class="card-mark"><i></i><i></i><i></i><i></i></span><span class="card-txt"><b>${esc(p.title)}</b><span>${esc(p.kind)}</span></span></span>
+        </a>
+        <div class="card-cap"><b>${esc(p.title)}</b><span>${esc(p.kind)}</span></div>
+      </div>`;}).join('')}
+    </div>
+  </div>`;},
+
+  projeto(slug){
+    const i=PROJECTS.findIndex(p=>p.slug===slug); if(i<0)return pages.nf();
+    const p=PROJECTS[i], prev=PROJECTS[(i-1+PROJECTS.length)%PROJECTS.length], next=PROJECTS[(i+1)%PROJECTS.length];
+    const url=location.href, t=encodeURIComponent(p.title+' — Giordanna Pereira Arquitetura'), u=encodeURIComponent(url);
+    return `
+  <div class="shell">
+    <div class="page-head"><h1>${esc(p.title)}</h1><p class="kind">${esc(p.kind)}</p></div>
+    <div class="proj-top">
+      <div><p class="lead">${esc(p.desc)}</p>${chips(p.tools)}</div>
+      <aside class="ficha rv">
+        <h2>Detalhes do projeto</h2>
+        <dl><dt>Local</dt><dd>${esc(p.local)}</dd><dt>Ano</dt><dd>${esc(p.ano)}</dd><dt>Área</dt><dd>${esc(p.area)}</dd><dt>Equipe</dt><dd>${p.equipeHtml?p.equipe:esc(p.equipe)}</dd></dl>
+        <div class="share">
+          <span>Compartilhe</span>
+          <div class="share-row">
+          <button type="button" id="sh-native" aria-label="Compartilhar" title="Compartilhar" hidden>${ICO.share}</button>
+          <a href="https://wa.me/?text=${t}%20${u}" target="_blank" rel="noopener" aria-label="Compartilhar no WhatsApp" title="WhatsApp">${ICO.whatsapp}</a>
+          <a href="https://www.linkedin.com/sharing/share-offsite/?url=${u}" target="_blank" rel="noopener" aria-label="Compartilhar no LinkedIn" title="LinkedIn">${ICO.linkedin}</a>
+          <a href="https://www.facebook.com/sharer/sharer.php?u=${u}" target="_blank" rel="noopener" aria-label="Compartilhar no Facebook" title="Facebook">${ICO.facebook}</a>
+          <a href="mailto:?subject=${t}&body=${u}" aria-label="Compartilhar por e-mail" title="E-mail">${ICO.mail}</a>
+          <button type="button" id="sh-copy" aria-label="Copiar link" title="Copiar link">${ICO.link}</button>
+          </div>
+          <span class="toast" id="sh-toast" role="status" aria-live="polite"></span>
+        </div>
+      </aside>
+    </div>
+    <div class="gal" id="gal">${p.gallery.map((k,n)=>{const d=DIMS[k]||[3,2];const hero=n===0&&d[0]>d[1];const ar=d[0]/d[1];const sizes=hero?'(min-width:1280px) 1200px, 100vw':`(min-width:1000px) ${Math.min(1200,Math.round(ar*380))}px, (min-width:600px) ${Math.min(900,Math.round(ar*300))}px, 100vw`;return `<button type="button" class="${hero?'gal-hero':''}" data-i="${n}" data-ar="${ar.toFixed(4)}" style="aspect-ratio:${d[0]}/${d[1]}" aria-label="Abrir foto ${n+1} de ${p.gallery.length}"><img src="${IMG[k]}"${srcAttrs(k,sizes)} width="${d[0]}" height="${d[1]}" alt="${esc(p.title)} — imagem ${n+1}" decoding="async"${n>2?' loading="lazy"':''}></button>`;}).join('')}</div>
+    <nav class="pn" aria-label="Outros projetos">
+      <a href="#/projeto/${prev.slug}"><small>Projeto anterior</small><b>${esc(prev.title)}</b></a>
+      <a class="next" href="#/projeto/${next.slug}"><small>Próximo projeto</small><b>${esc(next.title)}</b></a>
+    </nav>
+  </div>`;},
+
+  contato(){return `
+  <div class="shell contact">
+    <div class="page-head"><h1>Tem um projeto <br class="mb">para tirar do&nbsp;papel?</h1><p>Projetos residenciais e comerciais, documentação executiva ou uma vaga na sua equipe: escreva e eu respondo em até dois dias&nbsp;úteis.</p></div>
+    <div class="cgrid">
+      <aside class="cinfo rv">
+        <div class="form-head"><h2>Contato direto</h2><p>Escolha o canal que preferir.</p></div>
+        <ul class="c-list">${SOCIAL.map(s=>`<li><a href="${s.href}" ${s.ext?'target="_blank" rel="noopener"':''}><small>${s.label}</small><span>${s.text}</span></a></li>`).join('')}</ul>
+      </aside>
+      <div class="cform rv">
+      <div class="form-head"><h2>Ou envie uma mensagem</h2><p>Poucos campos, sem cadastro. Uso seus dados só para responder.</p></div>
+      <form id="cf" class="rv" name="contato" method="POST" novalidate>
+        <input type="hidden" name="form-name" value="contato">
+        <div class="hp" aria-hidden="true"><label>Empresa <input name="empresa" tabindex="-1" autocomplete="off"></label></div>
+        <div class="f2">
+          <div class="fld"><label for="f-nome">Nome <b>*</b></label><input id="f-nome" name="nome" type="text" autocomplete="name" required><span class="msg" id="e-nome">Digite seu nome.</span></div>
+          <div class="fld"><label for="f-email">E-mail <b>*</b></label><input id="f-email" name="email" type="email" autocomplete="email" inputmode="email" required aria-describedby="e-email"><span class="msg" id="e-email">Digite um e-mail válido, como nome@exemplo.com.</span></div>
+        </div>
+        <div class="f2">
+          <div class="fld"><label for="f-tel">WhatsApp <small style="text-transform:none;letter-spacing:0">(opcional)</small></label><input id="f-tel" name="whatsapp" type="tel" autocomplete="tel" inputmode="tel" placeholder="(34) 9 0000-0000"></div>
+          <div class="fld"><label for="f-assunto">Assunto <b>*</b></label><select id="f-assunto" name="assunto" required><option value="">Selecione</option><option>Projeto residencial</option><option>Projeto comercial</option><option>Documentação executiva / BIM</option><option>Oportunidade de trabalho</option><option>Outro</option></select><span class="msg" id="e-assunto">Escolha um assunto.</span></div>
+        </div>
+        <div class="fld"><label for="f-msg">Mensagem <b>*</b></label><textarea id="f-msg" name="mensagem" required minlength="10" aria-describedby="e-msg"></textarea><span class="msg" id="e-msg">Conte um pouco sobre o projeto (pelo menos 10 caracteres).</span></div>
+        <label class="consent" id="consent-w"><input type="checkbox" id="f-consent" name="consentimento" required><span>Autorizo o uso dos meus dados apenas para responder a esta mensagem, conforme a LGPD. <b>*</b></span></label>
+        <div class="f-actions"><button class="btn" type="submit" id="f-send">Enviar mensagem ${ICO.arrow}</button><p class="f-note">Resposta em até dois dias úteis.</p></div>
+        <p class="f-fail" id="f-fail" role="alert" tabindex="-1" hidden>Não foi possível enviar agora. Escreva direto para <a href="mailto:giordannapb.arq@gmail.com">giordannapb.arq@gmail.com</a>.</p>
+      </form>
+      <div class="f-ok" id="f-ok" role="status" aria-live="polite"><b>Mensagem enviada.</b><p>Obrigada! Respondo em até dois dias úteis pelo e-mail informado.</p></div>
+      </div>
+    </div>
+  </div>`;},
+
+  nf(){return `<div class="shell"><div class="page-head"><h1>Página não encontrada</h1><p><a href="#/projetos">Ver projetos</a></p></div></div>`;}
+};
+
