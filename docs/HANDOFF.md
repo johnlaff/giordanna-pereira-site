@@ -53,7 +53,7 @@ Documento de decisão completo (análise de mercado 2026, comparações, fontes)
 4. **CI**: GitHub Actions em todo PR: `pnpm install` → `astro check` → `astro build` → Playwright (suíte migrada de `tests/`) → axe → Lighthouse CI (orçamento: LCP < 2,5 s, CLS < 0,1, a11y 100).
 5. **Imagens**: originais em alta ficam no Drive; o repo guarda WebP ≤ 2560 px (`assets/`). O Astro gera AVIF + WebP e `srcset`/`sizes` (`image.layout: 'constrained'`, `<Picture formats={['avif','webp']}>`). As imagens do repo são redimensionamentos determinísticos dos originais (sem retoque); tratamento de renders por IA fica como possibilidade futura, quando a Giordanna for treinada para isso.
 6. **Fontes**: Cormorant Garamond (400/500/600) e Jost (300/400/500/600) self-hosted pela **Fonts API** do Astro. Sem chamada ao Google Fonts.
-7. **Segurança**: CSP gerada pelo Astro (`security.csp`), HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`; MDN HTTP Observatory no CI. Turnstile é a única origem externa.
+7. **Segurança**: CSP gerada pelo Astro (`security.csp`), HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`; MDN HTTP Observatory no CI. Duas origens externas, ambas da Cloudflare: Turnstile e o beacon do Web Analytics (`static.cloudflareinsights.com`, injeção automática, dados enviados para a própria origem); a CSP não usa `'strict-dynamic'` (ADR 0005).
 8. **Navegação**: páginas reais (MPA). View Transitions nativas via CSS `@view-transition { navigation: auto }` (sem `<ClientRouter />`); `prefetch: { prefetchAll: true }`. Sem hash router.
 9. **Formulário**: `POST /api/contato` no Worker: valida campos, Turnstile (siteverify), honeypot, rate limit (1 regra Cloudflare, por IP e caminho), envia via **Resend** para `contato@giordannapereira.arq.br` com `reply-to` do visitante. Sucesso em 2xx; em erro, o front mostra o e-mail como alternativa (comportamento já existe no preview: `FORM_ENDPOINT`, `#f-ok`, `#f-fail`).
 10. **CMS**: **Sveltia CMS** em `/admin` (`public/admin/index.html` + `config.yml`), backend GitHub com o **Sveltia CMS Authenticator** em Cloudflare Workers, publicando **direto em `main`**. `config.yml` espelha o schema da collection `projetos`; otimização no upload: `media_libraries.all.transformations.raster_image = { format: webp, quality: 90, width: 2560, height: 2560 }`. UI em pt-BR. Giordanna entra com conta GitHub própria (colaboradora, 2FA).
@@ -119,7 +119,7 @@ Tickets 3, 4, 5 e 6 podem rodar em paralelo depois do 2 (3, 5) e do 1 (4, 6).
 
 - Em toda galeria: renders primeiro, pranchas por último. Capas definidas em `conteudo.json` não mudam sem pedido dela.
 - Ordem dos projetos: Vitalis, GinecoCare, Banheiro Chocolate, Villa Verde, Vila Jasmim Manga, Sindicato, Mini Casa, UBS, Espaço Aparecer, Mirante.
-- Textos, fichas e depoimentos são os de `conteudo.json` (já revisados por ela). Placeholders: depoimentos de Valquiria e Mariana; imagens do Mirante (mock "Imagens em breve"); "LOGO AQUI" no rodapé/cabeçalho até ela mandar o logo.
+- Textos, fichas e depoimentos são os de `conteudo.json` (já revisados por ela). Placeholders: depoimentos de Valquiria e Mariana; imagens do Mirante (mock "Imagens em breve"); marca em texto (nome + CAU) no cabeçalho e rodapé até ela mandar o logo.
 - Toda correção vem com teste. Nada vai para `main` com axe ou Playwright vermelho.
 - Sem serviço pago. Sem dependência nova sem motivo registrado em ADR.
 
@@ -166,3 +166,18 @@ Depoimentos de Valquiria e Mariana · imagens do Mirante CESTES · logo definiti
 | Resend | ticket 6 | João | domínio verificado, API key só no Worker |
 | GitHub (conta da Giordanna) | ticket 7 | Giordanna | colaboradora com 2FA para o Sveltia |
 | GitHub OAuth App (para o Sveltia Authenticator) | ticket 7 | João | client id/secret só no Worker do autenticador |
+
+## 12. Resoluções do `/grill-with-docs` (insumo do `/to-spec` e do `/to-tickets`)
+
+Glossário em `CONTEXT.md`; decisões estruturais em `docs/adr/`. O que segue é nível de spec e ticket.
+
+- **Publicação pelo CMS** (ADR 0002): ruleset de `main` exige PR + checks com bypass para o papel write; "bloquear force push" e "restringir exclusão" sem bypass. CI roda também em push direto em `main`. `config.yml` marca obrigatórios com `required: true` e valida padrões de área e ano no formulário; o schema Zod é a segunda barreira.
+- **URLs** (ADR 0003): `/projetos` e `/projetos/<slug>`. A suíte migrada troca as rotas no ticket 1; não há redirect a manter.
+- **Vocabulário do modelo**: identificadores em pt-BR sem acento (`titulo`, `tipo`, `capa`, `descricao`, `ferramentas`, `local`, `ano`, `area`, `equipe`, `equipeUrl`, `galeria`, `ordem`); acentos só nos rótulos do `config.yml`. O ticket 2 renomeia as chaves do `conteudo.json` ao gerar a collection.
+- **Ordem**: `ordem` inteiro, obrigatório e único, numerado de 10 em 10. Sveltia: `sortable_fields: [ordem]` e lista ordenada por ele. Build falha em duplicata. `prev/next` derivam dessa ordem.
+- **Equipe**: `equipe` string obrigatória; `equipeUrl` URL https opcional. Sveltia: campos "Equipe" e "Link da equipe". A ficha renderiza link só quando a URL existe. Nenhum campo de conteúdo aceita HTML.
+- **Estado "Em breve"**: `texto` do depoimento opcional; `galeria` vazia e `capa` opcional no projeto. Card, página e imagem OG do projeto renderizam "Imagens em breve" em CSS, com o mesmo desenho do mock atual. Projeto com galeria e sem capa usa a primeira imagem da galeria como capa. `mirante-mock.webp` sai de `src/assets/` no ticket 2.
+- **E-mail exibido**: `giordannapb.arq@gmail.com` até o ticket 9, em constante única em `src/config.ts` (contatos, rodapé e fallback do formulário leem dela). No ticket 9 a troca para `contato@giordannapereira.arq.br` é critério de aceite, com teste que falha se `gmail.com` aparecer no HTML público; Email Routing entra antes de o domínio apontar para o site.
+- **CSP e analytics** (ADR 0005): `script-src` lista Turnstile e `static.cloudflareinsights.com`; `connect-src 'self'`; sem `'strict-dynamic'`. Critério do ticket 8: zero erros de CSP no console e eventos chegando ao painel do Web Analytics a partir do preview.
+- **Conteúdo da home e contatos**: hero, Sobre, Familiaridade, CTA e os quatro contatos vivem em `src/config.ts`, tipado, fora do CMS. Ticket 10 (pós-lançamento): Sobre (parágrafos, formação, credenciais) e Familiaridade (ferramentas por nível) migram para uma file collection do Sveltia, porque são os únicos textos da home que mudam com a carreira dela. Hero, CTA e contatos permanecem em código por decisão.
+- **Marca**: não existe "LOGO AQUI" no preview; cabeçalho e rodapé exibem nome + CAU em texto. O logo definitivo (§10) substitui esse bloco quando existir.
