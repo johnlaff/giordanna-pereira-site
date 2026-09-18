@@ -21,6 +21,7 @@ Detalhes que não são óbvios:
 - `.github/actions/setup` é a action composta que todo job usa: Node de `.node-version`, pnpm do campo `packageManager`, `pnpm install --frozen-lockfile` com cache do store e, quando pedido, o Chromium completo do Playwright em cache por versão. `e2e` e `lighthouse` usam esse mesmo Chromium: um só motor de renderização para os dois gates, local e no CI.
 - Cada job que precisa do site refaz o build. O `wrangler` lê `dist/client/wrangler.json` por um redirecionamento gravado em `.wrangler/deploy/config.json`, fora de `dist/`; um artefato entre jobs perderia esse arquivo e o `.assetsignore`, e o build leva menos de um segundo.
 - Actions fixadas por SHA completo, com a tag em comentário. O repositório exige SHA pinning; o Renovate atualiza o SHA e o comentário juntos.
+- `audit` olha o que vai para Produção (`--prod`) e, em PR, o que o PR acrescenta ao lockfile. Advisory transitivo sem correção publicada entra em `allow-ghsas` no workflow, com o motivo ao lado; advisory com correção entra como `overrides` em `pnpm-workspace.yaml`.
 - Relatórios: `playwright-report` (artefato só em falha) e `lighthouse-report` (sempre), sete dias de retenção. Nada é enviado a serviço externo.
 
 ### Orçamento do Lighthouse

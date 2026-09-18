@@ -81,3 +81,7 @@ jobs:
         with:
           fail-on-severity: high
           comment-summary-in-pr: never
+          # extract-zip (via lighthouse → puppeteer-core) não tem versão corrigida e só roda no
+          # download de navegador do Puppeteer, que nunca acontece: o Lighthouse usa o Chromium
+          # do Playwright (scripts/lighthouse.ts).
+          allow-ghsas: GHSA-jmr9-qjv8-65gv, GHSA-7pqw-9j4j-h8q3
