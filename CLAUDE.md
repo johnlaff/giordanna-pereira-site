@@ -17,7 +17,7 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 
 - Imagens em `src/assets/` são redimensionamentos determinísticos dos originais do Drive (sem retoque). Melhoria de renders por IA é possibilidade futura, não parte do fluxo atual.
 - Em toda galeria: renders primeiro, pranchas por último. Capas e ordem dos projetos vêm do conteúdo, não do código.
-- Conteúdo vive em `src/content/projetos/*.md` + `src/content/depoimentos/`; imagens em `src/assets/` (WebP ≤ 2560 px). O schema Zod é a verdade: build quebra se faltar campo ou imagem.
+- Conteúdo vive nas collections `projetos` e `depoimentos` em `src/content/`, como arquivos de dados com campos em pt-BR sem acento (tabelas em `CONTEXT.md`); `descricao` é texto simples e nenhum campo aceita HTML. Imagens em `src/assets/` (WebP ≤ 2560 px). O schema Zod é a verdade: build quebra se faltar campo, imagem ou se `ordem` repetir.
 - Sem requisição a domínio externo além do Turnstile (fontes self-hosted pela Fonts API). CSP gerada pelo Astro (`security.csp`).
 - Sem segredos no repo: chaves do Resend, Turnstile e do autenticador do Sveltia ficam em variáveis do Worker.
 - Toda correção vem com teste. Nada entra em `main` com Playwright/axe vermelho. Acessibilidade alvo: WCAG 2.2 AA.
@@ -34,7 +34,7 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 
 ## Fluxo de trabalho
 
-Trunk-based com PRs curtos (um ticket por PR). Cada PR ganha checks (check, build, Playwright, axe, Lighthouse) e uma preview URL do Workers Builds. Merge em `main` publica. Tickets são issues do GitHub ligadas à spec (sub-issues + "blocked by"); trabalhe a fronteira (tickets sem bloqueador aberto). Use `/handoff` ao encerrar uma sessão.
+Trunk-based com PRs curtos (um ticket por PR). Cada PR ganha checks (check, build, Playwright, axe, Lighthouse) e uma preview URL do Workers Builds. Merge em `main` publica. Tickets são sub-issues da spec #3 com "blocked by" nativo; trabalhe a fronteira (tickets sem bloqueador aberto), um ticket por PR. Use `/handoff` ao encerrar uma sessão.
 
 ## Referência visual
 
