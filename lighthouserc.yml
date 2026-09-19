@@ -8,9 +8,13 @@ ci:
     startServerReadyPattern: Ready on
     startServerReadyTimeout: 60000
     url:
-      # Cada ticket que cria página acrescenta a rota aqui, como em tests/e2e/rotas.ts.
+      # Uma rota por padrão de página, no pior caso de cada um: a Galeria mais pesada do
+      # site, uma Galeria média e o estado Em breve, que não carrega imagem alguma. Medir
+      # cada página de Projeto custaria minutos de CI para repetir o mesmo veredito.
       - http://localhost:8788/
+      - http://localhost:8788/projetos/edificio-vitalis
       - http://localhost:8788/projetos/consultorio-ginecocare
+      - http://localhost:8788/projetos/mirante-cestes
     numberOfRuns: 3
     settings:
       # O Chromium do Playwright não tem o sandbox setuid e o Ubuntu 24.04 do runner bloqueia

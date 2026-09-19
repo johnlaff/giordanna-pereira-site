@@ -1,91 +1,107 @@
-import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
-import { parse } from 'yaml';
 import { site } from '../../src/config.ts';
+import { projetos } from './projetos.ts';
 
-// O conteúdo é a fonte da verdade: a página é conferida contra o arquivo do Projeto, não
-// contra strings repetidas no teste.
-type Projeto = {
-  titulo: string;
-  tipo: string;
-  descricao: string;
-  ferramentas: string[];
-  local: string;
-  ano: string;
-  area: string;
-  equipe: string;
-  equipeUrl?: string;
-  galeria: string[];
-};
-const projeto: Projeto = parse(
-  readFileSync('src/content/projetos/consultorio-ginecocare.yml', 'utf8'),
-);
-const rota = '/projetos/consultorio-ginecocare';
+// O conteúdo é a fonte da verdade: cada página é conferida contra o arquivo do seu Projeto,
+// não contra strings repetidas no teste. O que vale para todos roda em cima da collection
+// inteira, então um Projeto novo — inclusive cadastrado no CMS — entra sozinho na suíte.
 
-test('a página do Projeto abre com título, Tipo e descrição do conteúdo', async ({ page }) => {
-  const resposta = await page.goto(rota);
-  expect(resposta?.status()).toBe(200);
-  await expect(page).toHaveTitle(`${projeto.titulo} — ${site.nome}`);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText(projeto.titulo);
-  await expect(page.locator('.page-head .kind')).toHaveText(projeto.tipo);
-  await expect(page.locator('.lead')).toHaveText(projeto.descricao);
-  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
-    'content',
-    projeto.descricao,
-  );
-});
+/** A Ordem é circular: `at(-1)` devolve o último, e o índice além do fim volta ao primeiro. */
+const vizinho = (indice: number) => projetos.at(indice % projetos.length)!;
 
-test('as Ferramentas aparecem na ordem do conteúdo', async ({ page }) => {
-  await page.goto(rota);
-  await expect(page.locator('.chips .chip')).toHaveText(projeto.ferramentas);
-});
+const chaveDaImagem = (caminho: string) => caminho.split('/').pop()?.replace('.webp', '');
 
-test('a Ficha técnica lista Local, Ano, Área e Equipe', async ({ page }) => {
-  await page.goto(rota);
-  const ficha = page.locator('.ficha');
-  await expect(ficha.getByRole('heading', { level: 2 })).toHaveText('Detalhes do projeto');
-  await expect(ficha.locator('dt')).toHaveText(['Local', 'Ano', 'Área', 'Equipe']);
-  await expect(ficha.locator('dd')).toHaveText([
-    projeto.local,
-    projeto.ano,
-    projeto.area,
-    projeto.equipe,
-  ]);
-});
+for (const [i, { slug, rota, dados }] of projetos.entries()) {
+  test(`${slug}: título, Tipo, descrição, Ferramentas e Ficha técnica saem do conteúdo`, async ({
+    page,
+  }) => {
+    const resposta = await page.goto(rota);
+    expect(resposta?.status()).toBe(200);
+    await expect(page).toHaveTitle(`${dados.titulo} — ${site.nome}`);
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(dados.titulo);
+    await expect(page.locator('.page-head .kind')).toHaveText(dados.tipo);
+    await expect(page.locator('.lead')).toHaveText(dados.descricao);
+    await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+      'content',
+      dados.descricao,
+    );
+    await expect(page.locator('.chips .chip')).toHaveText(dados.ferramentas);
+    const ficha = page.locator('.ficha');
+    await expect(ficha.getByRole('heading', { level: 2 })).toHaveText('Detalhes do projeto');
+    await expect(ficha.locator('dt')).toHaveText(['Local', 'Ano', 'Área', 'Equipe']);
+    await expect(ficha.locator('dd')).toHaveText([
+      dados.local,
+      dados.ano,
+      dados.area,
+      dados.equipe,
+    ]);
+    // A Equipe só vira link quando o Projeto traz a URL; o campo de texto nunca traz HTML.
+    const link = ficha.locator('dd a');
+    await expect(link).toHaveCount(dados.equipeUrl ? 1 : 0);
+    if (dados.equipeUrl !== undefined) {
+      await expect(link).toHaveAttribute('href', dados.equipeUrl);
+      await expect(link).toHaveText(dados.equipe);
+    }
+  });
 
-test('a Equipe só vira link quando o Projeto traz a URL', async ({ page }) => {
-  await page.goto(rota);
-  const links = page.locator('.ficha dd a');
-  await expect(links).toHaveCount(projeto.equipeUrl ? 1 : 0);
-});
+  test(`${slug}: a Galeria traz as imagens do conteúdo, ou o estado Em breve`, async ({ page }) => {
+    await page.goto(rota);
+    // O título da seção ancora a Galeria para quem navega por cabeçalhos, com ou sem imagem.
+    await expect(page.getByRole('heading', { level: 2, name: 'Galeria' })).toBeAttached();
+    await expect(page.locator('.gal img')).toHaveCount(dados.galeria.length);
 
-test('a Galeria traz todas as imagens do conteúdo, renders antes das pranchas', async ({
-  page,
-}) => {
-  await page.goto(rota);
-  const imagens = page.locator('.gal img');
-  await expect(imagens).toHaveCount(projeto.galeria.length);
-  for (const [i, caminho] of projeto.galeria.entries()) {
-    const chave = caminho.split('/').pop()?.replace('.webp', '');
-    await expect(imagens.nth(i)).toHaveAttribute('src', new RegExp(`/${chave}\\.`));
-    await expect(imagens.nth(i)).toHaveAttribute('alt', `${projeto.titulo} — imagem ${i + 1}`);
+    const emBreve = page.getByText('Imagens em breve');
+    if (dados.galeria.length === 0) {
+      await expect(emBreve).toBeVisible();
+      // A faixa do Em breve não tem imagem para limitar sua largura: precisa caber na tela.
+      const transbordo = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(transbordo).toBe(0);
+      return;
+    }
+    await expect(emBreve).toHaveCount(0);
+    // Renders antes das pranchas: a ordem do arquivo é a ordem da página, imagem a imagem.
+    for (const [n, caminho] of dados.galeria.entries()) {
+      const imagem = page.locator('.gal img').nth(n);
+      await expect(imagem).toHaveAttribute('src', new RegExp(`/${chaveDaImagem(caminho)}\\.`));
+      await expect(imagem).toHaveAttribute('alt', `${dados.titulo} — imagem ${n + 1}`);
+    }
+  });
+
+  test(`${slug}: a navegação leva ao Projeto anterior e ao próximo na Ordem`, async ({ page }) => {
+    await page.goto(rota);
+    const anterior = vizinho(i - 1);
+    const proximo = vizinho(i + 1);
+    const links = page.locator('.pn a');
+    await expect(links).toHaveCount(2);
+    await expect(links.first()).toHaveAttribute('href', anterior.rota);
+    await expect(links.first()).toContainText(anterior.dados.titulo);
+    await expect(links.last()).toHaveAttribute('href', proximo.rota);
+    await expect(links.last()).toContainText(proximo.dados.titulo);
+  });
+}
+
+test('seguir o próximo Projeto até o fim dá a volta e retorna ao primeiro', async ({ page }) => {
+  const primeiro = vizinho(0);
+  await page.goto(primeiro.rota);
+  for (const { slug } of [...projetos.slice(1), primeiro]) {
+    await page.locator('.pn a.next').click();
+    // A barra final é indiferente aqui: quem decide a forma canônica da URL é o Worker.
+    await expect(page).toHaveURL(new RegExp(`/projetos/${slug}/?$`));
   }
 });
 
-test('a Galeria é ancorada por um título, para quem navega por cabeçalhos', async ({ page }) => {
-  await page.goto(rota);
-  // O título é só para leitor de tela: existe na árvore de acessibilidade e não ocupa tela.
-  const titulo = page.getByRole('heading', { level: 2, name: 'Galeria' });
-  await expect(titulo).toBeAttached();
-  const caixa = await titulo.boundingBox();
-  expect(caixa?.width).toBeLessThanOrEqual(1);
-  expect(caixa?.height).toBeLessThanOrEqual(1);
-});
+// Daqui para baixo, a página aberta em detalhe: o que vale para uma Galeria com renders e
+// pranchas é verificado uma vez, no Projeto que serviu de tracer bullet.
+const detalhado = projetos.find(({ slug }) => slug === 'consultorio-ginecocare');
+if (detalhado === undefined) throw new Error('o Projeto do detalhe saiu da collection');
+const { rota, dados } = detalhado;
 
 test('cada imagem sai em AVIF com alternativa WebP e variantes por largura', async ({ page }) => {
   await page.goto(rota);
   const fontesAvif = page.locator('.gal source[type="image/avif"]');
-  await expect(fontesAvif).toHaveCount(projeto.galeria.length);
+  await expect(fontesAvif).toHaveCount(dados.galeria.length);
 
   for (const srcset of await fontesAvif.evaluateAll((fontes) =>
     fontes.map((f) => f.getAttribute('srcset') ?? ''),

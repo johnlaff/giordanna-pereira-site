@@ -1,0 +1,57 @@
+---
+/**
+ * Estado Em breve, desenhado pelo site: o que aparece no lugar da imagem de um Projeto
+ * cadastrado que ainda não tem Galeria.
+ *
+ * Preenche o bloco que o recebe e as formas acompanham a largura desse bloco — daí as
+ * medidas em `cqw` —, para valer tanto na faixa de abertura da página quanto num card.
+ */
+---
+
+<div class="em-breve">
+  <span class="circulo traco" aria-hidden="true"></span>
+  <span class="circulo cheio" aria-hidden="true"></span>
+  <p>Imagens em breve</p>
+</div>
+
+<style>
+  .em-breve {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--img-bg);
+    display: grid;
+    place-items: center;
+    /* As formas se medem pela largura do bloco, então ele é o container de consulta. */
+    container-type: inline-size;
+  }
+  .circulo {
+    position: absolute;
+    aspect-ratio: 1;
+    border-radius: 50%;
+  }
+  .traco {
+    width: 53cqw;
+    top: -22cqw;
+    right: -15cqw;
+    border: 1px solid var(--line);
+  }
+  .cheio {
+    width: 43cqw;
+    bottom: -20cqw;
+    left: -17cqw;
+    background: color-mix(in srgb, var(--sand) 22%, transparent);
+  }
+  .em-breve p {
+    position: relative;
+    font-size: clamp(11px, 1.2cqw, 14px);
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    text-align: center;
+    padding: 0 24px;
+    /* O espaçamento sobra depois da última letra; o recuo devolve a simetria óptica. */
+    text-indent: 0.28em;
+  }
+</style>

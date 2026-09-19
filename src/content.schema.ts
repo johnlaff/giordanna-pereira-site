@@ -1,7 +1,8 @@
 /**
- * Contrato do conteúdo dos Projetos: a forma de cada arquivo e a invariante de Ordem única
- * entre eles. As duas garantias valem no build e mudam pelo mesmo motivo — uma mudança no
- * que é um Projeto —, por isso moram juntas.
+ * Contrato do conteúdo dos Projetos: a forma de cada arquivo, a invariante de Ordem única
+ * entre eles e as leituras que derivam das duas — a sequência, os vizinhos de cada Projeto e
+ * a Capa. Tudo vale no build e muda pelo mesmo motivo — uma mudança no que é um Projeto —,
+ * por isso mora junto.
  *
  * O módulo fica fora de `content.config.ts` para o teste de contrato carregá-lo sem o runtime
  * do Astro: o validador de imagem entra por parâmetro, e é o `image()` do Astro em produção
@@ -56,4 +57,30 @@ export function ordenarProjetos<T extends ProjetoOrdenavel>(projetos: readonly T
     vistos.set(projeto.data.ordem, projeto.id);
   }
   return [...projetos].sort((a, b) => a.data.ordem - b.data.ordem);
+}
+
+type ProjetoIlustrado<T> = { data: { capa?: T | undefined; galeria: readonly T[] } };
+
+/**
+ * A imagem que representa o Projeto fora da sua página. Sem Capa própria, é a primeira da
+ * Galeria; sem Galeria nenhuma, o Projeto está Em breve e não tem imagem para mostrar.
+ */
+export function capaDe<T>({ data }: ProjetoIlustrado<T>): T | undefined {
+  return data.capa ?? data.galeria[0];
+}
+
+/**
+ * Os Projetos vizinhos na Ordem, para a navegação ao pé da página. A sequência é circular —
+ * do último se volta ao primeiro —, e não existe quando não há para onde navegar: menos de
+ * dois Projetos, ou um índice fora da lista.
+ */
+export function vizinhosNaOrdem<T>(
+  projetos: readonly T[],
+  indice: number,
+): { anterior: T; proximo: T } | undefined {
+  const total = projetos.length;
+  const anterior = projetos[(indice - 1 + total) % total];
+  const proximo = projetos[(indice + 1) % total];
+  if (total < 2 || anterior === undefined || proximo === undefined) return undefined;
+  return { anterior, proximo };
 }

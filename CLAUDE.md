@@ -32,7 +32,7 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 - `src/layouts/Base.astro` — casca de toda página (head, fontes, Header, `main`, Footer); props `titulo`, `descricao`, `secao` (item ativo da nav) e `hero` (cabeçalho transparente sobre o hero)
 - `src/pages/` — `index`, `404`, `projetos/[slug]`. Planejadas: `projetos/index`, `contato`, `api/contato.ts` (`prerender = false`)
 - `src/content/` — collection `projetos` (um `.yml` por Projeto); planejada: `depoimentos`. `src/content.config.ts` liga o loader ao contrato de `src/content.schema.ts`, que também garante a Ordem única
-- `src/components/` — Header, Footer, Marca, Icone, Ficha, Galeria. Planejados: Hero, Sobre, Ferramentas, Depoimentos (carrossel), CardProjeto, e o layout justificado + PhotoSwipe na Galeria, FormContato
+- `src/components/` — Header, Footer, Marca, Icone, Ficha, Galeria, EmBreve. Planejados: Hero, Sobre, Ferramentas, Depoimentos (carrossel), CardProjeto, e o layout justificado + PhotoSwipe na Galeria, FormContato
 - `src/styles/` — `tokens.css` (cores, tipografia, espaçamento) e `global.css` (reset, scaffold de página)
 - `public/og/` — imagens Open Graph. Planejado: `public/admin/` — Sveltia CMS (`index.html`, `config.yml`)
 - `tests/e2e/` — Playwright + axe (rotas em `rotas.ts`); `tests/unit/` — runner do Node; `docs/` — HANDOFF, ADRs, `esteira.md`, `agents/` (config do tracker), `reference/` (preview)
@@ -40,7 +40,7 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 
 ## Fluxo de trabalho
 
-Trunk-based com PRs curtos (um ticket por PR). Cada PR ganha os cinco checks do CI e uma preview URL do Workers Builds; `main` exige PR com checks verdes (bypass só para o papel write, que é o do CMS) e nunca aceita force push. Merge por squash em `main` publica. Actions fixadas por SHA; toda rota nova entra em `tests/e2e/rotas.ts` e em `lighthouserc.yml`. Tickets são sub-issues da spec #3 com "blocked by" nativo; trabalhe a fronteira (tickets sem bloqueador aberto), um ticket por PR. Use `/handoff` ao encerrar uma sessão.
+Trunk-based com PRs curtos (um ticket por PR). Cada PR ganha os cinco checks do CI e uma preview URL do Workers Builds; `main` exige PR com checks verdes (bypass só para o papel write, que é o do CMS) e nunca aceita force push. Merge por squash em `main` publica. Actions fixadas por SHA. As rotas da suíte saem de `tests/e2e/rotas.ts` — as páginas de Projeto vêm da própria collection, e uma rota nova de outro tipo entra ali à mão; o `lighthouserc.yml` mede uma rota por padrão de página, no pior caso de cada um. Tickets são sub-issues da spec #3 com "blocked by" nativo; trabalhe a fronteira (tickets sem bloqueador aberto), um ticket por PR. Use `/handoff` ao encerrar uma sessão.
 
 ## Referência visual
 

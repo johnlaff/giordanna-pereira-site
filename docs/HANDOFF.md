@@ -124,7 +124,7 @@ Cada ticket é um tracer bullet vertical com "blocked by" nativo; trabalhe a fro
 
 - Em toda galeria: renders primeiro, pranchas por último. Capas definidas em `conteudo.json` não mudam sem pedido dela.
 - Ordem dos projetos: Vitalis, GinecoCare, Banheiro Chocolate, Villa Verde, Vila Jasmim Manga, Sindicato, Mini Casa, UBS, Espaço Aparecer, Mirante.
-- Textos, fichas e depoimentos são os de `conteudo.json` (já revisados por ela). Placeholders: depoimentos de Valquiria e Mariana; imagens do Mirante (mock "Imagens em breve"); marca em texto (nome + CAU) no cabeçalho e rodapé até ela mandar o logo.
+- Textos, fichas e depoimentos são os de `conteudo.json` (já revisados por ela). Aguardando conteúdo: depoimentos de Valquiria e Mariana; imagens do Mirante, que fica no estado Em breve desenhado pelo site; marca em texto (nome + CAU) no cabeçalho e rodapé até ela mandar o logo.
 - Toda correção vem com teste. Nada vai para `main` com axe ou Playwright vermelho.
 - Sem serviço pago. Sem dependência nova sem motivo registrado em ADR.
 

@@ -1,9 +1,12 @@
 name: Setup
-description: Node da .node-version, pnpm do packageManager, dependências pelo lockfile e, se pedido, o Chromium do Playwright
+description: Node da .node-version, pnpm do packageManager, dependências pelo lockfile e, se pedido, o Chromium do Playwright e o cache de imagens do Astro
 
 inputs:
   chromium:
     description: Instala o Chromium completo do Playwright (e2e e Lighthouse usam o mesmo motor)
+    default: 'false'
+  imagens:
+    description: Restaura o cache de variantes de imagem do Astro (jobs que rodam pnpm build)
     default: 'false'
 
 runs:
@@ -16,6 +19,16 @@ runs:
         cache: pnpm
     - run: pnpm install --frozen-lockfile
       shell: bash
+    # Sem as variantes de imagem prontas, o build leva minutos (o custo está medido em
+    # docs/esteira.md). A chave acompanha só src/assets, porque é de lá que elas saem: uma
+    # edição de texto no CMS não pode invalidar o cache inteiro. O prefixo de reserva
+    # aproveita o cache anterior e deixa o build gerar apenas o que faltar.
+    - if: inputs.imagens == 'true'
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: node_modules/.astro/assets
+        key: astro-assets-${{ runner.os }}-${{ hashFiles('src/assets/**') }}
+        restore-keys: astro-assets-${{ runner.os }}-
     - if: inputs.chromium == 'true'
       id: playwright
       run: echo "version=$(pnpm exec playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"

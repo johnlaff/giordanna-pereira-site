@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { test } from 'node:test';
 import { z } from 'astro/zod';
-import { esquemaDeProjeto, ordenarProjetos } from '../../src/content.schema.ts';
+import {
+  capaDe,
+  esquemaDeProjeto,
+  ordenarProjetos,
+  vizinhosNaOrdem,
+} from '../../src/content.schema.ts';
 
 /**
  * Dublê do `image()` do Astro: resolve o caminho como o loader resolveria, relativo ao
@@ -113,4 +118,27 @@ test('os Projetos saem na Ordem crescente', () => {
     ordenados.map((p) => p.id),
     ['a', 'b', 'c'],
   );
+});
+
+test('a Capa é a própria quando definida, e a primeira da Galeria quando não', () => {
+  const capa = { src: 'capa.webp' };
+  const primeira = { src: 'primeira.webp' };
+  assert.deepEqual(capaDe({ data: { capa, galeria: [primeira] } }), capa);
+  assert.deepEqual(capaDe({ data: { galeria: [primeira, { src: 'outra.webp' }] } }), primeira);
+});
+
+test('um Projeto Em breve não tem Capa: nem imagem própria, nem Galeria', () => {
+  assert.equal(capaDe({ data: { galeria: [] } }), undefined);
+});
+
+test('a navegação entre Projetos é circular: o próximo do último é o primeiro', () => {
+  const projetos = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+  assert.deepEqual(vizinhosNaOrdem(projetos, 1), { anterior: { id: 'a' }, proximo: { id: 'c' } });
+  assert.deepEqual(vizinhosNaOrdem(projetos, 0), { anterior: { id: 'c' }, proximo: { id: 'b' } });
+  assert.deepEqual(vizinhosNaOrdem(projetos, 2), { anterior: { id: 'b' }, proximo: { id: 'a' } });
+});
+
+test('com menos de dois Projetos não há vizinho para onde navegar', () => {
+  assert.equal(vizinhosNaOrdem([{ id: 'a' }], 0), undefined);
+  assert.equal(vizinhosNaOrdem([], 0), undefined);
 });
