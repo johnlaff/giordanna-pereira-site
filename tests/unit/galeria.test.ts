@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { CORTE_MAXIMO, alturaAlvo, linhasDaGaleria } from '../../src/components/galeria.linhas.ts';
+import {
+  CORTE_MAXIMO,
+  RECORTE_MAXIMO,
+  alturaAlvo,
+  linhasDaGaleria,
+} from '../../src/components/galeria.linhas.ts';
 
 // A Galeria monta linhas justificadas: cada linha ocupa a largura toda, todas as imagens de
 // uma linha têm a mesma altura e a proporção de cada imagem é preservada — salvo o corte
@@ -13,6 +18,12 @@ const LARGURA = 1136;
 const RENDER = 2106 / 1174;
 const PRANCHA = 2560 / 1810;
 const medidas = (largura = LARGURA, abertura = false) => ({ largura, gap: GAP, abertura });
+
+/** Quanto da imagem a caixa esconde: `object-fit: cover` corta o excedente do lado maior. */
+const perdaDe = ({ largura, altura }: { largura: number; altura: number }, proporcao: number) => {
+  const caixa = largura / altura;
+  return 1 - Math.min(caixa, proporcao) / Math.max(caixa, proporcao);
+};
 
 const larguraDaLinha = (linha: { largura: number }[]) =>
   linha.reduce((soma, caixa) => soma + caixa.largura, 0) + (linha.length - 1) * GAP;
@@ -63,6 +74,15 @@ test('a primeira imagem paisagem abre a Galeria sozinha, em faixa de no máximo 
   assert.equal(abertura?.[0]?.cortada, true);
 });
 
+test('uma abertura quase quadrada cede altura em vez de comer o render', () => {
+  const quaseQuadrada = 898 / 722; // primeira imagem da Mini Casa
+  const [abertura] = linhasDaGaleria([quaseQuadrada, PRANCHA], medidas(LARGURA, true));
+  const natural = LARGURA / quaseQuadrada;
+  assert.ok(LARGURA / 2 < natural * (1 - RECORTE_MAXIMO), 'a faixa 2:1 cortaria demais');
+  assert.equal(abertura?.[0]?.altura, Math.round(natural * (1 - RECORTE_MAXIMO)));
+  assert.equal(abertura?.[0]?.largura, LARGURA);
+});
+
 test('uma abertura mais panorâmica que 2:1 mantém a proporção, sem corte', () => {
   const panoramica = 3;
   const [abertura] = linhasDaGaleria([panoramica, RENDER], medidas(LARGURA, true));
@@ -81,11 +101,33 @@ test('uma última linha alta demais puxa uma imagem da linha anterior', () => {
   for (const linha of linhas) assert.ok(linha[0]!.altura <= alturaAlvo(LARGURA) * CORTE_MAXIMO);
 });
 
-test('sem imagem para rebalançar, a última linha é cortada no teto de altura', () => {
+test('sem imagem para rebalançar, a última linha encolhe até o teto de recorte', () => {
   const [unica] = linhasDaGaleria([PRANCHA], medidas());
-  assert.equal(unica?.[0]?.altura, Math.round(alturaAlvo(LARGURA) * CORTE_MAXIMO));
+  const natural = LARGURA / PRANCHA;
+  // O teto de altura da linha pediria um corte maior do que o permitido: quem cede é o teto.
+  assert.ok(alturaAlvo(LARGURA) * CORTE_MAXIMO < natural * (1 - RECORTE_MAXIMO));
+  assert.equal(unica?.[0]?.altura, Math.round(natural * (1 - RECORTE_MAXIMO)));
   assert.equal(unica?.[0]?.largura, LARGURA);
-  assert.equal(unica?.[0]?.cortada, true);
+  // O arredondamento da altura para pixel inteiro move a perda no terceiro decimal.
+  assert.ok(Math.abs(perdaDe(unica![0]!, PRANCHA) - RECORTE_MAXIMO) < 0.01);
+});
+
+test('nenhuma imagem perde mais de um quarto da altura', () => {
+  // Proporções do acervo, da mais alta à mais deitada, mais a primeira quase quadrada.
+  const acervo = [1.244, 1.794, 0.562, 1.414, 1.849, 0.77, 2.162, 1.294];
+  for (const largura of [1136, 944, 688, 327])
+    for (const abertura of [false, true])
+      for (const caixa of linhasDaGaleria(acervo, medidas(largura, abertura)).flat())
+        assert.ok(
+          perdaDe(caixa, acervo[caixa.indice]!) <= RECORTE_MAXIMO + 0.01,
+          `imagem ${caixa.indice} perde ${(perdaDe(caixa, acervo[caixa.indice]!) * 100).toFixed(0)}% em ${largura} px`,
+        );
+});
+
+test('uma linha nunca fica mais alta que a largura da Galeria', () => {
+  // Um retrato sozinho na linha só caberia inteiro numa faixa altíssima: aí o recorte volta.
+  const [unica] = linhasDaGaleria([0.562], medidas());
+  assert.ok(unica![0]!.altura <= LARGURA);
 });
 
 test('a imagem que manteve a proporção não é marcada como cortada', () => {

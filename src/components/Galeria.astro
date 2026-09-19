@@ -15,6 +15,7 @@
 import type { ImageMetadata } from 'astro';
 import { Picture } from 'astro:assets';
 import 'photoswipe/style.css';
+import { qualidadeDeImagem } from '../config';
 import EmBreve from './EmBreve.astro';
 
 interface Props {
@@ -25,10 +26,45 @@ interface Props {
 
 const { imagens, titulo } = Astro.props;
 
-const LARGURA_TOTAL =
-  '(min-width: 1240px) 1136px, (min-width: 1100px) calc(100vw - 104px), (min-width: 700px) calc(100vw - 80px), calc(100vw - 48px)';
-const METADE =
-  '(min-width: 1240px) 559px, (min-width: 1100px) calc((100vw - 122px) / 2), (min-width: 700px) calc((100vw - 90px) / 2), (min-width: 641px) calc((100vw - 58px) / 2), calc(100vw - 48px)';
+/**
+ * A Abertura carrega de imediato — é a imagem que mede o carregamento da página — e as demais
+ * só ao se aproximarem da tela, quando o arranjo já mediu a caixa de cada uma e o navegador
+ * pede a variante certa. Carregá-las cedo pediria a variante pela estimativa abaixo, que para
+ * um retrato numa linha cheia chega a ser o dobro do necessário.
+ *
+ * Em tela sem retina o navegador reduz a imagem até a caixa, e um downscale curto borra mais
+ * do que ajuda: pedir uma vez e meia a caixa sai mais nítido — e mais leve — do que pedir o
+ * tamanho exato num arquivo de qualidade maior. Medido nos renders do GinecoCare: a variante
+ * de 1080 px a q60 pesa 19 KB e chega a 95% da nitidez de um redimensionamento sem perda; a
+ * de 640 px, que é o tamanho exato da caixa, chega a 84% pesando 25 KB na qualidade 90.
+ */
+const RETINA = '(min-resolution: 1.5dppx)';
+const DENSIDADE_SEM_RETINA = 1.5;
+
+/** As larguras que a imagem ocupa por faixa de tela, na ordem em que o navegador as lê. */
+const porFaixa = (faixas: [consulta: string, largura: string][]) =>
+  [
+    ...faixas.map(
+      ([consulta, largura]) => `${[RETINA, consulta].filter(Boolean).join(' and ')} ${largura}`,
+    ),
+    ...faixas.map(([consulta, largura]) =>
+      `${consulta} calc(${largura} * ${DENSIDADE_SEM_RETINA})`.trim(),
+    ),
+  ].join(', ');
+
+const LARGURA_TOTAL = porFaixa([
+  ['(min-width: 1240px)', '1136px'],
+  ['(min-width: 1100px)', 'calc(100vw - 104px)'],
+  ['(min-width: 700px)', 'calc(100vw - 80px)'],
+  ['', 'calc(100vw - 48px)'],
+]);
+const METADE = porFaixa([
+  ['(min-width: 1240px)', '559px'],
+  ['(min-width: 1100px)', 'calc((100vw - 122px) / 2)'],
+  ['(min-width: 700px)', 'calc((100vw - 90px) / 2)'],
+  ['(min-width: 641px)', 'calc((100vw - 58px) / 2)'],
+  ['', 'calc(100vw - 48px)'],
+]);
 
 const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].height;
 ---
@@ -36,6 +72,7 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
 {/* Sem esta âncora, quem navega por títulos pula do "Detalhes do projeto" ao rodapé
   sem encontrar a galeria, que é o conteúdo central da página. */}
 <h2 class="sr">Galeria</h2>
+{imagens.length > 0 && <p class="toque">Toque para ver em tela cheia</p>}
 {imagens.length > 0 ? (
   <div class="gal" data-titulo={titulo}>
     {imagens.map((imagem, i) => (
@@ -50,9 +87,10 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
           src={imagem}
           formats={['avif']}
           fallbackFormat="webp"
+          quality={qualidadeDeImagem}
           sizes={i === 0 && abreEmFaixa ? LARGURA_TOTAL : METADE}
           alt={`${titulo} — imagem ${i + 1}`}
-          loading={i < 3 ? 'eager' : 'lazy'}
+          loading={i === 0 ? 'eager' : 'lazy'}
           decoding="async"
           fetchpriority={i === 0 ? 'high' : undefined}
         />
@@ -75,6 +113,8 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
     const proporcoes = itens.map((item) => Number(item.dataset.proporcao));
     const titulo = galeria.dataset.titulo ?? '';
     const semMovimento = matchMedia('(prefers-reduced-motion: reduce)');
+    /** Sem retina, a imagem pedida é uma vez e meia a caixa — o mesmo que o `sizes` do HTML faz. */
+    const densidade = () => (devicePixelRatio < 1.5 ? 1.5 : 1);
 
     /* ===== arranjo em linhas justificadas ===== */
     let larguraArranjada = 0;
@@ -97,10 +137,11 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
         // Só o arranjo sabe a caixa de cada imagem: uma sozinha na linha ocupa a Galeria
         // inteira, e o `sizes` do HTML, escrito antes de saber disso, pediria uma variante
         // pequena demais. Com a medida exata, o navegador escolhe a que a caixa justifica.
+        const pedido = `${Math.round(caixa.largura * densidade())}px`;
         for (const fonte of item.querySelectorAll<HTMLImageElement | HTMLSourceElement>(
           'img, source',
         ))
-          fonte.sizes = `${caixa.largura}px`;
+          fonte.sizes = pedido;
         // O lightbox anima a partir da miniatura e precisa saber se ela mostra a imagem inteira.
         item.dataset.cortada = caixa.cortada ? 'true' : '';
       }
@@ -117,12 +158,22 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
       loop: true,
       wheelToZoom: true,
       initialZoomLevel: 'fit',
-      secondaryZoomLevel: 2,
+      // O duplo toque numa tela estreita enche a tela — é assim que se lê uma prancha de
+      // perto, sem perder a referência do desenho. Em tela larga, o dobro do tamanho real.
+      secondaryZoomLevel: (zoom) => ((zoom.panAreaSize?.x ?? 0) < 700 ? zoom.fill : 2),
       maxZoomLevel: 4,
       imageClickAction: 'zoom',
       doubleTapAction: 'zoom',
       tapAction: 'toggle-controls',
-      padding: { top: 24, bottom: 64, left: 20, right: 20 },
+      // Em tela estreita a imagem vai de borda a borda: os 20 px laterais custam 12% da
+      // largura justamente onde ela é escassa, e a folga de cima e de baixo já separa a
+      // imagem dos controles e da legenda.
+      paddingFn: ({ x }) => ({
+        top: 24,
+        bottom: 64,
+        left: x < 700 ? 0 : 20,
+        right: x < 700 ? 0 : 20,
+      }),
       easing: 'cubic-bezier(.32,.72,0,1)',
       showAnimationDuration: 380,
       hideAnimationDuration: 320,
@@ -164,6 +215,10 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
         thumbCropped: elemento.dataset.cortada === 'true',
       };
     });
+
+    // A imagem em tela cheia segue a mesma regra das miniaturas: sem retina, pede uma vez e
+    // meia o tamanho exibido, e é onde isso mais rende — é a tela de examinar o render.
+    lightbox.addFilter('srcsetSizesWidth', (largura) => largura * densidade());
 
     lightbox.on('uiRegister', () => {
       lightbox.pswp?.ui?.registerElement({
@@ -224,6 +279,21 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
 </script>
 
 <style>
+  /* Em tela de toque não há cursor nem hover para anunciar que a imagem abre: quem anuncia
+     é esta linha, uma vez, na mesma micro-tipografia das outras marcações da página. */
+  .toque {
+    display: none;
+    margin-bottom: 14px;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  @media (hover: none) {
+    .toque {
+      display: block;
+    }
+  }
   .gal {
     --ggap: clamp(10px, 1.6vw, 18px);
     display: flex;

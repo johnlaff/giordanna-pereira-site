@@ -152,7 +152,9 @@ test('as linhas da Galeria preenchem a largura toda, com uma só altura por linh
 
 // A caixa de cada imagem sai do arranjo em linhas, não de uma fração fixa da largura: uma
 // imagem sozinha na linha ocupa a Galeria inteira. Vale para todo Projeto, porque é o arranjo
-// que decide, e ele muda com as proporções do conteúdo.
+// que decide, e ele muda com as proporções do conteúdo. Numa tela sem retina, a imagem pedida
+// é uma vez e meia a caixa: o downscale curto do navegador borra menos que o encode no
+// tamanho exato.
 for (const { slug, rota: rotaDoProjeto, dados: projeto } of projetos.filter(
   ({ dados: { galeria } }) => galeria.length > 0,
 )) {
@@ -175,7 +177,11 @@ for (const { slug, rota: rotaDoProjeto, dados: projeto } of projetos.filter(
         srcset:
           item.querySelector<HTMLSourceElement>('source[type="image/avif"]')?.srcset ??
           imagens[i]!.srcset,
-        caixa: Math.round(imagens[i]!.getBoundingClientRect().width * window.devicePixelRatio),
+        caixa: Math.round(
+          imagens[i]!.getBoundingClientRect().width *
+            window.devicePixelRatio *
+            (window.devicePixelRatio < 1.5 ? 1.5 : 1),
+        ),
       }));
     });
 
@@ -187,11 +193,21 @@ for (const { slug, rota: rotaDoProjeto, dados: projeto } of projetos.filter(
       expect(carregada, `variante fora do srcset: ${escolhida}`).toBeDefined();
       expect(
         carregada!.largura,
-        `${escolhida} tem ${carregada!.largura}px para uma caixa de ${caixa}px`,
+        `${escolhida} tem ${carregada!.largura}px para uma caixa que pede ${caixa}px`,
       ).toBeGreaterThanOrEqual(ideal.largura);
+      expect(
+        carregada!.largura,
+        `${escolhida} é maior do que a caixa justifica`,
+      ).toBeLessThanOrEqual(ideal.largura * 1.6);
     }
   });
 }
+
+test('onde há cursor, a Galeria não mostra a pista de toque', async ({ page, isMobile }) => {
+  test.skip(isMobile === true, 'a pista existe justamente no toque');
+  await page.goto(rota);
+  await expect(page.getByText('Toque para ver em tela cheia')).toBeHidden();
+});
 
 test('a Galeria não empurra nada para fora da tela', async ({ page }) => {
   await page.goto(rota);
@@ -333,6 +349,40 @@ test('o lightbox carrega a variante que a tela justifica, sem requisição falha
     ideal.largura * 1.6,
   );
   expect(falhas).toEqual([]);
+});
+
+// Em tela de toque não existe cursor nem hover: a Galeria anuncia em texto o que a imagem faz,
+// e a tela cheia usa cada pixel de largura que tem.
+test.describe('em tela de toque', () => {
+  test.skip(({ isMobile }) => isMobile !== true, 'a pista de toque não existe onde há cursor');
+
+  test('a Galeria diz que a imagem abre em tela cheia', async ({ page }) => {
+    await page.goto(rota);
+    await expect(page.getByText('Toque para ver em tela cheia')).toBeVisible();
+  });
+
+  test('a imagem em tela cheia vai de borda a borda', async ({ page }) => {
+    await page.goto(rota);
+    await abrirLightbox(page, 0);
+    const caixa = await imagemDoLightbox(page).boundingBox();
+    const tela = page.viewportSize()!;
+    expect(caixa?.x).toBeLessThanOrEqual(1);
+    expect(caixa?.width).toBeCloseTo(tela.width, 0);
+  });
+
+  test('ampliar enche a tela, em vez de saltar para o tamanho real', async ({ page }) => {
+    await page.goto(rota);
+    await abrirLightbox(page, 0);
+    const imagem = imagemDoLightbox(page);
+    const tela = page.viewportSize()!;
+    await page.locator('.pswp__button--zoom').click();
+    await expect
+      .poll(async () => (await imagem.boundingBox())?.height ?? 0)
+      .toBeGreaterThan(tela.height * 0.8);
+    // Encheu a altura disponível e transbordou a largura: a imagem é lida de perto, aos pedaços.
+    const ampliada = (await imagem.boundingBox())!;
+    expect(ampliada.width).toBeGreaterThan(tela.width);
+  });
 });
 
 // Zoom com mouse: no celular, o mesmo gesto é o duplo toque, coberto pelo PhotoSwipe.

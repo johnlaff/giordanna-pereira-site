@@ -23,6 +23,15 @@ export const marca = {
  */
 export const emailExibido = 'giordannapb.arq@gmail.com';
 
+/**
+ * Qualidade das variantes que o build gera, a mesma para AVIF e WebP — o Astro aplica um
+ * número só aos dois. Medido nos renders e pranchas do GinecoCare: a nitidez do AVIF empaca a
+ * partir de 60 (95% de um redimensionamento sem perda, contra 97% em 80 pesando 70% mais), e
+ * o WebP, alternativa de quem não tem AVIF, fica igual em qualquer qualidade acima de 55.
+ * Vale para toda imagem do site; entra no hash do arquivo, então mudá-la regera as variantes.
+ */
+export const qualidadeDeImagem = 65;
+
 export type TipoContato = 'whatsapp' | 'linkedin' | 'behance' | 'email';
 
 export type Contato = {

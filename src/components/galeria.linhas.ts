@@ -33,6 +33,13 @@ export interface Medidas {
  */
 export const CORTE_MAXIMO = 1.45;
 
+/**
+ * Quanto uma imagem pode perder para caber na caixa. O teto de altura da linha e a faixa de
+ * abertura cedem antes de passar daqui: uma prancha cortada em mais de um quarto vira uma
+ * fatia que não deixa ler o desenho, e o visitante não tem como saber que falta alguma coisa.
+ */
+export const RECORTE_MAXIMO = 0.25;
+
 /** A faixa de abertura ocupa a largura toda e nunca passa de meia largura em altura. */
 const ABERTURA_MAXIMA = 0.5;
 
@@ -85,11 +92,14 @@ export function linhasDaGaleria(
   }
 
   return linhas.map((linha) => {
+    // A linha quer a altura em que preenche a largura com as proporções intactas; um teto a
+    // segura — meia largura na Abertura, o múltiplo da altura-alvo nas demais —, e o teto de
+    // recorte segura o teto. Uma imagem sozinha e muito alta esbarra na largura da Galeria.
     const naAbertura = abertura && linha[0] === 0;
+    const natural = alturaNatural(linha);
+    const teto = naAbertura ? largura * ABERTURA_MAXIMA : alvo * CORTE_MAXIMO;
     const altura = Math.round(
-      naAbertura
-        ? Math.min(largura / proporcoes[0]!, largura * ABERTURA_MAXIMA)
-        : Math.min(alturaNatural(linha), alvo * CORTE_MAXIMO),
+      Math.min(Math.max(Math.min(natural, teto), natural * (1 - RECORTE_MAXIMO)), largura),
     );
     // A última imagem absorve o arredondamento das demais: a linha fecha exatamente na largura.
     const disponivel = largura - (linha.length - 1) * gap;

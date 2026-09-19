@@ -23,7 +23,7 @@ A lista ordenada de imagens de um Projeto. Renders vêm primeiro; pranchas, por 
 _Avoid_: gallery, fotos, álbum
 
 **Abertura**:
-A primeira imagem da Galeria quando é paisagem: ocupa a largura toda em faixa de no máximo meia largura de altura, recortada no centro. As demais entram em linhas justificadas — cada linha preenche a largura, com a mesma altura dentro dela.
+A primeira imagem da Galeria quando é paisagem: ocupa a largura toda em faixa de no máximo meia largura de altura, recortada no centro. As demais entram em linhas justificadas — cada linha preenche a largura, com a mesma altura dentro dela. Nenhuma imagem perde mais de um quarto da altura: diante de uma imagem quase quadrada, a faixa e o teto de altura da linha cedem antes do recorte.
 _Avoid_: hero, destaque, capa da galeria
 
 **Lightbox**:
