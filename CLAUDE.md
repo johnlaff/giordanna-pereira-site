@@ -22,6 +22,7 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 - Sem requisição a domínio externo além do Turnstile (fontes self-hosted pela Fonts API). CSP gerada pelo Astro (`security.csp`).
 - Sem segredos no repo: chaves do Resend, Turnstile e do autenticador do Sveltia ficam em variáveis do Worker.
 - Toda correção vem com teste. Nada entra em `main` com Playwright/axe vermelho. Acessibilidade alvo: WCAG 2.2 AA.
+- Todo movimento novo (animação, transição, carrossel, lightbox, View Transitions) entra com o seu bloco `@media (prefers-reduced-motion: reduce)`, espelhando o preview.
 - Sem dependência ou serviço pago sem ADR.
 
 ## Estrutura
