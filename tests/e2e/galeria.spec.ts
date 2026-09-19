@@ -263,8 +263,17 @@ test('o foco fica preso no diálogo enquanto o lightbox está aberto', async ({ 
   // Focar o que está atrás do lightbox devolve o foco ao diálogo, e a tabulação o mantém lá.
   await page.locator('.gal .item').nth(3).focus();
   expect(await noDialogo(), 'o foco escapou para a página atrás').toBe(true);
-  await page.keyboard.press('Tab');
-  expect(await noDialogo(), 'a tabulação levou o foco para fora').toBe(true);
+  // Uma volta inteira pelos controles, e mais uma: o ciclo se fecha dentro do diálogo.
+  for (let passo = 0; passo < 8; passo++) {
+    await page.keyboard.press('Tab');
+    expect(await noDialogo(), `a tabulação levou o foco para fora no passo ${passo + 1}`).toBe(
+      true,
+    );
+  }
+  for (let passo = 0; passo < 8; passo++) {
+    await page.keyboard.press('Shift+Tab');
+    expect(await noDialogo(), `Shift+Tab levou o foco para fora no passo ${passo + 1}`).toBe(true);
+  }
 });
 
 test('aberto pelo teclado, o lightbox devolve o foco à imagem ao fechar', async ({ page }) => {
@@ -370,6 +379,25 @@ test.describe('com mouse', () => {
     expect(new Set(larguras).size, 'o zoom passou por tamanhos intermediários').toBeLessThanOrEqual(
       2,
     );
+  });
+
+  test('com a imagem ampliada, arrastar move a imagem', async ({ page }) => {
+    await page.goto(rota);
+    await abrirLightbox(page, 0);
+    const imagem = imagemDoLightbox(page);
+    const ajustada = (await imagem.boundingBox())?.width ?? 0;
+    await imagem.click();
+    await expect
+      .poll(async () => (await imagem.boundingBox())?.width ?? 0)
+      .toBeGreaterThan(ajustada * 1.5);
+
+    const antes = (await imagem.boundingBox())!;
+    const centro = { x: antes.x + antes.width / 2, y: antes.y + antes.height / 2 };
+    await page.mouse.move(centro.x, centro.y);
+    await page.mouse.down();
+    await page.mouse.move(centro.x - 150, centro.y, { steps: 8 });
+    await page.mouse.up();
+    await expect.poll(async () => (await imagem.boundingBox())?.x ?? 0).toBeLessThan(antes.x - 50);
   });
 
   test('a imagem ampliada sobe para a maior variante disponível', async ({ page }) => {

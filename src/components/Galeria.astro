@@ -184,12 +184,27 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
       });
     });
 
+    // Tabular a partir do último controle levaria o foco para fora do diálogo por um instante:
+    // o PhotoSwipe o traz de volta, mas só depois de ele já ter passado pela página atrás.
+    // Aqui o ciclo se fecha dentro do diálogo, como se espera de uma tela cheia modal.
+    const circularOFoco = (dialogo: HTMLElement) => (evento: KeyboardEvent) => {
+      if (evento.key !== 'Tab') return;
+      const controles = [...dialogo.querySelectorAll('button')].filter(
+        (botao) => !botao.disabled && getComputedStyle(botao).visibility !== 'hidden',
+      );
+      const ponta = evento.shiftKey ? controles[0] : controles.at(-1);
+      if (ponta === undefined || document.activeElement !== ponta) return;
+      evento.preventDefault();
+      (evento.shiftKey ? controles.at(-1) : controles[0])?.focus();
+    };
+
     lightbox.on('firstUpdate', () => {
       const dialogo = lightbox.pswp?.element;
       // O PhotoSwipe põe `role="dialog"`, mas quem usa leitor de tela precisa saber de qual
       // galeria é esta tela cheia, e que o resto da página está fora de alcance enquanto ela existe.
       dialogo?.setAttribute('aria-label', `Galeria em tela cheia: ${titulo}`);
       dialogo?.setAttribute('aria-modal', 'true');
+      if (dialogo !== undefined) dialogo.addEventListener('keydown', circularOFoco(dialogo));
       document.body.classList.add('lock');
     });
     lightbox.on('destroy', () => document.body.classList.remove('lock'));
@@ -275,6 +290,8 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
   .pswp {
     /* Preto puro: em tela cheia, qualquer cor ao redor contamina as cores do render. */
     --pswp-bg: #000;
+    /* O branco dos controles e da legenda é o par do preto do fundo, não o --paper da marca. */
+    --lb-frente: #fff;
     --pswp-root-z-index: 100;
     font-family: var(--font-sans);
   }
@@ -329,8 +346,8 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
     top: 50%;
     width: 12px;
     height: 12px;
-    border-left: 1.6px solid #fff;
-    border-bottom: 1.6px solid #fff;
+    border-left: 1.6px solid var(--lb-frente);
+    border-bottom: 1.6px solid var(--lb-frente);
     transform: translate(-35%, -50%) rotate(45deg);
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
   }
@@ -345,7 +362,7 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
   }
   .pswp__button:focus-visible {
-    outline: 2px solid #fff;
+    outline: 2px solid var(--lb-frente);
     outline-offset: 2px;
   }
   .pswp__top-bar {
@@ -371,7 +388,7 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
   .lb-legenda b {
     margin-right: 14px;
     font-weight: 400;
-    color: #fff;
+    color: var(--lb-frente);
     font-variant-numeric: tabular-nums;
   }
   /* A legenda acompanha os controles: some junto com eles ao toque na imagem. */
