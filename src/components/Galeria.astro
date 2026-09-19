@@ -1,0 +1,91 @@
+---
+/**
+ * Galeria de um Projeto: renders primeiro, pranchas por último, na ordem do conteúdo.
+ * Quando a primeira imagem é paisagem, ela abre a galeria na largura toda, recortada em 2:1;
+ * as demais entram em duas colunas com a proporção original.
+ *
+ * Cada imagem sai em AVIF com alternativa WebP, em variantes por largura que o navegador
+ * escolhe pelo `sizes` — abaixo, a largura que cada uma ocupa em cada faixa de tela.
+ */
+import type { ImageMetadata } from 'astro';
+import { Picture } from 'astro:assets';
+
+interface Props {
+  imagens: ImageMetadata[];
+  /** Nome do Projeto, usado no texto alternativo de cada imagem. */
+  titulo: string;
+}
+
+const { imagens, titulo } = Astro.props;
+
+const LARGURA_TOTAL =
+  '(min-width: 1240px) 1136px, (min-width: 1100px) calc(100vw - 104px), (min-width: 700px) calc(100vw - 80px), calc(100vw - 48px)';
+const METADE =
+  '(min-width: 1240px) 559px, (min-width: 1100px) calc((100vw - 122px) / 2), (min-width: 700px) calc((100vw - 90px) / 2), (min-width: 641px) calc((100vw - 58px) / 2), calc(100vw - 48px)';
+
+const abreComDestaque = imagens[0] !== undefined && imagens[0].width > imagens[0].height;
+---
+
+{imagens.length > 0 && (
+  <Fragment>
+    {/* Sem esta âncora, quem navega por títulos pula do "Detalhes do projeto" ao rodapé
+      sem encontrar a galeria, que é o conteúdo central da página. */}
+    <h2 class="sr">Galeria</h2>
+    <div class="gal">
+      {imagens.map((imagem, i) => (
+        <div class:list={['item', { destaque: i === 0 && abreComDestaque }]}>
+          <Picture
+            src={imagem}
+            formats={['avif']}
+            fallbackFormat="webp"
+            sizes={i === 0 && abreComDestaque ? LARGURA_TOTAL : METADE}
+            alt={`${titulo} — imagem ${i + 1}`}
+            loading={i < 3 ? 'eager' : 'lazy'}
+            decoding="async"
+            fetchpriority={i === 0 ? 'high' : undefined}
+          />
+        </div>
+      ))}
+    </div>
+  </Fragment>
+)}
+
+<style>
+  .gal {
+    --ggap: clamp(10px, 1.6vw, 18px);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ggap);
+    align-content: flex-start;
+    padding-bottom: clamp(50px, 8vh, 90px);
+  }
+  .item {
+    flex: 0 0 auto;
+    width: calc(50% - var(--ggap) / 2);
+    overflow: hidden;
+    /* Enquanto a imagem não pinta, o espaço reservado é o mesmo cinza do fundo do render. */
+    background: var(--img-bg);
+  }
+  /* O <picture> some do fluxo para a imagem preencher o item sem uma caixa intermediária. */
+  .item :global(picture) {
+    display: contents;
+  }
+  .item :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .destaque {
+    width: 100%;
+    aspect-ratio: 2 / 1;
+  }
+  .destaque :global(img) {
+    height: 100%;
+    object-fit: cover;
+  }
+  @media (max-width: 640px) {
+    .item {
+      width: 100%;
+    }
+  }
+</style>

@@ -1,0 +1,78 @@
+---
+/**
+ * Ficha técnica de um Projeto: os dados objetivos, sob o título "Detalhes do projeto".
+ * O nome da equipe vira link só quando o Projeto traz a URL — o campo de texto nunca traz HTML.
+ */
+interface Props {
+  local: string;
+  ano: string;
+  area: string;
+  equipe: string;
+  equipeUrl?: string | undefined;
+}
+
+const { local, ano, area, equipe, equipeUrl } = Astro.props;
+---
+
+<aside class="ficha">
+  <h2>Detalhes do projeto</h2>
+  <dl>
+    <dt>Local</dt>
+    <dd>{local}</dd>
+    <dt>Ano</dt>
+    <dd>{ano}</dd>
+    <dt>Área</dt>
+    <dd>{area}</dd>
+    <dt>Equipe</dt>
+    <dd>
+      {equipeUrl ? (
+        <a href={equipeUrl} target="_blank" rel="noopener">
+          {equipe}
+        </a>
+      ) : (
+        equipe
+      )}
+    </dd>
+  </dl>
+</aside>
+
+<style>
+  .ficha {
+    border-top: 1px solid var(--ink);
+    padding-top: 18px;
+  }
+  .ficha h2 {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 10px 18px;
+    font-size: 15px;
+  }
+  dt {
+    color: var(--ink-soft);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    padding-top: 4px;
+    font-weight: 400;
+  }
+  dd {
+    color: var(--ink);
+  }
+  dd a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-color: var(--sand);
+    transition: text-decoration-color 0.3s;
+  }
+  dd a:hover {
+    text-decoration-color: var(--ink);
+  }
+</style>
