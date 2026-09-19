@@ -33,11 +33,14 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
+        with:
+          imagens: 'true'
       - run: pnpm build
 
-  # Cada job que precisa do site refaz o build (menos de um segundo): o wrangler lê
-  # dist/client/wrangler.json via um redirecionamento em .wrangler/deploy/, fora de dist/,
-  # e um artefato entre jobs perderia esse arquivo e o .assetsignore.
+  # Cada job que precisa do site refaz o build, em vez de receber dist/ como artefato: o
+  # wrangler lê dist/client/wrangler.json via um redirecionamento em .wrangler/deploy/, fora
+  # de dist/, e o artefato perderia esse arquivo e o .assetsignore. O custo do build está nas
+  # variantes de imagem, e o cache da action de setup as traz prontas.
   e2e:
     runs-on: ubuntu-latest
     steps:
@@ -45,6 +48,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           chromium: 'true'
+          imagens: 'true'
       - run: pnpm build
       - run: pnpm test:e2e
       - if: failure()
@@ -61,6 +65,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           chromium: 'true'
+          imagens: 'true'
       - run: pnpm build
       - run: pnpm lighthouse
       - if: always()

@@ -1,0 +1,24 @@
+titulo: Banheiro Chocolate
+tipo: Residencial
+capa: ../../assets/banheiro-n04.webp
+descricao: >-
+  O projeto valoriza a integração entre materiais, iluminação e detalhamento de mobiliário,
+  criando um ambiente acolhedor, funcional e visualmente equilibrado, com soluções específicas
+  para bancada, armazenamento, banho e iluminação decorativa. Banheiro residencial desenvolvido
+  como exercício de domínio das plataformas SketchUp + Layout.
+ferramentas:
+  - SketchUp
+  - Layout
+  - V-Ray
+  - Adobe Photoshop
+local: Taubaté · SP
+ano: '2024'
+area: 5,98 m²
+equipe: Andressa Martins (projeto) · Giordanna Pereira (documentação)
+ordem: 30
+galeria:
+  - ../../assets/banheiro-n04.webp
+  - ../../assets/banheiro-n01.webp
+  - ../../assets/banheiro-n02.webp
+  - ../../assets/banheiro-n03.webp
+  - ../../assets/banheiro-n05.webp

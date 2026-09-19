@@ -2,15 +2,18 @@
 import { getCollection } from 'astro:content';
 import Ficha from '../../components/Ficha.astro';
 import Galeria from '../../components/Galeria.astro';
-import { ordenarProjetos } from '../../content.schema';
+import { ordenarProjetos, vizinhosNaOrdem } from '../../content.schema';
 import Base from '../../layouts/Base.astro';
 
 export async function getStaticPaths() {
   const projetos = ordenarProjetos(await getCollection('projetos'));
-  return projetos.map((projeto) => ({ params: { slug: projeto.id }, props: { projeto } }));
+  return projetos.map((projeto, i) => ({
+    params: { slug: projeto.id },
+    props: { projeto, vizinhos: vizinhosNaOrdem(projetos, i) },
+  }));
 }
 
-const { projeto } = Astro.props;
+const { projeto, vizinhos } = Astro.props;
 const { titulo, tipo, descricao, ferramentas, galeria } = projeto.data;
 ---
 
@@ -32,6 +35,18 @@ const { titulo, tipo, descricao, ferramentas, galeria } = projeto.data;
       <Ficha ficha={projeto.data} />
     </div>
     <Galeria imagens={galeria} titulo={titulo} />
+    {vizinhos && (
+      <nav class="pn" aria-label="Outros projetos">
+        <a href={`/projetos/${vizinhos.anterior.id}`}>
+          <small>Projeto anterior</small>
+          <b>{vizinhos.anterior.data.titulo}</b>
+        </a>
+        <a class="next" href={`/projetos/${vizinhos.proximo.id}`}>
+          <small>Próximo projeto</small>
+          <b>{vizinhos.proximo.data.titulo}</b>
+        </a>
+      </nav>
+    )}
   </div>
 </Base>
 
@@ -70,5 +85,45 @@ const { titulo, tipo, descricao, ferramentas, galeria } = projeto.data;
     border-radius: 999px;
     padding: 5px 13px;
     color: var(--ink-soft);
+  }
+  /* Navegação pela Ordem dos Projetos, circular: do último se volta ao primeiro. */
+  .pn {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+    border-top: 1px solid var(--line);
+    padding: 26px 0 var(--sp-page);
+  }
+  .pn a {
+    text-decoration: none;
+    color: inherit;
+    max-width: 46%;
+  }
+  .pn a small {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .pn a b {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: var(--fs-pn);
+    line-height: 1.1;
+    transition: color 0.3s;
+  }
+  .pn a:hover b {
+    color: var(--ink-soft);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pn a b {
+      transition: none;
+    }
+  }
+  .pn a.next {
+    text-align: right;
+    margin-left: auto;
   }
 </style>

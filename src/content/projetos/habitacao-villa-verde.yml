@@ -1,0 +1,22 @@
+titulo: Habitação Villa Verde
+tipo: Conjunto habitacional
+capa: ../../assets/vv-r01.webp
+descricao: >-
+  Conjunto residencial, desenvolvido integralmente em Revit — modelagem, documentação e
+  renderização — como exercício de domínio da plataforma BIM da Autodesk.
+ferramentas:
+  - Revit
+  - Lumion
+local: Constitución · Chile
+ano: '2010'
+area: 5.688 m²
+equipe: ELEMENTAL (projeto) · Giordanna Pereira (documentação)
+ordem: 40
+galeria:
+  - ../../assets/vv-r01.webp
+  - ../../assets/vv-r02.webp
+  - ../../assets/vv-r03.webp
+  - ../../assets/vv-r04.webp
+  - ../../assets/vv-r06.webp
+  - ../../assets/vv-r05.webp
+  - ../../assets/vv-p01.webp

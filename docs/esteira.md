@@ -18,15 +18,16 @@ Os nomes dos jobs são os checks exigidos pelo ruleset de `main`; `tests/unit/es
 
 Detalhes que não são óbvios:
 
-- `.github/actions/setup` é a action composta que todo job usa: Node de `.node-version`, pnpm do campo `packageManager`, `pnpm install --frozen-lockfile` com cache do store e, quando pedido, o Chromium completo do Playwright em cache por versão. `e2e` e `lighthouse` usam esse mesmo Chromium: um só motor de renderização para os dois gates, local e no CI.
-- Cada job que precisa do site refaz o build. O `wrangler` lê `dist/client/wrangler.json` por um redirecionamento gravado em `.wrangler/deploy/config.json`, fora de `dist/`; um artefato entre jobs perderia esse arquivo e o `.assetsignore`, e o build leva menos de um segundo.
+- `.github/actions/setup` é a action composta que todo job usa: Node de `.node-version`, pnpm do campo `packageManager`, `pnpm install --frozen-lockfile` com cache do store e, quando pedido, o Chromium completo do Playwright em cache por versão e o cache de imagens do Astro. `e2e` e `lighthouse` usam esse mesmo Chromium: um só motor de renderização para os dois gates, local e no CI.
+- Cada job que precisa do site refaz o build, em vez de receber `dist/` como artefato: o `wrangler` lê `dist/client/wrangler.json` por um redirecionamento gravado em `.wrangler/deploy/config.json`, fora de `dist/`, e o artefato perderia esse arquivo e o `.assetsignore`.
+- O tempo do build está nas imagens: o Astro deriva uma variante AVIF e uma WebP por largura de cada imagem dos Projetos — cerca de 1900 arquivos e 150 MB, quinze minutos a frio contra segundos com as variantes prontas (verificado 2026-09; cada Projeto novo no CMS aumenta os três números). Os três jobs que constroem o site restauram `node_modules/.astro/assets` pela action de setup, com a chave presa a `src/assets` — o conteúdo fica de fora para que uma edição de texto no CMS não invalide 150 MB de imagem — e um prefixo de reserva que aproveita o cache anterior e gera só o que faltar. Uma imagem nova custa o build cheio uma vez; o cache gravado em `main` serve os PRs seguintes.
 - Actions fixadas por SHA completo, com a tag em comentário. O repositório exige SHA pinning; o Renovate atualiza o SHA e o comentário juntos.
 - `audit` olha o que vai para Produção (`--prod`) e, em PR, o que o PR acrescenta ao lockfile. Advisory transitivo sem correção publicada entra em `allow-ghsas` no workflow, com o motivo ao lado; advisory com correção entra como `overrides` em `pnpm-workspace.yaml`.
 - Relatórios: `playwright-report` (artefato só em falha) e `lighthouse-report` (sempre), sete dias de retenção. Nada é enviado a serviço externo.
 
 ### Orçamento do Lighthouse
 
-`lighthouserc.yml`: emulação mobile com throttling simulado (o perfil padrão do Lighthouse e o cenário mais lento), três rodadas por URL, mediana. Falha o job: LCP acima de 2,5 s, CLS acima de 0,1, acessibilidade abaixo de 100. Performance abaixo de 95 é aviso, não erro, porque a nota varia com a carga do runner. Cada ticket que cria página acrescenta a rota na lista de URLs, como faz em `tests/e2e/rotas.ts`.
+`lighthouserc.yml`: emulação mobile com throttling simulado (o perfil padrão do Lighthouse e o cenário mais lento), três rodadas por URL, mediana. Falha o job: LCP acima de 2,5 s, CLS acima de 0,1, acessibilidade abaixo de 100. Performance abaixo de 95 é aviso, não erro, porque a nota varia com a carga do runner. A lista de URLs cobre uma rota por padrão de página, no pior caso de cada um — a Galeria mais pesada, uma Galeria média e o estado Em breve —, e não as dez páginas de Projeto: medir todas repetiria o mesmo veredito por minutos de CI. A cobertura rota a rota de acessibilidade é do `axe`, em `tests/e2e/rotas.ts`.
 
 ## Deploy: Workers Builds
 
