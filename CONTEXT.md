@@ -15,7 +15,7 @@ A categoria curta de um Projeto exibida junto ao título (ex.: "Comercial", "Res
 _Avoid_: kind, categoria, segmento
 
 **Capa**:
-A imagem que representa o Projeto no card da grade, na abertura da página e na imagem de compartilhamento. Pode ser uma imagem que não está na galeria; quando não é definida, é a primeira imagem da galeria.
+A imagem que representa o Projeto no card da grade e na imagem de compartilhamento. Pode ser uma imagem que não está na galeria; quando não é definida, é a primeira imagem da galeria. A página do Projeto não usa a Capa: ela abre com a primeira imagem da Galeria.
 _Avoid_: cover, thumbnail, destaque
 
 **Galeria**:
