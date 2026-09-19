@@ -150,6 +150,49 @@ test('as linhas da Galeria preenchem a largura toda, com uma só altura por linh
   }
 });
 
+// A caixa de cada imagem sai do arranjo em linhas, não de uma fração fixa da largura: uma
+// imagem sozinha na linha ocupa a Galeria inteira. Vale para todo Projeto, porque é o arranjo
+// que decide, e ele muda com as proporções do conteúdo.
+for (const { slug, rota: rotaDoProjeto, dados: projeto } of projetos.filter(
+  ({ dados: { galeria } }) => galeria.length > 0,
+)) {
+  test(`${slug}: cada imagem carrega a variante que a caixa dela justifica`, async ({ page }) => {
+    await page.goto(rotaDoProjeto);
+    // Cada imagem precisa entrar na tela para o navegador escolher a variante dela.
+    for (const item of await page.locator('.gal .item').all()) await item.scrollIntoViewIfNeeded();
+    await expect
+      .poll(() =>
+        page
+          .locator('.gal img')
+          .evaluateAll((imgs) => imgs.every((img) => (img as HTMLImageElement).currentSrc !== '')),
+      )
+      .toBe(true);
+
+    const escolhas = await page.locator('.gal .item').evaluateAll((itens) => {
+      const imagens = itens.map((item) => item.querySelector('img')!);
+      return itens.map((item, i) => ({
+        escolhida: imagens[i]!.currentSrc,
+        srcset:
+          item.querySelector<HTMLSourceElement>('source[type="image/avif"]')?.srcset ??
+          imagens[i]!.srcset,
+        caixa: Math.round(imagens[i]!.getBoundingClientRect().width * window.devicePixelRatio),
+      }));
+    });
+
+    expect(escolhas).toHaveLength(projeto.galeria.length);
+    for (const { escolhida, srcset, caixa } of escolhas) {
+      const disponiveis = variantes(srcset);
+      const ideal = disponiveis.find((v) => v.largura >= caixa) ?? disponiveis.at(-1)!;
+      const carregada = disponiveis.find((v) => escolhida.endsWith(v.url));
+      expect(carregada, `variante fora do srcset: ${escolhida}`).toBeDefined();
+      expect(
+        carregada!.largura,
+        `${escolhida} tem ${carregada!.largura}px para uma caixa de ${caixa}px`,
+      ).toBeGreaterThanOrEqual(ideal.largura);
+    }
+  });
+}
+
 test('a Galeria não empurra nada para fora da tela', async ({ page }) => {
   await page.goto(rota);
   await page.locator('.gal .item').last().scrollIntoViewIfNeeded();
