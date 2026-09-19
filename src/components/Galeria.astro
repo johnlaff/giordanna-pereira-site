@@ -54,10 +54,12 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
   sem encontrar a galeria, que é o conteúdo central da página. */}
 <h2 class="sr">Galeria</h2>
 {/* Cada imagem já se anuncia ao leitor de tela pelo próprio rótulo; esta linha é a pista
-  visual de quem não tem cursor para descobrir o mesmo. */}
+  visual de quem não tem cursor para descobrir o mesmo. Ela promete abrir e ampliar, e não
+  tela cheia: numa tela em pé, um render deitado abre pouco maior que a miniatura, e o
+  tamanho vem do gesto seguinte. */}
 {imagens.length > 0 && (
   <p class="toque" aria-hidden="true">
-    Toque numa imagem para ver em tela cheia
+    Toque numa imagem para abrir e ampliar
   </p>
 )}
 {imagens.length > 0 ? (

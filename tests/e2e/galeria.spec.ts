@@ -234,7 +234,7 @@ for (const { slug, rota: rotaDoProjeto } of projetos.filter(
 test('onde há cursor, a Galeria não mostra a pista de toque', async ({ page, isMobile }) => {
   test.skip(isMobile === true, 'a pista existe justamente no toque');
   await page.goto(rota);
-  await expect(page.getByText('Toque numa imagem para ver em tela cheia')).toBeHidden();
+  await expect(page.getByText('Toque numa imagem para abrir e ampliar')).toBeHidden();
 });
 
 test('a Galeria não empurra nada para fora da tela', async ({ page }) => {
@@ -386,7 +386,7 @@ test.describe('em tela de toque', () => {
 
   test('a Galeria diz que a imagem abre em tela cheia', async ({ page }) => {
     await page.goto(rota);
-    await expect(page.getByText('Toque numa imagem para ver em tela cheia')).toBeVisible();
+    await expect(page.getByText('Toque numa imagem para abrir e ampliar')).toBeVisible();
   });
 
   test('a imagem em tela cheia vai de borda a borda', async ({ page }) => {
