@@ -19,6 +19,15 @@ const checksExigidos = new Set(
     .map((c) => c.context),
 );
 
+test('o cache de imagens acompanha o que decide as variantes', () => {
+  // A chave presa só a `src/assets` deixaria o cache servir variantes de outra qualidade: o
+  // build regeraria o acervo a cada corrida sem nunca conseguir gravar a chave de novo.
+  const setup = readFileSync('.github/actions/setup/action.yml', 'utf8');
+  const chave = /key: astro-assets-.*hashFiles\(([^)]*)\)/.exec(setup)?.[1] ?? '';
+  for (const caminho of ["'src/assets/**'", "'src/imagens.ts'"])
+    assert.ok(chave.includes(caminho), `fora da chave do cache: ${caminho}`);
+});
+
 test('o workflow dispara em pull_request e em push para main', () => {
   assert.ok(workflow.on.pull_request !== undefined);
   assert.deepEqual(workflow.on.push.branches, ['main']);
