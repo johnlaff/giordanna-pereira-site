@@ -2,7 +2,7 @@
 
 Portfólio de Giordanna Pereira (arquiteta e urbanista, Uberlândia/MG). Astro 7 + TypeScript, estático, hospedado em Cloudflare Workers (static assets), com um endpoint on-demand (`/api/contato`) e Sveltia CMS em `/admin`.
 
-Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Depois `CONTEXT.md` e `docs/adr/`.
+Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Depois `CONTEXT.md`, `docs/adr/` e `docs/esteira.md` (CI, deploy, rulesets, Renovate).
 
 ## Comandos
 
@@ -12,6 +12,7 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 - `pnpm build` — build de produção em `dist/` (`dist/client/` são os assets estáticos)
 - `pnpm test` — build → `pnpm test:unit` (runner do Node, `tests/unit/`) → `pnpm test:e2e` (Playwright + axe em todas as rotas de `tests/e2e/rotas.ts`, contra `dist/` servido por `wrangler dev`)
 - `pnpm test:ui` — Playwright com interface, para depurar
+- `pnpm lighthouse` — Lighthouse CI contra o Worker local, orçamento em `lighthouserc.yml` (LCP < 2,5 s, CLS < 0,1, acessibilidade 100)
 
 ## Regras do projeto
 
@@ -33,11 +34,12 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 - `src/components/` — Header, Footer, Marca, Icone. Planejados: Hero, Sobre, Ferramentas, Depoimentos (carrossel), CardProjeto, Galeria (justificada + PhotoSwipe), Ficha, FormContato
 - `src/styles/` — `tokens.css` (cores, tipografia, espaçamento) e `global.css` (reset, scaffold de página)
 - `public/og/` — imagens Open Graph. Planejado: `public/admin/` — Sveltia CMS (`index.html`, `config.yml`)
-- `tests/e2e/` — Playwright + axe (rotas em `rotas.ts`); `tests/unit/` — runner do Node; `docs/` — HANDOFF, ADRs, `agents/` (config do tracker), `reference/` (preview)
+- `tests/e2e/` — Playwright + axe (rotas em `rotas.ts`); `tests/unit/` — runner do Node; `docs/` — HANDOFF, ADRs, `esteira.md`, `agents/` (config do tracker), `reference/` (preview)
+- `.github/workflows/ci.yml` — jobs `check`, `build`, `e2e`, `lighthouse`, `audit` (nomes = checks exigidos pelo ruleset); `.github/actions/setup` — action composta; `.github/rulesets/` — fonte dos rulesets de `main`, aplicados via `gh api`; `renovate.json`; `scripts/lighthouse.ts`
 
 ## Fluxo de trabalho
 
-Trunk-based com PRs curtos (um ticket por PR). Cada PR ganha checks (check, build, Playwright, axe, Lighthouse) e uma preview URL do Workers Builds. Merge em `main` publica. Tickets são sub-issues da spec #3 com "blocked by" nativo; trabalhe a fronteira (tickets sem bloqueador aberto), um ticket por PR. Use `/handoff` ao encerrar uma sessão.
+Trunk-based com PRs curtos (um ticket por PR). Cada PR ganha os cinco checks do CI e uma preview URL do Workers Builds; `main` exige PR com checks verdes (bypass só para o papel write, que é o do CMS) e nunca aceita force push. Merge por squash em `main` publica. Actions fixadas por SHA; toda rota nova entra em `tests/e2e/rotas.ts` e em `lighthouserc.yml`. Tickets são sub-issues da spec #3 com "blocked by" nativo; trabalhe a fronteira (tickets sem bloqueador aberto), um ticket por PR. Use `/handoff` ao encerrar uma sessão.
 
 ## Referência visual
 
