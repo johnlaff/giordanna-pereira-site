@@ -2,19 +2,24 @@
 /**
  * Galeria de um Projeto: renders primeiro, pranchas por último, na ordem do conteúdo.
  * Quando a primeira imagem é paisagem, ela abre a galeria na largura toda, sem nunca passar de
- * meia largura em altura; as demais entram em duas colunas — uma só abaixo de 640 px — com a
- * proporção original. Sem imagem nenhuma, a seção mostra o estado Em breve.
+ * meia largura em altura; as demais entram em linhas justificadas — todas ocupam a largura
+ * toda, com a mesma altura dentro da linha (`galeria.linhas.ts`). Sem imagem nenhuma, a seção
+ * mostra o estado Em breve. Cada imagem abre em tela cheia no lightbox, com zoom.
+ *
+ * O arranjo depende da largura medida no navegador: até ele rodar, e sem JavaScript, as
+ * imagens ficam em duas colunas na proporção original — uma só abaixo de 640 px.
  *
  * Cada imagem sai em AVIF com alternativa WebP, em variantes por largura que o navegador
- * escolhe pelo `sizes` — abaixo, a largura que cada uma ocupa em cada faixa de tela.
+ * escolhe pelo `sizes` — abaixo, a largura aproximada que cada uma ocupa em cada faixa de tela.
  */
 import type { ImageMetadata } from 'astro';
 import { Picture } from 'astro:assets';
+import 'photoswipe/style.css';
 import EmBreve from './EmBreve.astro';
 
 interface Props {
   imagens: ImageMetadata[];
-  /** Nome do Projeto, usado no texto alternativo de cada imagem. */
+  /** Nome do Projeto, usado no texto alternativo de cada imagem e na legenda do lightbox. */
   titulo: string;
 }
 
@@ -25,27 +30,33 @@ const LARGURA_TOTAL =
 const METADE =
   '(min-width: 1240px) 559px, (min-width: 1100px) calc((100vw - 122px) / 2), (min-width: 700px) calc((100vw - 90px) / 2), (min-width: 641px) calc((100vw - 58px) / 2), calc(100vw - 48px)';
 
-const abreComDestaque = imagens[0] !== undefined && imagens[0].width > imagens[0].height;
+const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].height;
 ---
 
 {/* Sem esta âncora, quem navega por títulos pula do "Detalhes do projeto" ao rodapé
   sem encontrar a galeria, que é o conteúdo central da página. */}
 <h2 class="sr">Galeria</h2>
 {imagens.length > 0 ? (
-  <div class="gal">
+  <div class="gal" data-titulo={titulo}>
     {imagens.map((imagem, i) => (
-      <div class:list={['item', { destaque: i === 0 && abreComDestaque }]}>
+      <button
+        type="button"
+        class:list={['item', { abertura: i === 0 && abreEmFaixa }]}
+        style={`aspect-ratio:${imagem.width}/${imagem.height}`}
+        data-proporcao={(imagem.width / imagem.height).toFixed(4)}
+        aria-label={`Abrir imagem ${i + 1} de ${imagens.length} em tela cheia`}
+      >
         <Picture
           src={imagem}
           formats={['avif']}
           fallbackFormat="webp"
-          sizes={i === 0 && abreComDestaque ? LARGURA_TOTAL : METADE}
+          sizes={i === 0 && abreEmFaixa ? LARGURA_TOTAL : METADE}
           alt={`${titulo} — imagem ${i + 1}`}
           loading={i < 3 ? 'eager' : 'lazy'}
           decoding="async"
           fetchpriority={i === 0 ? 'high' : undefined}
         />
-      </div>
+      </button>
     ))}
   </div>
 ) : (
@@ -53,6 +64,142 @@ const abreComDestaque = imagens[0] !== undefined && imagens[0].width > imagens[0
     <EmBreve />
   </div>
 )}
+
+<script>
+  import PhotoSwipeLightbox from 'photoswipe/lightbox';
+  import { linhasDaGaleria } from './galeria.linhas';
+
+  const galeria = document.querySelector<HTMLElement>('.gal');
+  if (galeria !== null) {
+    const itens = [...galeria.querySelectorAll<HTMLElement>('.item')];
+    const proporcoes = itens.map((item) => Number(item.dataset.proporcao));
+    const titulo = galeria.dataset.titulo ?? '';
+    const semMovimento = matchMedia('(prefers-reduced-motion: reduce)');
+
+    /* ===== arranjo em linhas justificadas ===== */
+    let larguraArranjada = 0;
+    const arranjar = () => {
+      const largura = galeria.clientWidth;
+      // Só a largura muda o arranjo; sem esta guarda, a altura que ele mesmo produz
+      // realimentaria o observador.
+      if (largura === larguraArranjada) return;
+      larguraArranjada = largura;
+      const linhas = linhasDaGaleria(proporcoes, {
+        largura,
+        gap: parseFloat(getComputedStyle(galeria).columnGap) || 0,
+        abertura: itens[0]?.classList.contains('abertura') ?? false,
+      });
+      for (const caixa of linhas.flat()) {
+        const item = itens[caixa.indice]!;
+        item.style.width = `${caixa.largura}px`;
+        item.style.height = `${caixa.altura}px`;
+        item.style.aspectRatio = 'auto';
+        // O lightbox anima a partir da miniatura e precisa saber se ela mostra a imagem inteira.
+        item.dataset.cropped = caixa.cortada ? 'true' : '';
+      }
+    };
+    arranjar();
+    new ResizeObserver(arranjar).observe(galeria);
+
+    /* ===== lightbox ===== */
+    const lightbox = new PhotoSwipeLightbox({
+      gallery: galeria,
+      children: '.item',
+      pswpModule: () => import('photoswipe'),
+      bgOpacity: 1,
+      loop: true,
+      wheelToZoom: true,
+      initialZoomLevel: 'fit',
+      secondaryZoomLevel: 2,
+      maxZoomLevel: 4,
+      imageClickAction: 'zoom',
+      doubleTapAction: 'zoom',
+      tapAction: 'toggle-controls',
+      padding: { top: 24, bottom: 64, left: 20, right: 20 },
+      easing: 'cubic-bezier(.32,.72,0,1)',
+      showAnimationDuration: 380,
+      hideAnimationDuration: 320,
+      // A legenda já diz a posição; o contador do PhotoSwipe ficaria repetido.
+      counter: false,
+      closeTitle: 'Fechar',
+      zoomTitle: 'Ampliar',
+      arrowPrevTitle: 'Imagem anterior',
+      arrowNextTitle: 'Próxima imagem',
+      errorMsg: 'Não foi possível carregar esta imagem.',
+    });
+
+    // Quem prefere menos movimento abre a imagem sem a animação de zoom, e amplia sem transição.
+    const ajustarMovimento = () => {
+      lightbox.options.showHideAnimationType = semMovimento.matches ? 'none' : 'zoom';
+      lightbox.options.zoomAnimationDuration = semMovimento.matches ? 0 : 300;
+    };
+    ajustarMovimento();
+    semMovimento.addEventListener('change', ajustarMovimento);
+
+    // Em tela cheia vale a maior variante que a tela justifica, no formato que o navegador
+    // já escolheu para a miniatura: o `srcset` do lightbox é o mesmo do `<picture>` da página.
+    // Quem decide o formato é a primeira imagem, a única que já carregou quando a página abre;
+    // as demais podem nem ter começado, e aí `currentSrc` ainda está vazio.
+    const aceitaAvif = () => itens[0]?.querySelector('img')?.currentSrc.endsWith('.avif') ?? false;
+    lightbox.addFilter('domItemData', (item, elemento) => {
+      const img = elemento.querySelector('img');
+      const avif = elemento.querySelector<HTMLSourceElement>('source[type="image/avif"]');
+      if (img === null) return item;
+      const emAvif = aceitaAvif() && avif !== null;
+      return {
+        ...item,
+        src: img.src,
+        srcset: emAvif ? avif.srcset : img.srcset,
+        width: Number(img.getAttribute('width')),
+        height: Number(img.getAttribute('height')),
+        alt: img.alt,
+        msrc: img.currentSrc || img.src,
+        thumbCropped: elemento.dataset.cropped === 'true',
+      };
+    });
+
+    lightbox.on('uiRegister', () => {
+      lightbox.pswp?.ui?.registerElement({
+        name: 'legenda',
+        className: 'lb-legenda',
+        appendTo: 'root',
+        onInit: (elemento, pswp) => {
+          const posicao = document.createElement('b');
+          const projeto = document.createElement('span');
+          projeto.textContent = titulo;
+          elemento.append(posicao, projeto);
+          const atualizar = () => {
+            posicao.textContent = `${pswp.currIndex + 1} / ${pswp.getNumItems()}`;
+          };
+          pswp.on('change', atualizar);
+          atualizar();
+        },
+      });
+    });
+
+    lightbox.on('firstUpdate', () => {
+      const dialogo = lightbox.pswp?.element;
+      // O PhotoSwipe põe `role="dialog"`, mas quem usa leitor de tela precisa saber de qual
+      // galeria é esta tela cheia, e que o resto da página está fora de alcance enquanto ela existe.
+      dialogo?.setAttribute('aria-label', `Galeria em tela cheia: ${titulo}`);
+      dialogo?.setAttribute('aria-modal', 'true');
+      document.body.classList.add('lock');
+    });
+    lightbox.on('destroy', () => document.body.classList.remove('lock'));
+
+    // Esc entre o clique e a tela cheia no ar: o PhotoSwipe só atende ao fechamento depois que
+    // a animação de abertura termina, e no primeiro clique ele ainda está baixando o módulo.
+    // Nas duas janelas o pedido se perderia e a galeria abriria contra a vontade de quem pediu.
+    document.addEventListener('keydown', (evento) => {
+      if (evento.key !== 'Escape') return;
+      const pswp = lightbox.pswp;
+      if (pswp === undefined) lightbox.shouldOpen = false;
+      else if (!pswp.opener.isOpen) pswp.on('openingAnimationEnd', () => pswp.close());
+    });
+
+    lightbox.init();
+  }
+</script>
 
 <style>
   .gal {
@@ -62,13 +209,14 @@ const abreComDestaque = imagens[0] !== undefined && imagens[0].width > imagens[0
     gap: var(--ggap);
     align-content: flex-start;
     padding-bottom: clamp(50px, 8vh, 90px);
-    /* A altura do destaque se mede pela largura da galeria; por isso ela é o container de consulta. */
+    /* A altura da Abertura se mede pela largura da galeria; por isso ela é o container de consulta. */
     container-type: inline-size;
   }
   .item {
     flex: 0 0 auto;
     width: calc(50% - var(--ggap) / 2);
     overflow: hidden;
+    cursor: zoom-in;
     /* Enquanto a imagem não pinta, o espaço reservado é o mesmo cinza do fundo do render. */
     background: var(--img-bg);
   }
@@ -79,20 +227,28 @@ const abreComDestaque = imagens[0] !== undefined && imagens[0].width > imagens[0
   .item :global(img) {
     display: block;
     width: 100%;
-    height: auto;
+    height: 100%;
+    /* A caixa da linha justificada pode ser mais baixa que a imagem: ela entra centralizada. */
+    object-fit: cover;
+    transition: opacity 0.5s;
   }
-  .destaque {
-    width: 100%;
+  .item:hover :global(img) {
+    opacity: 0.88;
   }
   /* A abertura ocupa a largura toda e nunca passa de meia largura em altura: uma imagem mais
      alta que 2:1 é recortada; uma já mais panorâmica mantém a proporção original. */
-  .destaque :global(img) {
+  .abertura {
+    width: 100%;
     max-height: 50cqw;
-    object-fit: cover;
   }
   @media (max-width: 640px) {
     .item {
       width: 100%;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .item :global(img) {
+      transition: none;
     }
   }
   /* O Em breve ocupa a mesma faixa de abertura de uma Galeria com imagens; em telas estreitas,
@@ -103,5 +259,69 @@ const abreComDestaque = imagens[0] !== undefined && imagens[0].width > imagens[0
     aspect-ratio: 2 / 1;
     min-height: 220px;
     margin-bottom: clamp(50px, 8vh, 90px);
+  }
+</style>
+
+<style is:global>
+  /* O lightbox vive fora da página, em elemento próprio no fim do body: o estilo dele não
+     pode ser escopado no componente. Fora daqui, tudo vem do CSS do PhotoSwipe. */
+  .pswp {
+    --pswp-bg: var(--navy-deep);
+    --pswp-root-z-index: 100;
+    font-family: var(--font-sans);
+  }
+  .pswp__icn {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  }
+  .pswp__button:focus-visible {
+    outline: 2px solid var(--paper);
+    outline-offset: 2px;
+  }
+  .pswp__top-bar {
+    height: 80px;
+    background: none;
+  }
+  .lb-legenda {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 16px;
+    padding: 0 16px;
+    text-align: center;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: rgba(241, 242, 240, 0.75);
+    pointer-events: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .lb-legenda b {
+    margin-right: 14px;
+    font-weight: 400;
+    color: var(--paper);
+    font-variant-numeric: tabular-nums;
+  }
+  /* A legenda acompanha os controles: some junto com eles ao toque na imagem. */
+  .pswp:not(.pswp--ui-visible) .lb-legenda {
+    opacity: 0;
+  }
+  .pswp--ui-visible .lb-legenda {
+    opacity: 1;
+    transition: opacity 0.3s;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pswp--ui-visible .lb-legenda {
+      transition: none;
+    }
+  }
+  @media (max-width: 640px) {
+    .pswp__button--close,
+    .pswp__button--zoom {
+      width: 44px;
+      height: 44px;
+      margin: 10px 10px 0 0;
+    }
   }
 </style>

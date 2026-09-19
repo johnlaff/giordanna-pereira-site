@@ -22,6 +22,14 @@ _Avoid_: cover, thumbnail, destaque
 A lista ordenada de imagens de um Projeto. Renders vêm primeiro; pranchas, por último.
 _Avoid_: gallery, fotos, álbum
 
+**Abertura**:
+A primeira imagem da Galeria quando é paisagem: ocupa a largura toda em faixa de no máximo meia largura de altura, recortada no centro. As demais entram em linhas justificadas — cada linha preenche a largura, com a mesma altura dentro dela.
+_Avoid_: hero, destaque, capa da galeria
+
+**Lightbox**:
+A tela cheia que abre ao clicar numa imagem da Galeria, com zoom, navegação em loop e a legenda de posição e Projeto. É um diálogo: prende o foco enquanto está aberto e o devolve à imagem ao fechar.
+_Avoid_: modal, overlay, visualizador
+
 **Render**:
 Imagem de perspectiva realista de um Projeto.
 _Avoid_: perspectiva, visualização, imagem 3D
