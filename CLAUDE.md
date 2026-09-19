@@ -29,9 +29,9 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 - `astro.config.ts` — `output: 'static'`, adapter Cloudflare (`imageService: 'compile'`), Fonts API; `wrangler.jsonc` — assets em `dist/`, `not_found_handling: 404-page`
 - `src/config.ts` — configuração tipada fora do CMS: `site`, `marca` (nome + CAU), `emailExibido` (constante única do e-mail) e `contatos`
 - `src/layouts/Base.astro` — casca de toda página (head, fontes, Header, `main`, Footer); props `titulo`, `descricao`, `secao` (item ativo da nav) e `hero` (cabeçalho transparente sobre o hero)
-- `src/pages/` — `index`, `404`. Planejadas: `projetos/index`, `projetos/[slug]`, `contato`, `api/contato.ts` (`prerender = false`)
-- `src/content/` — planejada: collections `projetos` e `depoimentos` (schema em `src/content.config.ts`)
-- `src/components/` — Header, Footer, Marca, Icone. Planejados: Hero, Sobre, Ferramentas, Depoimentos (carrossel), CardProjeto, Galeria (justificada + PhotoSwipe), Ficha, FormContato
+- `src/pages/` — `index`, `404`, `projetos/[slug]`. Planejadas: `projetos/index`, `contato`, `api/contato.ts` (`prerender = false`)
+- `src/content/` — collection `projetos` (um `.yml` por Projeto); planejada: `depoimentos`. `src/content.config.ts` liga o loader ao contrato de `src/content.schema.ts`, que também garante a Ordem única
+- `src/components/` — Header, Footer, Marca, Icone, Ficha, Galeria. Planejados: Hero, Sobre, Ferramentas, Depoimentos (carrossel), CardProjeto, e o layout justificado + PhotoSwipe na Galeria, FormContato
 - `src/styles/` — `tokens.css` (cores, tipografia, espaçamento) e `global.css` (reset, scaffold de página)
 - `public/og/` — imagens Open Graph. Planejado: `public/admin/` — Sveltia CMS (`index.html`, `config.yml`)
 - `tests/e2e/` — Playwright + axe (rotas em `rotas.ts`); `tests/unit/` — runner do Node; `docs/` — HANDOFF, ADRs, `esteira.md`, `agents/` (config do tracker), `reference/` (preview)

@@ -10,6 +10,7 @@ ci:
     url:
       # Cada ticket que cria página acrescenta a rota aqui, como em tests/e2e/rotas.ts.
       - http://localhost:8788/
+      - http://localhost:8788/projetos/consultorio-ginecocare
     numberOfRuns: 3
     settings:
       # O Chromium do Playwright não tem o sandbox setuid e o Ubuntu 24.04 do runner bloqueia

@@ -1,0 +1,74 @@
+---
+import { getCollection } from 'astro:content';
+import Ficha from '../../components/Ficha.astro';
+import Galeria from '../../components/Galeria.astro';
+import { ordenarProjetos } from '../../content.schema';
+import Base from '../../layouts/Base.astro';
+
+export async function getStaticPaths() {
+  const projetos = ordenarProjetos(await getCollection('projetos'));
+  return projetos.map((projeto) => ({ params: { slug: projeto.id }, props: { projeto } }));
+}
+
+const { projeto } = Astro.props;
+const { titulo, tipo, descricao, ferramentas, galeria } = projeto.data;
+---
+
+<Base titulo={titulo} descricao={descricao} secao="projetos">
+  <div class="shell">
+    <div class="page-head">
+      <h1>{titulo}</h1>
+      <p class="kind">{tipo}</p>
+    </div>
+    <div class="proj-top">
+      <div>
+        <p class="lead">{descricao}</p>
+        <ul class="chips" aria-label="Ferramentas usadas no projeto">
+          {ferramentas.map((ferramenta) => (
+            <li class="chip">{ferramenta}</li>
+          ))}
+        </ul>
+      </div>
+      <Ficha ficha={projeto.data} />
+    </div>
+    <Galeria imagens={galeria} titulo={titulo} />
+  </div>
+</Base>
+
+<style>
+  .proj-top {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: clamp(28px, 5vw, 80px);
+    align-items: start;
+    padding-bottom: clamp(36px, 6vh, 60px);
+  }
+  @media (max-width: 860px) {
+    .proj-top {
+      grid-template-columns: 1fr;
+    }
+  }
+  .lead {
+    color: var(--ink-soft);
+    font-size: 17px;
+    max-width: 58ch;
+    margin-top: 18px;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 22px;
+    list-style: none;
+  }
+  .chip {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 400;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 5px 13px;
+    color: var(--ink-soft);
+  }
+</style>
