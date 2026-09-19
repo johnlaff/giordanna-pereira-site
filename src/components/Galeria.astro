@@ -17,6 +17,7 @@ import { Picture } from 'astro:assets';
 import 'photoswipe/style.css';
 import { qualidadeDeImagem } from '../config';
 import EmBreve from './EmBreve.astro';
+import { porFaixa } from './galeria.linhas';
 
 interface Props {
   imagens: ImageMetadata[];
@@ -31,27 +32,7 @@ const { imagens, titulo } = Astro.props;
  * só ao se aproximarem da tela, quando o arranjo já mediu a caixa de cada uma e o navegador
  * pede a variante certa. Carregá-las cedo pediria a variante pela estimativa abaixo, que para
  * um retrato numa linha cheia chega a ser o dobro do necessário.
- *
- * Em tela sem retina o navegador reduz a imagem até a caixa, e um downscale curto borra mais
- * do que ajuda: pedir uma vez e meia a caixa sai mais nítido — e mais leve — do que pedir o
- * tamanho exato num arquivo de qualidade maior. Medido nos renders do GinecoCare: a variante
- * de 1080 px a q60 pesa 19 KB e chega a 95% da nitidez de um redimensionamento sem perda; a
- * de 640 px, que é o tamanho exato da caixa, chega a 84% pesando 25 KB na qualidade 90.
  */
-const RETINA = '(min-resolution: 1.5dppx)';
-const DENSIDADE_SEM_RETINA = 1.5;
-
-/** As larguras que a imagem ocupa por faixa de tela, na ordem em que o navegador as lê. */
-const porFaixa = (faixas: [consulta: string, largura: string][]) =>
-  [
-    ...faixas.map(
-      ([consulta, largura]) => `${[RETINA, consulta].filter(Boolean).join(' and ')} ${largura}`,
-    ),
-    ...faixas.map(([consulta, largura]) =>
-      `${consulta} calc(${largura} * ${DENSIDADE_SEM_RETINA})`.trim(),
-    ),
-  ].join(', ');
-
 const LARGURA_TOTAL = porFaixa([
   ['(min-width: 1240px)', '1136px'],
   ['(min-width: 1100px)', 'calc(100vw - 104px)'],
@@ -72,7 +53,13 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
 {/* Sem esta âncora, quem navega por títulos pula do "Detalhes do projeto" ao rodapé
   sem encontrar a galeria, que é o conteúdo central da página. */}
 <h2 class="sr">Galeria</h2>
-{imagens.length > 0 && <p class="toque">Toque para ver em tela cheia</p>}
+{/* Cada imagem já se anuncia ao leitor de tela pelo próprio rótulo; esta linha é a pista
+  visual de quem não tem cursor para descobrir o mesmo. */}
+{imagens.length > 0 && (
+  <p class="toque" aria-hidden="true">
+    Toque numa imagem para ver em tela cheia
+  </p>
+)}
 {imagens.length > 0 ? (
   <div class="gal" data-titulo={titulo}>
     {imagens.map((imagem, i) => (
@@ -105,7 +92,7 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
 
 <script>
   import PhotoSwipeLightbox from 'photoswipe/lightbox';
-  import { linhasDaGaleria } from './galeria.linhas';
+  import { DENSIDADE_SEM_RETINA, TELA_ESTREITA, linhasDaGaleria } from './galeria.linhas';
 
   const galeria = document.querySelector<HTMLElement>('.gal');
   if (galeria !== null) {
@@ -114,7 +101,7 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
     const titulo = galeria.dataset.titulo ?? '';
     const semMovimento = matchMedia('(prefers-reduced-motion: reduce)');
     /** Sem retina, a imagem pedida é uma vez e meia a caixa — o mesmo que o `sizes` do HTML faz. */
-    const densidade = () => (devicePixelRatio < 1.5 ? 1.5 : 1);
+    const densidade = () => (devicePixelRatio < 1.5 ? DENSIDADE_SEM_RETINA : 1);
 
     /* ===== arranjo em linhas justificadas ===== */
     let larguraArranjada = 0;
@@ -134,6 +121,10 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
         item.style.width = `${caixa.largura}px`;
         item.style.height = `${caixa.altura}px`;
         item.style.aspectRatio = 'auto';
+        // O `aspect-ratio` e o `max-height` são o andaime de quem não tem JavaScript; com o
+        // arranjo medido, quem manda é a altura calculada, que pode passar de meia largura
+        // para não recortar demais.
+        item.style.maxHeight = 'none';
         // Só o arranjo sabe a caixa de cada imagem: uma sozinha na linha ocupa a Galeria
         // inteira, e o `sizes` do HTML, escrito antes de saber disso, pediria uma variante
         // pequena demais. Com a medida exata, o navegador escolhe a que a caixa justifica.
@@ -158,10 +149,11 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
       loop: true,
       wheelToZoom: true,
       initialZoomLevel: 'fit',
-      // O duplo toque numa tela estreita enche a tela — é assim que se lê uma prancha de
-      // perto, sem perder a referência do desenho. Em tela larga, o dobro do tamanho real.
-      secondaryZoomLevel: (zoom) => ((zoom.panAreaSize?.x ?? 0) < 700 ? zoom.fill : 2),
-      maxZoomLevel: 4,
+      // Ampliar enche a tela, e quando isso rende pouco — um retrato numa tela em pé — vai
+      // pelo menos a duas vezes e meia o ajuste. O teto é o tamanho real da imagem: além
+      // dele, o que cresce é o artefato do arquivo, não a informação.
+      secondaryZoomLevel: (zoom) => Math.min(Math.max(zoom.fill, zoom.fit * 2.5), 1),
+      maxZoomLevel: 1,
       imageClickAction: 'zoom',
       doubleTapAction: 'zoom',
       tapAction: 'toggle-controls',
@@ -171,8 +163,8 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
       paddingFn: ({ x }) => ({
         top: 24,
         bottom: 64,
-        left: x < 700 ? 0 : 20,
-        right: x < 700 ? 0 : 20,
+        left: x < TELA_ESTREITA ? 0 : 20,
+        right: x < TELA_ESTREITA ? 0 : 20,
       }),
       easing: 'cubic-bezier(.32,.72,0,1)',
       showAnimationDuration: 380,
@@ -196,9 +188,13 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
 
     // Em tela cheia vale a maior variante que a tela justifica, no formato que o navegador
     // já escolheu para a miniatura: o `srcset` do lightbox é o mesmo do `<picture>` da página.
-    // Quem decide o formato é a primeira imagem, a única que já carregou quando a página abre;
-    // as demais podem nem ter começado, e aí `currentSrc` ainda está vazio.
-    const aceitaAvif = () => itens[0]?.querySelector('img')?.currentSrc.endsWith('.avif') ?? false;
+    // Quem decide é a primeira imagem que já escolheu formato — numa rede lenta a Abertura
+    // ainda pode estar carregando, e aí `currentSrc` está vazio e não diz nada.
+    const aceitaAvif = () =>
+      itens
+        .map((item) => item.querySelector('img')?.currentSrc)
+        .find((escolhida) => escolhida !== undefined && escolhida !== '')
+        ?.endsWith('.avif') ?? false;
     lightbox.addFilter('domItemData', (item, elemento) => {
       const img = elemento.querySelector('img');
       const avif = elemento.querySelector<HTMLSourceElement>('source[type="image/avif"]');
@@ -279,14 +275,13 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
 </script>
 
 <style>
-  /* Em tela de toque não há cursor nem hover para anunciar que a imagem abre: quem anuncia
-     é esta linha, uma vez, na mesma micro-tipografia das outras marcações da página. */
+  /* Em tela de toque não há cursor nem hover para anunciar que a imagem abre: quem anuncia é
+     esta linha, uma vez. Ela fala em voz corrente de propósito — a caixa alta com entreletra
+     larga é o figurino dos rótulos da página, e uma instrução não é um rótulo. */
   .toque {
     display: none;
     margin-bottom: 14px;
-    font-size: 11px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
+    font-size: 14px;
     color: var(--ink-soft);
   }
   @media (hover: none) {

@@ -203,10 +203,38 @@ for (const { slug, rota: rotaDoProjeto, dados: projeto } of projetos.filter(
   });
 }
 
+// O arranjo calcula a altura, mas quem pinta é o CSS: o teto de recorte só vale se sobreviver
+// à folha de estilo. Por isso a medida é a caixa renderizada, não o número que o JavaScript
+// escreveu — e vale para todo Projeto, porque é o conteúdo que decide o quanto se perde.
+for (const { slug, rota: rotaDoProjeto } of projetos.filter(
+  ({ dados: { galeria } }) => galeria.length > 0,
+)) {
+  test(`${slug}: nenhuma imagem perde mais de um quarto da altura`, async ({ page }) => {
+    await page.goto(rotaDoProjeto);
+    for (const item of await page.locator('.gal .item').all()) await item.scrollIntoViewIfNeeded();
+    const perdas = await page.locator('.gal .item').evaluateAll((itens) =>
+      itens.map((item) => {
+        const caixa = item.getBoundingClientRect();
+        const proporcao = Number((item as HTMLElement).dataset.proporcao);
+        const daCaixa = caixa.width / caixa.height;
+        return {
+          proporcao,
+          perda: 1 - Math.min(daCaixa, proporcao) / Math.max(daCaixa, proporcao),
+        };
+      }),
+    );
+    for (const { proporcao, perda } of perdas)
+      expect(
+        perda,
+        `imagem de proporção ${proporcao} perde ${(perda * 100).toFixed(1)}%`,
+      ).toBeLessThanOrEqual(0.26);
+  });
+}
+
 test('onde há cursor, a Galeria não mostra a pista de toque', async ({ page, isMobile }) => {
   test.skip(isMobile === true, 'a pista existe justamente no toque');
   await page.goto(rota);
-  await expect(page.getByText('Toque para ver em tela cheia')).toBeHidden();
+  await expect(page.getByText('Toque numa imagem para ver em tela cheia')).toBeHidden();
 });
 
 test('a Galeria não empurra nada para fora da tela', async ({ page }) => {
@@ -358,7 +386,7 @@ test.describe('em tela de toque', () => {
 
   test('a Galeria diz que a imagem abre em tela cheia', async ({ page }) => {
     await page.goto(rota);
-    await expect(page.getByText('Toque para ver em tela cheia')).toBeVisible();
+    await expect(page.getByText('Toque numa imagem para ver em tela cheia')).toBeVisible();
   });
 
   test('a imagem em tela cheia vai de borda a borda', async ({ page }) => {

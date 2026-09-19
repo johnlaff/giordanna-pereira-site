@@ -2,9 +2,11 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   CORTE_MAXIMO,
+  DENSIDADE_SEM_RETINA,
   RECORTE_MAXIMO,
   alturaAlvo,
   linhasDaGaleria,
+  porFaixa,
 } from '../../src/components/galeria.linhas.ts';
 
 // A Galeria monta linhas justificadas: cada linha ocupa a largura toda, todas as imagens de
@@ -124,10 +126,27 @@ test('nenhuma imagem perde mais de um quarto da altura', () => {
         );
 });
 
-test('uma linha nunca fica mais alta que a largura da Galeria', () => {
-  // Um retrato sozinho na linha só caberia inteiro numa faixa altíssima: aí o recorte volta.
-  const [unica] = linhasDaGaleria([0.562], medidas());
-  assert.ok(unica![0]!.altura <= LARGURA);
+test('um retrato sozinho na linha não preenche a largura, em vez de ser recortado', () => {
+  // Preencher a largura pediria uma faixa mais alta que a Galeria é larga: a linha recua.
+  const retrato = 0.562;
+  const [unica] = linhasDaGaleria([retrato], medidas());
+  assert.ok(unica![0]!.altura <= LARGURA, 'a linha ficou mais alta que a Galeria');
+  assert.ok(unica![0]!.largura < LARGURA, 'a linha foi esticada até a borda');
+  assert.ok(perdaDe(unica![0]!, retrato) <= 0.01, 'o retrato foi recortado');
+});
+
+test('o `sizes` pede a caixa em tela de retina e uma vez e meia nas demais', () => {
+  const faixas = [
+    ['(min-width: 700px)', '559px'],
+    ['', '100vw'],
+  ] as const;
+  assert.equal(
+    porFaixa(faixas),
+    '(min-resolution: 1.5dppx) and (min-width: 700px) 559px, ' +
+      `(min-resolution: 1.5dppx) 100vw, ` +
+      `(min-width: 700px) calc(559px * ${DENSIDADE_SEM_RETINA}), ` +
+      `calc(100vw * ${DENSIDADE_SEM_RETINA})`,
+  );
 });
 
 test('a imagem que manteve a proporção não é marcada como cortada', () => {
