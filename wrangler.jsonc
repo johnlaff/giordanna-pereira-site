@@ -9,6 +9,10 @@
     "binding": "ASSETS",
     // Rota inexistente responde 404 com a página 404 do site, não 200 com a home.
     "not_found_handling": "404-page",
+    // A forma canônica é sem barra final, a mesma do `trailingSlash` do astro.config.ts: o
+    // Worker entrega /projetos/x direto e redireciona /projetos/x/ para lá. No padrão
+    // ("auto-trailing-slash") seria o contrário, e todo link interno pagaria um 301.
+    "html_handling": "drop-trailing-slash",
   },
   "observability": { "enabled": true },
 }
