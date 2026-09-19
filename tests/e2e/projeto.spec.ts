@@ -123,7 +123,9 @@ test('o navegador escolhe AVIF e nenhuma imagem da Galeria falha', async ({ page
   }
 });
 
-test('a primeira imagem abre a Galeria na largura toda, recortada em 2:1', async ({ page }) => {
+test('a abertura da Galeria ocupa a largura toda e não passa de meia largura em altura', async ({
+  page,
+}) => {
   await page.goto(rota);
   const destaque = page.locator('.gal .item').first();
   const galeria = page.locator('.gal');

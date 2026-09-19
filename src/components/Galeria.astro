@@ -1,8 +1,9 @@
 ---
 /**
  * Galeria de um Projeto: renders primeiro, pranchas por último, na ordem do conteúdo.
- * Quando a primeira imagem é paisagem, ela abre a galeria na largura toda, recortada em 2:1;
- * as demais entram em duas colunas com a proporção original.
+ * Quando a primeira imagem é paisagem, ela abre a galeria na largura toda, sem nunca passar de
+ * meia largura em altura; as demais entram em duas colunas — uma só abaixo de 640 px — com a
+ * proporção original.
  *
  * Cada imagem sai em AVIF com alternativa WebP, em variantes por largura que o navegador
  * escolhe pelo `sizes` — abaixo, a largura que cada uma ocupa em cada faixa de tela.
