@@ -36,7 +36,12 @@ for (const [i, { slug, rota, dados }] of projetos.entries()) {
       dados.equipe,
     ]);
     // A Equipe só vira link quando o Projeto traz a URL; o campo de texto nunca traz HTML.
-    await expect(ficha.locator('dd a')).toHaveCount(dados.equipeUrl ? 1 : 0);
+    const link = ficha.locator('dd a');
+    await expect(link).toHaveCount(dados.equipeUrl ? 1 : 0);
+    if (dados.equipeUrl !== undefined) {
+      await expect(link).toHaveAttribute('href', dados.equipeUrl);
+      await expect(link).toHaveText(dados.equipe);
+    }
   });
 
   test(`${slug}: a Galeria traz as imagens do conteúdo, ou o estado Em breve`, async ({ page }) => {
