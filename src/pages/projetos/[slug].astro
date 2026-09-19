@@ -11,8 +11,7 @@ export async function getStaticPaths() {
 }
 
 const { projeto } = Astro.props;
-const { titulo, tipo, descricao, ferramentas, local, ano, area, equipe, equipeUrl, galeria } =
-  projeto.data;
+const { titulo, tipo, descricao, ferramentas, galeria } = projeto.data;
 ---
 
 <Base titulo={titulo} descricao={descricao} secao="projetos">
@@ -30,7 +29,7 @@ const { titulo, tipo, descricao, ferramentas, local, ano, area, equipe, equipeUr
           ))}
         </ul>
       </div>
-      <Ficha local={local} ano={ano} area={area} equipe={equipe} equipeUrl={equipeUrl} />
+      <Ficha ficha={projeto.data} />
     </div>
     <Galeria imagens={galeria} titulo={titulo} />
   </div>

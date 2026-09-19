@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { parse } from 'yaml';
+import { site } from '../../src/config.ts';
 
 // O conteúdo é a fonte da verdade: a página é conferida contra o arquivo do Projeto, não
 // contra strings repetidas no teste.
@@ -24,7 +25,7 @@ const rota = '/projetos/consultorio-ginecocare';
 test('a página do Projeto abre com título, Tipo e descrição do conteúdo', async ({ page }) => {
   const resposta = await page.goto(rota);
   expect(resposta?.status()).toBe(200);
-  await expect(page).toHaveTitle(`${projeto.titulo} — Giordanna Pereira Arquitetura`);
+  await expect(page).toHaveTitle(`${projeto.titulo} — ${site.nome}`);
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(projeto.titulo);
   await expect(page.locator('.page-head .kind')).toHaveText(projeto.tipo);
   await expect(page.locator('.lead')).toHaveText(projeto.descricao);
@@ -131,5 +132,10 @@ test('a primeira imagem abre a Galeria na largura toda, recortada em 2:1', async
     galeria.boundingBox(),
   ]);
   expect(caixaDestaque?.width).toBeCloseTo(caixaGaleria?.width ?? 0, 0);
-  expect((caixaDestaque?.width ?? 0) / (caixaDestaque?.height ?? 1)).toBeCloseTo(2, 1);
+  // A abertura nunca fica mais alta que 2:1; uma imagem já mais panorâmica mantém a sua proporção.
+  const proporcaoOriginal = await destaque
+    .locator('img')
+    .evaluate((img: HTMLImageElement) => img.naturalWidth / img.naturalHeight);
+  const esperada = Math.max(proporcaoOriginal, 2);
+  expect((caixaDestaque?.width ?? 0) / (caixaDestaque?.height ?? 1)).toBeCloseTo(esperada, 1);
 });

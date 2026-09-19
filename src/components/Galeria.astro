@@ -58,6 +58,8 @@ const abreComDestaque = imagens[0] !== undefined && imagens[0].width > imagens[0
     gap: var(--ggap);
     align-content: flex-start;
     padding-bottom: clamp(50px, 8vh, 90px);
+    /* A altura do destaque se mede pela largura da galeria; por isso ela é o container de consulta. */
+    container-type: inline-size;
   }
   .item {
     flex: 0 0 auto;
@@ -77,10 +79,11 @@ const abreComDestaque = imagens[0] !== undefined && imagens[0].width > imagens[0
   }
   .destaque {
     width: 100%;
-    aspect-ratio: 2 / 1;
   }
+  /* A abertura ocupa a largura toda e nunca passa de meia largura em altura: uma imagem mais
+     alta que 2:1 é recortada; uma já mais panorâmica mantém a proporção original. */
   .destaque :global(img) {
-    height: 100%;
+    max-height: 50cqw;
     object-fit: cover;
   }
   @media (max-width: 640px) {

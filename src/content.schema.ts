@@ -1,7 +1,11 @@
 /**
- * Contrato do conteúdo dos Projetos. Fica fora de `content.config.ts` para o teste de
- * contrato carregá-lo sem o runtime do Astro: o validador de imagem entra por parâmetro,
- * e é o `image()` do Astro em produção e um dublê nos testes.
+ * Contrato do conteúdo dos Projetos: a forma de cada arquivo e a invariante de Ordem única
+ * entre eles. As duas garantias valem no build e mudam pelo mesmo motivo — uma mudança no
+ * que é um Projeto —, por isso moram juntas.
+ *
+ * O módulo fica fora de `content.config.ts` para o teste de contrato carregá-lo sem o runtime
+ * do Astro: o validador de imagem entra por parâmetro, e é o `image()` do Astro em produção
+ * e um dublê nos testes.
  */
 import { z } from 'astro/zod';
 

@@ -3,15 +3,19 @@
  * Ficha técnica de um Projeto: os dados objetivos, sob o título "Detalhes do projeto".
  * O nome da equipe vira link só quando o Projeto traz a URL — o campo de texto nunca traz HTML.
  */
+import type { CollectionEntry } from 'astro:content';
+
 interface Props {
-  local: string;
-  ano: string;
-  area: string;
-  equipe: string;
-  equipeUrl?: string | undefined;
+  /** Os campos da Ficha técnica, do próprio Projeto: o tipo deriva do schema e nunca sai de sincronia. */
+  ficha: Pick<
+    CollectionEntry<'projetos'>['data'],
+    'local' | 'ano' | 'area' | 'equipe' | 'equipeUrl'
+  >;
 }
 
-const { local, ano, area, equipe, equipeUrl } = Astro.props;
+const {
+  ficha: { local, ano, area, equipe, equipeUrl },
+} = Astro.props;
 ---
 
 <aside class="ficha">
