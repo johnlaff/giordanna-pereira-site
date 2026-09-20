@@ -9,12 +9,12 @@ import { familiaridade } from '../config';
 
 <section class="shell tools">
   <div class="sec-head">
-    <h2 class="sec-title">Ferramentas</h2>
+    <h2 class="sec-title">{familiaridade.titulo}</h2>
     <span class="sec-rule" aria-hidden="true"></span>
   </div>
-  <ul class="tools-grid rv" aria-label="Ferramentas, da maior para a menor familiaridade">
-    {familiaridade.map((ferramenta) => (
-      <li class:list={['tool', `t${ferramenta.nivel}`]}>{ferramenta.nome}</li>
+  <ul class="tools-grid rv" aria-label={familiaridade.rotulo}>
+    {familiaridade.itens.map((item) => (
+      <li class:list={['tool', `t${item.nivel}`]}>{item.nome}</li>
     ))}
   </ul>
 </section>
@@ -53,7 +53,7 @@ import { familiaridade } from '../config';
     border-color: var(--mist);
   }
   .tool.t3 {
-    background: #ffffff;
+    background: var(--branco);
     color: var(--ink);
     border-color: var(--line);
   }

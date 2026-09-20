@@ -9,8 +9,8 @@ import { inflateSync } from 'node:zlib';
 
 const ASSINATURA = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 
-/** Canais por tipo de cor do PNG: cinza, RGB, cinza com alfa e RGBA. */
-const CANAIS: Record<number, number> = { 0: 1, 2: 3, 4: 2, 6: 4 };
+/** Canais por tipo de cor do PNG. Só os dois que o `screenshot` do Playwright grava. */
+const CANAIS: Record<number, number> = { 2: 3, 6: 4 };
 
 export type Imagem = {
   largura: number;
@@ -99,10 +99,3 @@ export const corDoPixel = ({ largura, canais, pixels }: Imagem, x: number, y: nu
 
 /** Luminância perceptual (Rec. 601), de 0 (preto) a 255 (branco). */
 export const luminancia = ({ r, g, b }: Cor) => 0.299 * r + 0.587 * g + 0.114 * b;
-
-export const luminanciaMedia = (imagem: Imagem) => {
-  let soma = 0;
-  for (let y = 0; y < imagem.altura; y++)
-    for (let x = 0; x < imagem.largura; x++) soma += luminancia(corDoPixel(imagem, x, y));
-  return soma / (imagem.largura * imagem.altura);
-};

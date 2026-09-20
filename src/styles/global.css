@@ -213,7 +213,6 @@ main {
   transition:
     opacity 0.9s var(--ease),
     transform 0.9s var(--ease);
-  transition-delay: var(--d, 0ms);
 }
 .rv.in {
   opacity: 1;

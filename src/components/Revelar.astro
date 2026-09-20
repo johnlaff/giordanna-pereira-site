@@ -1,0 +1,40 @@
+---
+/**
+ * Revela os blocos `.rv` da página: cada um sobe e aparece uma vez, ao entrar na tela.
+ *
+ * Mora num componente, e não na casca, porque o ADR 0003 pede que o JavaScript de cada
+ * página carregue só onde é usado — a página de Projeto e a 404 não têm bloco nenhum para
+ * revelar. Quem tiver `.rv` põe este componente na página, antes do conteúdo.
+ */
+---
+
+{/* Sem JavaScript ninguém revela nada, e o conteúdo precisa aparecer assim mesmo: o
+  movimento é enfeite, o conteúdo não. A regra vem antes do conteúdo para não haver piscada. */}
+<noscript>
+  <style is:inline>
+    .rv {
+      opacity: 1;
+      transform: none;
+    }
+  </style>
+</noscript>
+
+<script>
+  const blocos = document.querySelectorAll('.rv');
+  if ('IntersectionObserver' in window) {
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        for (const entrada of entradas)
+          if (entrada.isIntersecting) {
+            entrada.target.classList.add('in');
+            observador.unobserve(entrada.target);
+          }
+      },
+      // A entrada dispara quando o bloco já avançou um pouco na tela, não na borda.
+      { rootMargin: '0px 0px -10% 0px' },
+    );
+    for (const bloco of blocos) observador.observe(bloco);
+  } else {
+    for (const bloco of blocos) bloco.classList.add('in');
+  }
+</script>

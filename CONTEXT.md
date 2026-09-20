@@ -50,6 +50,14 @@ _Avoid_: tool, programa, skill
 O bloco "Ferramentas" da home: o conjunto de softwares que Giordanna domina, em três níveis, do maior para o menor. É independente das Ferramentas de cada Projeto (inclui, por exemplo, Pacote Office e AutoCAD, que nenhum Projeto lista).
 _Avoid_: skills, competências, nível
 
+**Credencial**:
+Uma linha da grade de dados objetivos do bloco Sobre, na home: um rótulo curto (Formação, Atuação, Projetos, Serviços) e o que ele reúne. Vive na configuração tipada, não no CMS.
+_Avoid_: qualificação, dado, item
+
+**CTA**:
+O convite que fecha a home, com uma frase e o botão para a Grade de projetos.
+_Avoid_: chamada, call to action, banner
+
 **Ordem**:
 A posição de um Projeto na grade e na navegação anterior/próximo. Número inteiro, único entre os Projetos, numerado de 10 em 10 para inserir um novo sem renumerar os demais.
 _Avoid_: posição, índice, peso

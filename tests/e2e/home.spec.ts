@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { chamada, contatos, familiaridade, hero, sobre } from '../../src/config.ts';
+import { contatos, cta, familiaridade, hero, sobre } from '../../src/config.ts';
 import { corDoPixel, lerPng, luminancia } from './pixels.ts';
 
 // A home é a página que o Preview aprovado define em maior detalhe. O que esta suíte guarda
@@ -26,17 +26,29 @@ const varianteDoHero = async (page: Page) => {
   });
 };
 
+/** Abre a home na tela pedida e devolve as URLs de imagem que o navegador chegou a buscar. */
 const abrirEm = async (page: Page, largura: number, altura: number) => {
   await page.setViewportSize({ width: largura, height: altura });
+  const buscadas: string[] = [];
+  page.on('response', (resposta) => {
+    if (resposta.request().resourceType() === 'image') buscadas.push(resposta.url());
+  });
   await page.goto('/');
   await page.waitForLoadState('load');
+  return buscadas;
+};
+
+/** A variante escolhida, conferida contra o que a rede de fato buscou. */
+const varianteBuscada = async (page: Page, buscadas: string[]) => {
+  const variante = await varianteDoHero(page);
+  const absoluta = new URL(variante.url, page.url()).href;
+  expect(buscadas, 'a variante do hero não apareceu na rede').toContain(absoluta);
+  return variante.largura;
 };
 
 test('o hero abre a home com o título, a legenda e o atalho às redes', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-    `${hero.titulo} ${hero.destaque}`,
-  );
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText(`${hero.titulo} ${hero.enfase}`);
   await expect(page.locator('.hero-sub')).toHaveText(hero.subtitulo);
   await expect(page.locator('.hero-cap')).toHaveText(hero.legenda);
 
@@ -55,18 +67,20 @@ test('a imagem do hero carrega de imediato e com prioridade', async ({ page }) =
 });
 
 test('em desktop o hero baixa uma variante de pelo menos 1920 px', async ({ page }) => {
-  await abrirEm(page, 1440, 900);
-  expect((await varianteDoHero(page)).largura).toBeGreaterThanOrEqual(1920);
+  const buscadas = await abrirEm(page, 1440, 900);
+  expect(await varianteBuscada(page, buscadas)).toBeGreaterThanOrEqual(1920);
 });
 
 test('em tela grande o hero baixa a variante nativa de 2304 px', async ({ page }) => {
-  await abrirEm(page, 2560, 1440);
-  expect((await varianteDoHero(page)).largura).toBe(2304);
+  const buscadas = await abrirEm(page, 2560, 1440);
+  expect(await varianteBuscada(page, buscadas)).toBe(2304);
 });
 
-test('em tela de celular o hero não baixa a variante maior', async ({ page }) => {
-  await abrirEm(page, 375, 812);
-  expect((await varianteDoHero(page)).largura).toBeLessThanOrEqual(1280);
+test('em tela de celular o hero não baixa uma variante de desktop', async ({ page }) => {
+  // 375 px de tela a três pontos por pixel pedem 1192 px de imagem: a de 1280 serve, e as de
+  // 1920 e 2304 seriam peso jogado fora no 4G. É esse desperdício que o teto guarda.
+  const buscadas = await abrirEm(page, 375, 812);
+  expect(await varianteBuscada(page, buscadas)).toBeLessThanOrEqual(1280);
 });
 
 test('com prefers-reduced-motion o hero fica parado', async ({ page }) => {
@@ -93,7 +107,7 @@ test('Sobre traz a apresentação e as quatro credenciais', async ({ page }) => 
   await page.goto('/');
   const secao = page.locator('.about');
   await expect(secao.getByRole('heading', { level: 2 })).toHaveText(
-    `${sobre.titulo} ${sobre.destaque}`,
+    `${sobre.titulo} ${sobre.enfase}`,
   );
   await expect(secao.locator('p')).toHaveCount(sobre.paragrafos.length);
   for (const [i, paragrafo] of sobre.paragrafos.entries())
@@ -132,21 +146,21 @@ test('a moldura do retrato fica atrás da foto e continua visível', async ({ pa
 test('Familiaridade lista as ferramentas da maior para a menor', async ({ page }) => {
   await page.goto('/');
   const ferramentas = page.locator('.tools-grid .tool');
-  await expect(ferramentas).toHaveText(familiaridade.map(({ nome }) => nome));
+  await expect(ferramentas).toHaveText(familiaridade.itens.map(({ nome }) => nome));
 
   const niveis = await ferramentas.evaluateAll((itens) =>
     itens.map((item) => Number(item.className.match(/\bt(\d)\b/)?.[1])),
   );
-  expect(niveis).toEqual(familiaridade.map(({ nivel }) => nivel));
+  expect(niveis).toEqual(familiaridade.itens.map(({ nivel }) => nivel));
   expect([...niveis]).toEqual([...niveis].sort((a, b) => a - b));
 });
 
 test('a chamada do fim da home leva à Grade de projetos', async ({ page }) => {
   await page.goto('/');
-  const convite = page.locator('.cta').getByRole('link', { name: chamada.rotulo });
-  await expect(convite).toHaveAttribute('href', chamada.href);
+  const convite = page.locator('.cta').getByRole('link', { name: cta.rotulo });
+  await expect(convite).toHaveAttribute('href', cta.href);
   await expect(page.locator('.cta').getByRole('heading', { level: 2 })).toHaveText(
-    `${chamada.titulo} ${chamada.destaque}`,
+    `${cta.titulo} ${cta.enfase}`,
   );
 });
 
@@ -154,20 +168,33 @@ test('a chamada do fim da home leva à Grade de projetos', async ({ page }) => {
 // faixa atrás dele: em cinza de 0 a 255, o fundo não pode passar de 110.
 const TETO_DA_FAIXA = 110;
 
+/**
+ * A luminância média da faixa que fica atrás do cabeçalho, no pior quadro do Ken Burns: a
+ * aproximação muda o que aparece ali, então a medida congela a animação em três pontos do
+ * ciclo e fica com o mais claro dos três.
+ */
 const faixaDoCabecalho = async (page: Page) => {
   const alturaDaFaixa = await page
     .locator('.hdr')
     .evaluate((el) => el.getBoundingClientRect().bottom);
   const escala = await page.evaluate(() => devicePixelRatio);
-  const tela = lerPng(await page.screenshot());
-  let soma = 0;
-  let pontos = 0;
-  for (let y = 0; y < Math.round(alturaDaFaixa * escala); y++)
-    for (let x = 0; x < tela.largura; x++) {
-      soma += luminancia(corDoPixel(tela, x, y));
-      pontos++;
-    }
-  return soma / pontos;
+
+  const medidas: number[] = [];
+  for (const segundos of [0, 13, 26]) {
+    await page.addStyleTag({
+      content: `.hero-img{animation-play-state:paused;animation-delay:-${segundos}s}`,
+    });
+    const tela = lerPng(await page.screenshot());
+    let soma = 0;
+    let pontos = 0;
+    for (let y = 0; y < Math.round(alturaDaFaixa * escala); y++)
+      for (let x = 0; x < tela.largura; x++) {
+        soma += luminancia(corDoPixel(tela, x, y));
+        pontos++;
+      }
+    medidas.push(soma / pontos);
+  }
+  return Math.max(...medidas);
 };
 
 test('a faixa atrás do cabeçalho é escura mesmo antes de o render pintar', async ({ page }) => {

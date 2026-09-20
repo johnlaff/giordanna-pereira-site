@@ -1,15 +1,15 @@
 ---
-/** O convite que fecha a home: uma frase e o caminho para a Grade de projetos. */
-import { chamada } from '../config';
+/** A CTA que fecha a home: o convite e o caminho para a Grade de projetos. */
+import { cta } from '../config';
 import Icone from './Icone.astro';
 ---
 
 <section class="shell cta rv">
   <h2>
-    {chamada.titulo} <em>{chamada.destaque}</em>
+    {cta.titulo} <em>{cta.enfase}</em>
   </h2>
-  <a class="btn" href={chamada.href}>
-    {chamada.rotulo}
+  <a class="btn" href={cta.href}>
+    {cta.rotulo}
     <Icone nome="seta" />
   </a>
 </section>

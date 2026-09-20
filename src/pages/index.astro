@@ -1,14 +1,16 @@
 ---
-import Chamada from '../components/Chamada.astro';
+import CTA from '../components/CTA.astro';
 import Ferramentas from '../components/Ferramentas.astro';
 import Hero from '../components/Hero.astro';
+import Revelar from '../components/Revelar.astro';
 import Sobre from '../components/Sobre.astro';
 import Base from '../layouts/Base.astro';
 ---
 
 <Base secao="home" hero>
+  <Revelar />
   <Hero />
   <Sobre />
   <Ferramentas />
-  <Chamada />
+  <CTA />
 </Base>

@@ -67,13 +67,13 @@ export const contatos: readonly Contato[] = [
 ];
 
 /**
- * O hero da home. `titulo` e `destaque` são as duas linhas do h1; o destaque é a segunda,
- * em tom mais claro. O espaço fino antes de "executivo" é um espaço inquebrável: a palavra
- * não pode cair sozinha na última linha.
+ * O hero da home. `titulo` e `enfase` são as duas linhas do h1; a ênfase é a segunda, em tom
+ * mais claro. O espaço antes de "executivo" é inquebrável: a palavra não pode cair sozinha
+ * na última linha.
  */
 export const hero = {
   titulo: 'Espaços projetados',
-  destaque: 'para viver.',
+  enfase: 'para viver.',
   subtitulo:
     'Arquiteta e Urbanista e Técnica em Edificações, integrando metodologia BIM do estudo preliminar ao detalhamento executivo.',
   /** Descrição do render para quem não vê a imagem de fundo. */
@@ -87,7 +87,7 @@ export type Credencial = { rotulo: string; texto: readonly string[] };
 
 export const sobre = {
   titulo: 'Pronta para',
-  destaque: 'somar.',
+  enfase: 'somar.',
   retratoAlt: 'Retrato de Giordanna Pereira com capacete de obra',
   paragrafos: [
     'Arquiteta e Urbanista formada pela Universidade Federal de Uberlândia e Técnica em Edificações pelo CEFET - MG, com três anos de experiência prática em três escritórios, da criação à documentação executiva de projetos residenciais e comerciais.',
@@ -110,26 +110,31 @@ export const sobre = {
 /**
  * Familiaridade: os softwares que Giordanna domina, em três níveis, do maior para o menor.
  * É independente das Ferramentas de cada Projeto — o Pacote Office e o AutoCAD entram aqui
- * e nenhum Projeto os lista.
+ * e nenhum Projeto os lista —, e por isso o item tem nome próprio, não o de Ferramenta.
  */
 export type Nivel = 1 | 2 | 3;
-export type Ferramenta = { nome: string; nivel: Nivel };
+export type ItemDeFamiliaridade = { nome: string; nivel: Nivel };
 
-export const familiaridade: readonly Ferramenta[] = [
-  { nome: 'Archicad', nivel: 1 },
-  { nome: 'SketchUp + Layout', nivel: 2 },
-  { nome: 'Enscape', nivel: 2 },
-  { nome: 'Pacote Office', nivel: 2 },
-  { nome: 'Revit', nivel: 3 },
-  { nome: 'AutoCAD', nivel: 3 },
-  { nome: 'V-Ray', nivel: 3 },
-  { nome: 'Adobe Ai · Ps · Id', nivel: 3 },
-];
+export const familiaridade = {
+  titulo: 'Ferramentas',
+  /** O que o leitor de tela anuncia antes da lista, já que a ordem é a informação. */
+  rotulo: 'Ferramentas, da maior para a menor familiaridade',
+  itens: [
+    { nome: 'Archicad', nivel: 1 },
+    { nome: 'SketchUp + Layout', nivel: 2 },
+    { nome: 'Enscape', nivel: 2 },
+    { nome: 'Pacote Office', nivel: 2 },
+    { nome: 'Revit', nivel: 3 },
+    { nome: 'AutoCAD', nivel: 3 },
+    { nome: 'V-Ray', nivel: 3 },
+    { nome: 'Adobe Ai · Ps · Id', nivel: 3 },
+  ] as readonly ItemDeFamiliaridade[],
+} as const;
 
-/** O convite que fecha a home. */
-export const chamada = {
+/** A CTA que fecha a home: o convite e o caminho para a Grade de projetos. */
+export const cta = {
   titulo: 'Conheça mais',
-  destaque: 'do meu trabalho.',
+  enfase: 'do meu trabalho.',
   rotulo: 'Ver projetos',
   href: '/projetos',
 } as const;
