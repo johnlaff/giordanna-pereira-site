@@ -5,6 +5,7 @@ import Ficha from '../../components/Ficha.astro';
 import Galeria from '../../components/Galeria.astro';
 import { ordenarProjetos, vizinhosNaOrdem } from '../../content.schema';
 import Base from '../../layouts/Base.astro';
+import { rotaDoProjeto } from '../../rotas';
 
 export async function getStaticPaths() {
   const projetos = ordenarProjetos(await getCollection('projetos'));
@@ -34,17 +35,17 @@ const { titulo, tipo, descricao, ferramentas, galeria } = projeto.data;
         </ul>
       </div>
       <Ficha ficha={projeto.data}>
-        <Compartilhe titulo={titulo} rota={`/projetos/${projeto.id}`} />
+        <Compartilhe titulo={titulo} rota={rotaDoProjeto(projeto.id)} />
       </Ficha>
     </div>
     <Galeria imagens={galeria} titulo={titulo} />
     {vizinhos && (
       <nav class="pn" aria-label="Outros projetos">
-        <a href={`/projetos/${vizinhos.anterior.id}`}>
+        <a href={rotaDoProjeto(vizinhos.anterior.id)}>
           <small>Projeto anterior</small>
           <b>{vizinhos.anterior.data.titulo}</b>
         </a>
-        <a class="next" href={`/projetos/${vizinhos.proximo.id}`}>
+        <a class="next" href={rotaDoProjeto(vizinhos.proximo.id)}>
           <small>Próximo projeto</small>
           <b>{vizinhos.proximo.data.titulo}</b>
         </a>

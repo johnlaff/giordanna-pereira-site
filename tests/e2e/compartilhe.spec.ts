@@ -1,6 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { tituloCompartilhado } from '../../src/components/compartilhe.ts';
-import { site } from '../../src/config.ts';
+import { site, tituloDaPagina } from '../../src/config.ts';
 import { projetos } from './projetos.ts';
 
 // O bloco Compartilhe da Ficha. O que cada destino espera está fixado nos testes de unidade;
@@ -38,7 +37,7 @@ for (const { slug, rota, dados } of projetos) {
   test(`${slug}: cada destino leva o nome do Projeto e o endereço da página`, async ({ page }) => {
     await page.goto(rota);
     const url = canonica(rota);
-    const titulo = tituloCompartilhado(dados.titulo);
+    const titulo = tituloDaPagina(dados.titulo);
     const href = async (rotulo: string) =>
       new URL(
         (await page
@@ -116,7 +115,7 @@ test('com navigator.share o botão nativo aparece e envia o título e a URL can�
     (await page.locator('html').getAttribute('data-compartilhado')) ?? '{}',
   );
   expect(enviado).toEqual({
-    title: tituloCompartilhado(primeiro.dados.titulo),
+    title: tituloDaPagina(primeiro.dados.titulo),
     url: canonica(primeiro.rota),
   });
 });
@@ -139,6 +138,24 @@ test('copiar link põe a URL canônica na área de transferência e avisa por re
 
   // O aviso é passageiro: some sozinho e não fica no caminho da leitura.
   await expect(aviso).toHaveCSS('opacity', '0', { timeout: 6000 });
+});
+
+test('copiar link duas vezes anuncia as duas', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+  await page.goto(primeiro.rota);
+
+  const aviso = page.locator('.share').getByRole('status');
+  const copiar = page.locator('.share').getByRole('button', { name: 'Copiar link' });
+
+  await copiar.click();
+  await expect(aviso).toHaveText('Link copiado');
+  // Depois de sumir, a região viva volta a ficar vazia: escrever de novo a mesma frase numa
+  // região viva não é mudança, e sem esvaziá-la o segundo clique apareceria sem ser anunciado.
+  await expect(aviso).toHaveText('', { timeout: 6000 });
+
+  await copiar.click();
+  await expect(aviso).toHaveText('Link copiado');
+  await expect(aviso).toHaveCSS('opacity', '1');
 });
 
 test('sem permissão para a área de transferência o aviso ensina o caminho manual', async ({
@@ -174,15 +191,19 @@ test('o teclado alcança a fileira inteira, com foco visível e rótulo próprio
   expect(alcancados).toEqual(rotulos);
   expect(new Set(alcancados).size).toBe(rotulos.length);
 
+  // A cor sai do token, não de um rgb cravado aqui: quem manda no anel é `tokens.css`.
   const anel = await page.evaluate(() => {
     const { outlineStyle, outlineWidth, outlineColor } = getComputedStyle(document.activeElement!);
-    return { outlineStyle, outlineWidth, outlineColor };
+    const sonda = document.createElement('span');
+    sonda.style.color = 'var(--navy)';
+    document.body.append(sonda);
+    const navy = getComputedStyle(sonda).color;
+    sonda.remove();
+    return { outlineStyle, outlineWidth, outlineColor, navy };
   });
-  expect(anel).toEqual({
-    outlineStyle: 'solid',
-    outlineWidth: '2px',
-    outlineColor: 'rgb(46, 58, 72)',
-  });
+  expect(anel.outlineStyle).toBe('solid');
+  expect(anel.outlineWidth).toBe('2px');
+  expect(anel.outlineColor).toBe(anel.navy);
 });
 
 test('o botão nativo escondido fica fora do caminho do teclado', async ({ page }) => {

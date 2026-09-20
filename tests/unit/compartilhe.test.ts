@@ -1,23 +1,27 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { site } from '../../src/config.ts';
-import {
-  destinosDeCompartilhamento,
-  tituloCompartilhado,
-} from '../../src/components/compartilhe.ts';
+import { destinosDeCompartilhamento } from '../../src/components/compartilhe.ts';
+import { site, tituloDaPagina } from '../../src/config.ts';
 
 const url = 'https://giordannapereira.arq.br/projetos/edificio-vitalis';
 const destinos = destinosDeCompartilhamento('Edifício Vitalis', url);
 const porTipo = (tipo: string) => destinos.find((destino) => destino.tipo === tipo)!;
 
-test('o que se compartilha é o nome do Projeto junto ao do site', () => {
+test('o que se compartilha é o título da página, e não só o nome do Projeto', () => {
   // Quem recebe o link vê de quem ele é antes de abrir: é o mesmo par do título da aba.
-  assert.equal(tituloCompartilhado('Edifício Vitalis'), `Edifício Vitalis — ${site.nome}`);
+  assert.equal(tituloDaPagina('Edifício Vitalis'), `Edifício Vitalis — ${site.nome}`);
+  // O LinkedIn e o Facebook só recebem a URL — o título quem monta são eles, a partir dela.
+  for (const tipo of ['whatsapp', 'email']) {
+    assert.ok(
+      porTipo(tipo).href.includes(encodeURIComponent(tituloDaPagina('Edifício Vitalis'))),
+      `${tipo} deveria levar o título da página`,
+    );
+  }
 });
 
 test('cada destino leva a URL canônica da página, com o parâmetro que ele espera', () => {
   const u = encodeURIComponent(url);
-  const t = encodeURIComponent(`Edifício Vitalis — ${site.nome}`);
+  const t = encodeURIComponent(tituloDaPagina('Edifício Vitalis'));
 
   assert.equal(porTipo('whatsapp').href, `https://wa.me/?text=${t}%20${u}`);
   assert.equal(

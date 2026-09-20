@@ -42,6 +42,14 @@ _Avoid_: planta, lâmina, desenho
 O bloco de dados objetivos de um Projeto: local, ano, área e equipe. Na página, aparece sob o título "Detalhes do projeto".
 _Avoid_: ficha, detalhes, dados técnicos
 
+**Compartilhe**:
+O bloco que fecha o painel da Ficha na página de um Projeto: o rótulo e a fileira de Destinos, com o compartilhamento do próprio aparelho e o copiar link.
+_Avoid_: share, social share, botões de compartilhar
+
+**Destino**:
+Um lugar para onde o bloco Compartilhe manda a página (WhatsApp, LinkedIn, Facebook, e-mail). É uma âncora montada no build, com o título da página e a URL canônica; não se confunde com Contato, que é um canal para falar com Giordanna.
+_Avoid_: rede, share target, canal
+
 **Ferramenta**:
 Software usado em um Projeto (ex.: Archicad, Enscape), listado na página do Projeto.
 _Avoid_: tool, programa, skill

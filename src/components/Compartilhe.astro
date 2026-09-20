@@ -12,7 +12,8 @@
  * O bloco não depende das imagens Open Graph: quem compartilha já leva link e título certos, e
  * a OG gerada no build (#13) só melhora o cartão depois.
  */
-import { destinosDeCompartilhamento, tituloCompartilhado } from './compartilhe';
+import { tituloDaPagina } from '../config';
+import { destinosDeCompartilhamento } from './compartilhe';
 import Icone from './Icone.astro';
 
 interface Props {
@@ -31,7 +32,7 @@ const url = new URL(rota, Astro.site).href;
 const destinos = destinosDeCompartilhamento(titulo, url);
 ---
 
-<div class="share" data-url={url} data-titulo={tituloCompartilhado(titulo)}>
+<div class="share" data-url={url} data-titulo={tituloDaPagina(titulo)}>
   <span class="rotulo">Compartilhe</span>
   <div class="share-row">
     <button type="button" class="nativo" aria-label="Compartilhar" title="Compartilhar" hidden>
@@ -153,13 +154,23 @@ const destinos = destinosDeCompartilhamento(titulo, url);
     const copiar = bloco.querySelector<HTMLButtonElement>('.copiar');
 
     /** O retorno do copiar link: visível para quem vê e anunciado pela região viva. */
-    let aTempo = 0;
+    let sumico = 0;
+    let limpeza = 0;
     const avisar = (texto: string) => {
       if (toast === null) return;
+      clearTimeout(sumico);
+      clearTimeout(limpeza);
       toast.textContent = texto;
       toast.classList.add('on');
-      clearTimeout(aTempo);
-      aTempo = window.setTimeout(() => toast.classList.remove('on'), 2200);
+      sumico = window.setTimeout(() => {
+        toast.classList.remove('on');
+        // A região viva anuncia mudança, e escrever a mesma frase de novo não é mudança: sem
+        // esvaziá-la depois de sumir, o segundo clique voltaria a aparecer sem ser anunciado.
+        // O esvaziar espera o aviso já estar invisível, para o texto não piscar embora.
+        limpeza = window.setTimeout(() => {
+          toast.textContent = '';
+        }, 300);
+      }, 2200);
     };
 
     // O botão nativo só existe onde o navegador o tem — no celular, quase sempre; no desktop,

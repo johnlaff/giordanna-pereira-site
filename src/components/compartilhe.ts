@@ -10,7 +10,9 @@
  * O compartilhamento nativo e o copiar link ficam em `Compartilhe.astro`, que precisa do
  * navegador para saber se existem.
  */
-import { site } from '../config.ts';
+// A extensão é explícita porque o teste de unidade carrega este módulo pelo runner do Node,
+// que resolve como ESM e não tem o bundler do Astro para adivinhá-la.
+import { tituloDaPagina } from '../config.ts';
 
 export type TipoDeDestino = 'whatsapp' | 'linkedin' | 'facebook' | 'email';
 
@@ -25,16 +27,15 @@ export type Destino = {
   externo: boolean;
 };
 
-/** O que vai escrito na mensagem: o Projeto e de quem ele é, o mesmo par do título da aba. */
-export const tituloCompartilhado = (titulo: string): string => `${titulo} — ${site.nome}`;
-
 /**
- * Os destinos na ordem do Preview. Cada um espera o seu parâmetro: o WhatsApp recebe uma
+ * Os destinos na ordem do Preview. O que vai escrito é o título da página — o Projeto e de
+ * quem ele é —, para a conversa mostrar o mesmo que a aba do navegador.
+ * Cada um espera o seu parâmetro: o WhatsApp recebe uma
  * mensagem única — título e endereço separados por espaço —, o LinkedIn e o Facebook só a URL,
  * e o e-mail traz o título no assunto e o endereço no corpo.
  */
 export const destinosDeCompartilhamento = (titulo: string, url: string): readonly Destino[] => {
-  const t = encodeURIComponent(tituloCompartilhado(titulo));
+  const t = encodeURIComponent(tituloDaPagina(titulo));
   const u = encodeURIComponent(url);
   return [
     {
