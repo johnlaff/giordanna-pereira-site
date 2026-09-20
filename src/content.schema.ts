@@ -1,7 +1,8 @@
 /**
- * Contrato do conteúdo dos Projetos: a forma de cada arquivo, a invariante de Ordem única
- * entre eles e as leituras que derivam das duas — a sequência, os vizinhos de cada Projeto e
- * a Capa. Tudo vale no build e muda pelo mesmo motivo — uma mudança no que é um Projeto —,
+ * Contrato do conteúdo editável: a forma de cada arquivo de Projeto e de Depoimento, as
+ * invariantes entre eles — a Ordem única dos Projetos, a sequência dos Depoimentos — e as
+ * leituras que derivam das duas: a sequência, os vizinhos de cada Projeto e a Capa. Tudo vale
+ * no build e muda pelo mesmo motivo — uma mudança no que é um Projeto ou um Depoimento —,
  * por isso mora junto.
  *
  * O módulo fica fora de `content.config.ts` para o teste de contrato carregá-lo sem o runtime
@@ -38,6 +39,27 @@ export const esquemaDeProjeto = <T extends z.ZodType>(imagem: () => T) =>
     galeria: z.array(imagem()),
     ordem: z.int(),
   });
+
+export const esquemaDeDepoimento = () =>
+  z.object({
+    nome: texto(),
+    papel: texto(),
+    /** Sem texto, o Depoimento está cadastrado e aguardando: é o estado Em breve. */
+    texto: texto().optional(),
+  });
+
+type DepoimentoOrdenavel = { id: string };
+
+/**
+ * A sequência dos Depoimentos no carrossel, que é a do nome do arquivo — daí o prefixo
+ * numérico de `src/content/depoimentos/`. Um Depoimento não tem Ordem própria como o Projeto
+ * porque nada mais depende da posição dele: ela não vira URL nem navegação, só a vez de
+ * aparecer. A comparação é byte a byte, e não por locale, para que a sequência do build seja
+ * a mesma em qualquer máquina.
+ */
+export function ordenarDepoimentos<T extends DepoimentoOrdenavel>(depoimentos: readonly T[]): T[] {
+  return [...depoimentos].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
 
 type ProjetoOrdenavel = { id: string; data: { ordem: number } };
 

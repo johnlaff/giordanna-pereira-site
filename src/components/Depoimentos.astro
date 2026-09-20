@@ -1,0 +1,471 @@
+---
+/**
+ * Depoimentos: o carrossel da home, na ordem do conteúdo. Um Depoimento sem texto aparece no
+ * estado Em breve — cadastrado, visível, aguardando o que a pessoa ainda vai escrever.
+ *
+ * O carrossel é uma faixa de rolagem nativa com encaixe (`scroll-snap`), e não um trilho
+ * animado por JavaScript: quem chega pelo toque já arrasta com a inércia do sistema, quem
+ * chega pelo teclado rola a faixa, e sem JavaScript nenhum os cards continuam legíveis e
+ * roláveis. O que o script acrescenta é o giro infinito, as setas e o esmaecimento das
+ * pontas.
+ *
+ * O giro infinito é feito de cópias: a lista inteira entra de novo antes do primeiro card e
+ * depois do último, e quando a rolagem para sobre uma cópia a posição salta, sem animação,
+ * para o card verdadeiro equivalente. Clonar a lista inteira — e não dois ou três cards —
+ * garante que sempre haja pista para rolar além da ponta antes do salto.
+ */
+import { getCollection } from 'astro:content';
+import { depoimentos as secao } from '../config';
+import { ordenarDepoimentos } from '../content.schema';
+import Icone from './Icone.astro';
+
+const lista = ordenarDepoimentos(await getCollection('depoimentos'));
+
+/** O espaço é inquebrável: "breve" não pode cair sozinho na última linha do card. */
+const EM_BREVE = 'Depoimento em\u00a0breve.';
+---
+
+<section class="quotes" id="depoimentos">
+  <div class="shell">
+    <div class="sec-head">
+      <h2 class="sec-title">{secao.titulo}</h2>
+      <span class="sec-rule" aria-hidden="true"></span>
+    </div>
+    <div class="qcar rv" role="region" aria-roledescription="carrossel" aria-label={secao.rotulo}>
+      {/* A faixa recebe o foco para quem navega pelo teclado: é ela que rola, e as setas do
+        teclado andam de card em card. Uma região que rola e não é alcançável pelo teclado é
+        violação de WCAG 2.1.1 (a regra `scrollable-region-focusable` do axe), e é isso que a
+        linha abaixo resolve; a regra do ESLint enxerga só a `div` sem papel interativo. */}
+      {/* eslint-disable-next-line astro/jsx-a11y/no-noninteractive-tabindex */}
+      <div class="qtrack" tabindex="0">
+        {lista.map(({ data }, i) => (
+          <figure
+            class:list={['qcard', { soon: data.texto === undefined }]}
+            role="group"
+            aria-roledescription="depoimento"
+            aria-label={`${i + 1} de ${lista.length}`}
+          >
+            <p>{data.texto ?? EM_BREVE}</p>
+            <figcaption>
+              <b>{data.nome}</b>
+              <span>{data.papel}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+      <button type="button" class="qbtn prev" data-passo="-1" aria-label="Depoimento anterior">
+        <Icone nome="anterior" />
+      </button>
+      <button type="button" class="qbtn next" data-passo="1" aria-label="Próximo depoimento">
+        <Icone nome="proximo" />
+      </button>
+    </div>
+  </div>
+</section>
+
+<style>
+  .quotes {
+    background: var(--faixa-clara);
+    padding: var(--sp-sec) var(--gutter);
+  }
+  .quotes .shell {
+    padding-inline: 0;
+  }
+  .quotes .sec-head {
+    padding-top: 0;
+  }
+  /* `--qpeek` é a fresta do card seguinte que fica à mostra: a promessa de que há mais. */
+  .qcar {
+    --qgap: 24px;
+    --qpeek: 14%;
+    position: relative;
+  }
+  .qtrack {
+    display: flex;
+    gap: var(--qgap);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    padding: 6px 0 10px;
+    scrollbar-width: none;
+    outline: none;
+  }
+  .qtrack::-webkit-scrollbar {
+    display: none;
+  }
+  .qtrack:focus-visible {
+    outline: 2px solid var(--navy);
+    outline-offset: -2px;
+  }
+  /* Durante o arraste com o mouse o encaixe sai do caminho: ele brigaria com a posição que o
+     ponteiro dita a cada quadro, e só volta a mandar quando o gesto termina. */
+  .qtrack.drag {
+    scroll-snap-type: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .qcard {
+    flex: 0 0 calc((100% - var(--qgap) * 2 - var(--qpeek)) / 3);
+    scroll-snap-align: start;
+    background: var(--paper);
+    padding: 26px 26px 22px;
+    border-top: 2px solid var(--sand);
+    display: flex;
+    flex-direction: column;
+    min-height: 300px;
+    transition: opacity 0.45s var(--ease);
+    cursor: grab;
+  }
+  /* Meio-termo do arraste com mouse: a superfície do card mostra a mão e arrasta; o texto
+     mostra o cursor de texto e continua selecionável. */
+  .qcard p,
+  .qcard figcaption {
+    cursor: auto;
+  }
+  .qtrack.drag,
+  .qtrack.drag * {
+    cursor: grabbing;
+  }
+  /* Card fora da janela do carrossel: esmaecido, para a atenção ficar nos que estão em cena. */
+  .qcard.dim {
+    opacity: 0.42;
+  }
+  /* No quadro do salto invisível, nada transiciona: o esmaecimento entraria dançando. */
+  .qtrack.nofx .qcard {
+    transition: none;
+  }
+  .qcard::before {
+    content: '\201C';
+    font-family: var(--font-serif);
+    font-size: 64px;
+    line-height: 0.6;
+    color: var(--sand);
+    display: block;
+    margin-bottom: 12px;
+  }
+  .qcard p {
+    font-size: 15px;
+    color: var(--ink-soft);
+    margin-bottom: 16px;
+    flex: 1;
+  }
+  .qcard.soon p {
+    font-style: italic;
+  }
+  .qcard b {
+    display: block;
+    font-weight: 500;
+    font-size: 15px;
+  }
+  .qcard span {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .qbtn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%;
+    border: 1px solid rgba(46, 58, 72, 0.35);
+    background: rgba(241, 242, 240, 0.92);
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(35, 45, 56, 0.12);
+    transition:
+      background 0.3s,
+      color 0.3s,
+      border-color 0.3s;
+  }
+  .qbtn :global(svg) {
+    width: 18px;
+    height: 18px;
+  }
+  .qbtn.prev {
+    left: -23px;
+  }
+  .qbtn.next {
+    right: -23px;
+  }
+  .qbtn:hover {
+    background: var(--navy);
+    color: var(--paper);
+    border-color: var(--navy);
+  }
+  @media (max-width: 1100px) {
+    .qcard {
+      flex-basis: calc((100% - var(--qgap) - var(--qpeek)) / 2);
+    }
+  }
+  @media (max-width: 700px) {
+    .qcar {
+      --qpeek: 12%;
+      --qgap: 14px;
+    }
+    .qcard {
+      flex-basis: calc(100% - var(--qpeek));
+      min-height: 0;
+    }
+    .qbtn.prev {
+      left: -8px;
+    }
+    .qbtn.next {
+      right: -8px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .qcard,
+    .qbtn {
+      transition: none;
+    }
+    .qtrack {
+      scroll-behavior: auto;
+    }
+  }
+</style>
+
+<script>
+  const carrossel = document.querySelector<HTMLElement>('.qcar');
+  const trilho = carrossel?.querySelector<HTMLElement>('.qtrack');
+  if (carrossel != null && trilho != null) {
+    const reais = [...trilho.children] as HTMLElement[];
+    const total = reais.length;
+    const semMovimento = matchMedia('(prefers-reduced-motion: reduce)');
+
+    /* ===== cópias nas duas pontas ===== */
+    // A cópia é enfeite de rolagem, não conteúdo: sai da árvore de acessibilidade e do
+    // caminho do foco, para o leitor de tela anunciar seis Depoimentos, e não dezoito.
+    const copiar = (card: HTMLElement) => {
+      const copia = card.cloneNode(true) as HTMLElement;
+      copia.classList.add('clone');
+      copia.setAttribute('aria-hidden', 'true');
+      copia.inert = true;
+      return copia;
+    };
+    for (const card of [...reais].reverse()) trilho.insertBefore(copiar(card), trilho.firstChild);
+    for (const card of reais) trilho.appendChild(copiar(card));
+    const cards = [...trilho.children] as HTMLElement[];
+
+    /* ===== medidas ===== */
+    const origem = () => cards[0]!.offsetLeft;
+    /** Distância de um card ao seguinte: a largura dele mais o espaço entre os dois. */
+    const passo = () => cards[1]!.offsetLeft - origem();
+    /** Posição do primeiro card verdadeiro, logo depois das cópias da frente. */
+    const inicioReal = () => cards[total]!.offsetLeft - origem();
+    /** Quanto a faixa anda de uma volta inteira da lista. */
+    const volta = () => total * passo();
+
+    /**
+     * Esmaece o que saiu da janela do carrossel e o tira do caminho de quem não vê a tela:
+     * um card fora de vista não deve ser lido nem receber foco. As cópias já saíram na
+     * criação e não voltam.
+     */
+    const atualizarVisiveis = () => {
+      const rolagem = trilho.scrollLeft;
+      const janela = trilho.clientWidth;
+      for (const card of cards) {
+        const esquerda = card.offsetLeft - origem() - rolagem;
+        // A folga de 6 px absorve o arredondamento da rolagem, que chega fracionado.
+        const fora = esquerda < -6 || esquerda + card.offsetWidth > janela + 6;
+        card.classList.toggle('dim', fora);
+        if (card.classList.contains('clone')) continue;
+        card.setAttribute('aria-hidden', fora ? 'true' : 'false');
+        card.inert = fora;
+      }
+    };
+
+    /* ===== giro infinito ===== */
+    let quadro = 0;
+    let saltando = false;
+    let repouso = 0;
+    /** Dedo ou botão do mouse pressionado: nunca saltar no meio do gesto. */
+    let apertado = false;
+
+    /** Fim da rolagem: traz a posição de volta para dentro da faixa de cards verdadeiros. */
+    const assentar = () => {
+      if (apertado) {
+        clearTimeout(repouso);
+        repouso = window.setTimeout(assentar, 120);
+        return;
+      }
+      const rolagem = trilho.scrollLeft;
+      const inicio = inicioReal();
+      const uma = volta();
+      let saltou = false;
+      if (rolagem < inicio - 2) {
+        saltando = true;
+        trilho.scrollLeft = rolagem + uma;
+        saltando = false;
+        saltou = true;
+      } else if (rolagem >= inicio + uma - 2) {
+        saltando = true;
+        trilho.scrollLeft = rolagem - uma;
+        saltando = false;
+        saltou = true;
+      }
+      if (!saltou) {
+        atualizarVisiveis();
+        return;
+      }
+      // O salto é invisível porque a faixa já mostra o mesmo card; o que denunciaria é o
+      // esmaecimento transicionando. Ele entra com a transição desligada, e ela volta no
+      // quadro seguinte.
+      trilho.classList.add('nofx');
+      atualizarVisiveis();
+      void trilho.offsetWidth;
+      requestAnimationFrame(() => trilho.classList.remove('nofx'));
+    };
+
+    const adiarAssentamento = (espera: number) => {
+      clearTimeout(repouso);
+      repouso = window.setTimeout(assentar, espera);
+    };
+
+    trilho.addEventListener(
+      'scroll',
+      () => {
+        if (saltando) return;
+        if (quadro === 0)
+          quadro = requestAnimationFrame(() => {
+            quadro = 0;
+            atualizarVisiveis();
+          });
+        adiarAssentamento(90);
+      },
+      { passive: true },
+    );
+    if ('onscrollend' in window) trilho.addEventListener('scrollend', assentar);
+    addEventListener('resize', () => {
+      if (quadro === 0)
+        quadro = requestAnimationFrame(() => {
+          quadro = 0;
+          atualizarVisiveis();
+        });
+    });
+
+    /* ===== navegação ===== */
+    /** Índice do card em cena; pode ficar fora de 0..N-1 enquanto o assentamento não veio. */
+    const indice = () => Math.round((trilho.scrollLeft - inicioReal()) / passo());
+    const irPara = (i: number) => {
+      trilho.scrollTo({
+        left: inicioReal() + i * passo(),
+        behavior: semMovimento.matches ? 'auto' : 'smooth',
+      });
+    };
+    // Assenta antes de andar: partindo de uma cópia, o índice vira o do card verdadeiro e o
+    // passo seguinte sai do lugar certo.
+    const andar = (direcao: number) => {
+      clearTimeout(repouso);
+      assentar();
+      irPara(indice() + direcao);
+    };
+
+    for (const botao of carrossel.querySelectorAll<HTMLElement>('.qbtn'))
+      botao.addEventListener('click', () => andar(Number(botao.dataset['passo'])));
+
+    trilho.addEventListener('keydown', (evento) => {
+      if (evento.key !== 'ArrowRight' && evento.key !== 'ArrowLeft') return;
+      evento.preventDefault();
+      andar(evento.key === 'ArrowRight' ? 1 : -1);
+    });
+
+    /* ===== toque ===== */
+    // O toque usa a rolagem nativa, com a inércia do sistema; o que falta é avisar quando o
+    // dedo está na tela, para o salto esperar o gesto terminar.
+    trilho.addEventListener('touchstart', () => (apertado = true), { passive: true });
+    const soltouODedo = () => {
+      apertado = false;
+      adiarAssentamento(120);
+    };
+    trilho.addEventListener('touchend', soltouODedo, { passive: true });
+    trilho.addEventListener('touchcancel', soltouODedo, { passive: true });
+
+    /* ===== arraste com o mouse ===== */
+    // O arraste engata depois de 8 px: abaixo disso o gesto ainda pode ser um clique ou o
+    // começo de uma seleção de texto. A partir daí, cursor de mão fechada, seleção bloqueada
+    // e o clique final cancelado.
+    const LIMIAR = 8;
+    let pressionado = false;
+    let arrastando = false;
+    let andou = false;
+    let partidaX = 0;
+    let partidaRolagem = 0;
+    const sobreOTexto = (alvo: EventTarget | null) =>
+      alvo instanceof Element && alvo.closest('.qcard p, .qcard figcaption') !== null;
+
+    trilho.addEventListener('pointerdown', (evento) => {
+      if (evento.pointerType !== 'mouse' || evento.button !== 0 || sobreOTexto(evento.target))
+        return;
+      pressionado = true;
+      apertado = true;
+      arrastando = false;
+      andou = false;
+      partidaX = evento.clientX;
+      partidaRolagem = trilho.scrollLeft;
+    });
+    trilho.addEventListener('pointermove', (evento) => {
+      if (!pressionado) return;
+      const percorrido = evento.clientX - partidaX;
+      if (!arrastando) {
+        if (Math.abs(percorrido) < LIMIAR) return;
+        arrastando = true;
+        andou = true;
+        trilho.classList.add('drag');
+        // A captura mantém o gesto vivo quando o ponteiro sai da faixa; nem todo navegador
+        // aceita capturar este ponteiro, e sem ela o arraste ainda funciona dentro da faixa.
+        try {
+          trilho.setPointerCapture(evento.pointerId);
+        } catch {
+          /* segue sem captura */
+        }
+        getSelection()?.removeAllRanges();
+      }
+      trilho.scrollLeft = partidaRolagem - percorrido;
+    });
+    const largarOMouse = () => {
+      if (!pressionado) return;
+      pressionado = false;
+      apertado = false;
+      if (!arrastando) {
+        adiarAssentamento(120);
+        return;
+      }
+      arrastando = false;
+      trilho.classList.remove('drag');
+      // Sem encaixe durante o arraste, a faixa para onde o ponteiro deixou: o encaixe volta
+      // levando o card mais próximo ao lugar.
+      irPara(indice());
+    };
+    trilho.addEventListener('pointerup', largarOMouse);
+    trilho.addEventListener('pointercancel', largarOMouse);
+    trilho.addEventListener('lostpointercapture', largarOMouse);
+    trilho.addEventListener('mousemove', (evento) => {
+      if (arrastando) evento.preventDefault();
+    });
+    trilho.addEventListener('selectstart', (evento) => {
+      if (arrastando) evento.preventDefault();
+    });
+    trilho.addEventListener('dragstart', (evento) => evento.preventDefault());
+    // O arraste termina em clique; sem isto, largar sobre um card dispararia o que houvesse ali.
+    trilho.addEventListener(
+      'click',
+      (evento) => {
+        if (!andou) return;
+        evento.preventDefault();
+        evento.stopPropagation();
+        andou = false;
+      },
+      true,
+    );
+
+    /* ===== posição inicial: o primeiro card verdadeiro, sem animação ===== */
+    saltando = true;
+    trilho.scrollLeft = inicioReal();
+    saltando = false;
+    atualizarVisiveis();
+  }
+</script>
