@@ -1,0 +1,257 @@
+---
+/**
+ * O card de um Projeto na Grade: a Capa preenchendo a caixa e, por cima, a marca e o nome.
+ *
+ * Em tela com cursor o nome só aparece ao passar o mouse ou receber o foco — a Capa é o que
+ * vende o Projeto, e escrever sobre ela o tempo todo esconderia justamente o que se quer ver.
+ * Em tela de toque não há esse gesto, então o nome fica visível desde o começo (o
+ * `@media (hover: none)` no fim deste arquivo).
+ *
+ * Um Projeto sem Capa — cadastrado, aguardando imagens — mostra o Em breve desenhado pelo
+ * site, e aí o card muda de regra: não há imagem para proteger nem para revelar, então o nome
+ * fica em tinta sobre o painel claro desde o começo, sem véu e sem gesto nenhum.
+ */
+import type { CollectionEntry } from 'astro:content';
+import { Picture } from 'astro:assets';
+import { capaDe } from '../content.schema';
+import { qualidadeDeImagem } from '../imagens';
+import EmBreve from './EmBreve.astro';
+
+interface Props {
+  projeto: CollectionEntry<'projetos'>;
+  /** A largura que o card ocupa em cada faixa de tela (`grade.ts`). */
+  sizes: string;
+  /** Os primeiros cards da Grade carregam de imediato; o resto, ao se aproximar da tela. */
+  prioritaria: boolean;
+}
+
+const { projeto, sizes, prioritaria } = Astro.props;
+const { titulo, tipo } = projeto.data;
+const capa = capaDe(projeto);
+---
+
+<a class="card" href={`/projetos/${projeto.id}`} aria-label={`${titulo} — ${tipo}`}>
+  {capa ? (
+    <Picture
+      src={capa}
+      formats={['avif']}
+      fallbackFormat="webp"
+      quality={qualidadeDeImagem}
+      sizes={sizes}
+      alt=""
+      loading={prioritaria ? 'eager' : 'lazy'}
+      decoding="async"
+      fetchpriority={prioritaria ? 'high' : undefined}
+    />
+  ) : (
+    <span class="sem-capa">
+      <EmBreve />
+    </span>
+  )}
+  <span class="veu" aria-hidden="true"></span>
+  {/* O nome já é o rótulo do link; aqui ele é pintura, e repeti-lo ao leitor de tela só
+    faria o card ser anunciado duas vezes. */}
+  <span class="sobreposicao" aria-hidden="true">
+    <span class="marca">
+      <i></i>
+      <i></i>
+      <i></i>
+      <i></i>
+    </span>
+    <span class="texto">
+      <b>{titulo}</b>
+      <span>{tipo}</span>
+    </span>
+  </span>
+</a>
+
+<style>
+  .card {
+    position: relative;
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    overflow: hidden;
+    /* Enquanto a Capa não pinta, o espaço reservado é o mesmo cinza do fundo de um render. */
+    background: var(--img-bg);
+    /* A proporção vem da Grade, que a muda conforme o card e a largura da tela. */
+    aspect-ratio: var(--proporcao, 4 / 3);
+  }
+  .card:active {
+    opacity: 0.7;
+  }
+  /* O <picture> some do fluxo para a imagem preencher o card sem uma caixa intermediária. */
+  .card :global(picture) {
+    display: contents;
+  }
+  .card :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .sem-capa {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .veu {
+    position: absolute;
+    inset: 0;
+    background: rgba(35, 45, 56, 0);
+    transition: background 0.55s var(--ease);
+  }
+  .sobreposicao {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 0 20px;
+    text-align: center;
+    pointer-events: none;
+  }
+  /* A marca se monta ao passar o mouse: os quatro pontos vêm dos cantos para o centro. */
+  .marca {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 auto;
+  }
+  .marca i {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--paper);
+    opacity: 0;
+    transition:
+      transform 0.55s var(--ease),
+      opacity 0.45s var(--ease);
+  }
+  .marca i:nth-child(1) {
+    left: 0;
+    top: 0;
+    transform: translate(-22px, -22px);
+  }
+  .marca i:nth-child(2) {
+    right: 0;
+    top: 0;
+    transform: translate(22px, -22px);
+  }
+  .marca i:nth-child(3) {
+    left: 0;
+    bottom: 0;
+    border-radius: 0 0 0 16px;
+    transform: translate(-22px, 22px);
+  }
+  .marca i:nth-child(4) {
+    right: 0;
+    bottom: 0;
+    border-radius: 0 0 16px 0;
+    transform: translate(22px, 22px);
+  }
+  .texto {
+    color: var(--paper);
+    transform: translateY(12px);
+    opacity: 0;
+    transition:
+      opacity 0.5s var(--ease) 0.12s,
+      transform 0.5s var(--ease) 0.12s;
+  }
+  .texto b {
+    display: block;
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: var(--fs-card);
+    line-height: 1.05;
+  }
+  .texto span {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    margin-top: 8px;
+    color: var(--sand);
+  }
+
+  /* O estado revelado: o mesmo para o cursor e para o foco do teclado. */
+  .card:hover .veu,
+  .card:focus-visible .veu {
+    background: rgba(35, 45, 56, 0.55);
+  }
+  .card:hover .marca i,
+  .card:focus-visible .marca i {
+    opacity: 0.92;
+    transform: translate(0, 0);
+  }
+  .card:hover .marca i:nth-child(1),
+  .card:focus-visible .marca i:nth-child(1) {
+    opacity: 0.55;
+  }
+  .card:hover .marca i:nth-child(4),
+  .card:focus-visible .marca i:nth-child(4) {
+    opacity: 0.4;
+  }
+  .card:hover .texto,
+  .card:focus-visible .texto {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* O card sem Capa: o painel do Em breve já ocupa o centro com o seu recado, então o nome
+     desce para o pé do card, em tinta sobre o claro. Sem véu — escurecer um painel que o site
+     desenhou só serviria para tirar contraste de um texto que já está legível. */
+  .sem-capa ~ .veu,
+  .sem-capa ~ .sobreposicao .marca {
+    display: none;
+  }
+  .sem-capa ~ .sobreposicao {
+    justify-content: flex-end;
+    padding-bottom: clamp(14px, 4%, 22px);
+  }
+  .sem-capa ~ .sobreposicao .texto {
+    opacity: 1;
+    transform: none;
+    color: var(--ink);
+    transition: color 0.3s;
+  }
+  .sem-capa ~ .sobreposicao .texto span {
+    color: var(--ink-soft);
+  }
+  .card:hover .sem-capa ~ .sobreposicao .texto {
+    color: var(--ink-soft);
+  }
+
+  /* Tela de toque: não há como passar o mouse, então o estado revelado é o estado normal —
+     véu um pouco mais leve, porque aqui ele fica o tempo todo sobre a Capa. */
+  @media (hover: none) {
+    .veu {
+      background: rgba(35, 45, 56, 0.5);
+    }
+    .marca i {
+      opacity: 0.92;
+      transform: translate(0, 0);
+    }
+    .marca i:nth-child(1) {
+      opacity: 0.55;
+    }
+    .marca i:nth-child(4) {
+      opacity: 0.4;
+    }
+    .texto {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .veu,
+    .marca i,
+    .texto,
+    .sem-capa ~ .sobreposicao .texto {
+      transition: none;
+    }
+  }
+</style>

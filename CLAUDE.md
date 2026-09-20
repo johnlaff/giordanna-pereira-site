@@ -29,12 +29,12 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 
 - `astro.config.ts` — `output: 'static'`, adapter Cloudflare (`imageService: 'compile'`), Fonts API; `wrangler.jsonc` — assets em `dist/`, `not_found_handling: 404-page`
 - `src/imagens.ts` — o que decide as variantes de imagem (qualidade e esforço do AVIF), e `src/servico-de-imagem.ts`, o serviço que as grava; os dois estão na chave do cache de imagens do CI
-- `src/config.ts` — configuração tipada fora do CMS: `site`, `marca` (nome + CAU), `emailExibido` (constante única do e-mail), `contatos` e o texto da home (`hero`, `sobre`, `familiaridade`, `cta`)
+- `src/config.ts` — configuração tipada fora do CMS: `site`, `marca` (nome + CAU), `emailExibido` (constante única do e-mail), `contatos` e os textos das páginas (`hero`, `sobre`, `familiaridade`, `cta`, `projetos`)
 - `src/layouts/Base.astro` — casca de toda página (head, fontes, Header, `main`, Footer); props `titulo`, `descricao`, `secao` (item ativo da nav) e `hero` (cabeçalho transparente sobre o hero)
-- `src/pages/` — `index`, `404`, `projetos/[slug]`. Planejadas: `projetos/index`, `contato`, `api/contato.ts` (`prerender = false`)
+- `src/pages/` — `index`, `404`, `projetos/index` (a Grade), `projetos/[slug]`, e os endpoints `sitemap.xml` e `robots.txt`, que servem o que sai de `src/rotas.ts` (as rotas públicas do site). Planejadas: `contato`, `api/contato.ts` (`prerender = false`)
 - `src/content/` — collections `projetos` (um `.yml` por Projeto) e `depoimentos` (um `.yml` por Depoimento, com prefixo numérico no nome: a sequência do carrossel é a do nome do arquivo). `src/content.config.ts` liga o loader ao contrato de `src/content.schema.ts`, que também garante a Ordem única
-- `src/components/` — Header, Footer, Marca, Icone, Ficha, Galeria (linhas justificadas em `galeria.linhas.ts` e lightbox PhotoSwipe), EmBreve, Hero, Sobre, Ferramentas, Depoimentos (carrossel infinito por cópias nas duas pontas), CTA, Revelar (entrada dos blocos `.rv`, só na página que os tem). Planejados: CardProjeto, FormContato
-- `src/styles/` — `tokens.css` (cores, tipografia, espaçamento) e `global.css` (reset, scaffold de página)
+- `src/components/` — Header, Footer, Marca, Icone, Ficha, Galeria (linhas justificadas em `galeria.linhas.ts` e lightbox PhotoSwipe), EmBreve, Hero, Sobre, Ferramentas, Depoimentos (carrossel infinito por cópias nas duas pontas), CTA, CardProjeto (larguras e `sizes` da grade em `grade.ts`), Revelar (entrada dos blocos `.rv`, só na página que os tem). Planejado: FormContato
+- `src/styles/` — `tokens.css` (cores, tipografia, espaçamento) e `global.css` (reset, scaffold de página, transição nativa entre páginas)
 - `public/og/` — imagens Open Graph. Planejado: `public/admin/` — Sveltia CMS (`index.html`, `config.yml`)
 - `tests/e2e/` — Playwright + axe (rotas em `rotas.ts`); `tests/unit/` — runner do Node; `docs/` — HANDOFF, ADRs, `esteira.md`, `agents/` (config do tracker), `reference/` (preview)
 - `.github/workflows/ci.yml` — jobs `check`, `build`, `e2e`, `lighthouse`, `audit` (nomes = checks exigidos pelo ruleset); `.github/actions/setup` — action composta; `.github/rulesets/` — fonte dos rulesets de `main`, aplicados via `gh api`; `renovate.json`; `scripts/lighthouse.ts`

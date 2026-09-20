@@ -141,6 +141,19 @@ export const depoimentos = {
   rotulo: 'Depoimentos',
 } as const;
 
+/**
+ * A Grade de projetos: a moldura da página que lista todos os Projetos. O que cada card mostra
+ * vem da collection; o cabeçalho da página não passa pelo CMS, como o resto deste arquivo.
+ * O espaço antes de "galeria" é inquebrável: a palavra não pode cair sozinha na última linha.
+ */
+export const projetos = {
+  titulo: 'Projetos',
+  chamada:
+    'Arquitetura, habitação, interiores e documentação executiva. Cada projeto com sua ficha técnica e galeria.',
+  descricao:
+    'Os projetos de Giordanna Pereira: arquitetura, habitação de interesse social, interiores e documentação executiva, cada um com ficha técnica e galeria.',
+} as const;
+
 /** A CTA que fecha a home: o convite e o caminho para a Grade de projetos. */
 export const cta = {
   titulo: 'Conheça mais',

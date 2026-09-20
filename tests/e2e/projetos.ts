@@ -16,6 +16,8 @@ export type Projeto = {
   area: string;
   equipe: string;
   equipeUrl?: string;
+  /** Sem Capa, a primeira imagem da Galeria representa o Projeto. */
+  capa?: string;
   galeria: string[];
   ordem: number;
 };

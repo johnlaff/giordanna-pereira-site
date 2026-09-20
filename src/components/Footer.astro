@@ -1,6 +1,7 @@
 ---
 /** Rodapé: marca, CAU, os quatro Contatos como ícones e a linha de direitos. */
 import { contatos, marca, site } from '../config';
+import { prefetchDe } from '../rotas';
 import Icone from './Icone.astro';
 import Marca from './Marca.astro';
 
@@ -38,7 +39,9 @@ const ano = new Date().getFullYear();
         © {ano} {site.nome}
       </span>
       <span class="rights">Todos os direitos reservados</span>
-      <a href="/contato">Política de privacidade</a>
+      <a href="/contato" data-astro-prefetch={prefetchDe('/contato')}>
+        Política de privacidade
+      </a>
     </div>
   </div>
 </footer>

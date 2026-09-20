@@ -19,7 +19,7 @@ for (const rota of rotas) {
   });
 }
 
-for (const canonica of rotas.filter((rota) => rota.startsWith('/projetos/'))) {
+for (const canonica of rotas.filter((rota) => rota.startsWith('/projetos'))) {
   test(`${canonica}/ redireciona para a forma sem barra`, async ({ request }) => {
     const resposta = await request.get(`${canonica}/`, { maxRedirects: 0 });
     expect(REDIRECIONAMENTOS).toContain(resposta.status());
