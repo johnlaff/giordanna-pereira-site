@@ -30,6 +30,7 @@ astro.config.ts        Astro 7: output static, adapter Cloudflare, Fonts API (Co
 lighthouserc.yml       orçamento do Lighthouse CI (LCP, CLS, acessibilidade)
 renovate.json          atualização de dependências: patches com automerge, minors agrupados
 .github/               workflow de CI, action de setup e os rulesets de main (docs/esteira.md)
+.claude/               gancho de SessionStart: prepara o container das sessões do Claude Code na web
 scripts/               lighthouse.ts: roda o Lighthouse CI no Chromium do Playwright
 wrangler.jsonc         Worker: assets em dist/, 404 servido pela página 404 do site
 playwright.config.ts   projetos desktop (1440 px) e mobile (375 px); webServer = wrangler dev
