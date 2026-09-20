@@ -32,15 +32,18 @@ export const qualidadeDeImagem = 65;
  *
  * E no acervo inteiro, com a escada de larguras que o site usa de verdade:
  *
- * | esforço | ritmo do build  | peso do conjunto AVIF |
- * | ------- | --------------- | --------------------- |
- * | 2       | 10,6 variantes/s | +2,4%                |
- * | 3       | 7,1 variantes/s  | +0,7%                |
- * | 4       | 1,8 variantes/s  | referência           |
+ * | esforço | ritmo do build   | peso do conjunto AVIF |
+ * | ------- | ---------------- | --------------------- |
+ * | 1       | 14,4 variantes/s | +2,3%                 |
+ * | 2       | 10,6 variantes/s | +2,4%                 |
+ * | 3       | 7,1 variantes/s  | +0,7%                 |
+ * | 4       | 1,8 variantes/s  | referência            |
  *
- * O 3 é a escolha: quase quatro vezes o ritmo do padrão sem custar bytes ao visitante. O 2
- * seria mais rápido ainda, mas aí o build passa a ser pago em peso de página, que é o que o
- * orçamento do Lighthouse defende.
+ * O 3 é a escolha: quase quatro vezes o ritmo do padrão sem custar bytes ao visitante. Os dois
+ * esforços mais baratos são mais rápidos, mas cobram o mesmo pedágio — +2,3% no 1 e +2,4% no
+ * 2, contra +0,7% no 3 —, e aí o build passa a ser pago em peso de página, que é o que o
+ * orçamento do Lighthouse defende. O tempo de build se paga uma vez por build; o peso, em
+ * toda visita.
  *
  * O esforço não entra no nome do arquivo gerado, ao contrário da qualidade: mudá-lo sozinho
  * não regera nada, porque as variantes em cache continuam válidas e servidas como estão — o

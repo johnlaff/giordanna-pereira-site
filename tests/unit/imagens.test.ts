@@ -10,6 +10,11 @@ import servicoSharp from '../../src/servico-de-imagem.ts';
  * compressor por um caminho frágil: o adapter da Cloudflare descarta `image.service` quando o
  * entrypoint é o do próprio Astro. Se esse desvio se perder, nada quebra — o build só volta a
  * levar dezessete minutos em silêncio. Estes testes são o alarme.
+ *
+ * O alcance deles tem um limite que vale saber: eles cobrem os dois lados que dependem deste
+ * repositório — o serviço honra `service.config.avif`, e o `astro.config.ts` aponta para um
+ * entrypoint que o adapter preserva. Nenhum deles executa o adapter, que não expõe
+ * `setImageConfig` fora do pacote; uma mudança de comportamento dele passaria por aqui.
  */
 
 // A menor imagem do acervo, para o teste custar o mínimo; qualquer uma serve de entrada.
@@ -17,14 +22,17 @@ const menorImagem = readdirSync('src/assets')
   .map((arquivo) => [`src/assets/${arquivo}`, statSync(`src/assets/${arquivo}`).size] as const)
   .sort(([, a], [, b]) => a - b)[0]![0];
 
-const bytesDoAvif = async (avif: { effort: number }) => {
+const bytesDoAvif = async (avif: { effort: number } | undefined) => {
   const { data } = await servicoSharp.transform(
     readFileSync(menorImagem),
     { src: menorImagem, width: 320, format: 'avif', quality: qualidadeDeImagem },
     // O resto da configuração de imagem não entra na compressão; só `service.config` entra.
     {
       endpoint: { route: '/_image' },
-      service: { entrypoint: servicoDeImagem.entrypoint, config: { avif } },
+      service: {
+        entrypoint: servicoDeImagem.entrypoint,
+        config: avif === undefined ? {} : { avif },
+      },
       dangerouslyProcessSVG: false,
       domains: [],
       remotePatterns: [],
@@ -36,11 +44,13 @@ const bytesDoAvif = async (avif: { effort: number }) => {
 };
 
 test('o esforço configurado chega ao compressor de AVIF', async () => {
+  // A comparação é contra o padrão do sharp, e não contra outro esforço qualquer, porque a
+  // falha a pegar é justamente a configuração ser ignorada — e o que sobra então é o padrão.
   const configurado = await bytesDoAvif(servicoDeImagem.config.avif);
-  const referencia = await bytesDoAvif({ effort: 0 });
+  const padraoDoSharp = await bytesDoAvif(undefined);
   assert.notEqual(
     configurado,
-    referencia,
+    padraoDoSharp,
     'o serviço ignorou `service.config.avif`: o esforço de src/imagens.ts não tem efeito',
   );
 });

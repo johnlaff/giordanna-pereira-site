@@ -4,12 +4,13 @@ O build gera uma variante AVIF e uma WebP por largura de cada imagem dos Projeto
 
 O esforço não é qualidade. O alvo de qualidade é `qualidadeDeImagem`, e o esforço só diz quanto tempo o compressor gasta tentando alcançá-lo com menos bytes. Medido no acervo em 2026-09-20, o padrão 4 é patológico: ele procura cinco vezes mais que o 3 e grava um arquivo do mesmo tamanho. Gravando a variante de 2560 px de seis imagens do site, o tempo por imagem vai de 0,85 s no esforço 1 a 10,62 s no 4, enquanto o peso fica entre 270 e 274 kB em toda a faixa — o único esforço que de fato engorda o arquivo é o 0, com +8%.
 
-O 3 é o ponto onde o build fica quase quatro vezes mais rápido sem custar bytes ao visitante (+0,7% no conjunto). O 2 seria mais rápido ainda, mas cobra +2,4% de peso, e peso de página é exatamente o que o orçamento do Lighthouse defende.
+O 3 é o ponto onde o build fica quase quatro vezes mais rápido sem custar bytes ao visitante (+0,7% no conjunto). Os dois esforços mais baratos foram medidos no acervo inteiro e cobram o mesmo pedágio: o 2 constrói a 10,6 variantes/s com +2,4% de peso, e o 1, o mais rápido de todos (2 min 10 s no acervo, 14,4 variantes/s), com +2,3%. É mais de três vezes o peso extra do 3 para ganhar dois minutos de build, e peso de página é exatamente o que o orçamento do Lighthouse defende: o build se paga uma vez, o peso em toda visita.
 
 `src/servico-de-imagem.ts` existe por um detalhe do adapter da Cloudflare. Com `imageService: 'compile'`, ele só preserva o `image.service` do projeto quando o entrypoint não é o do próprio Astro (`hasUserImageService`, em `@astrojs/cloudflare/utils/image-config`); com o entrypoint do Astro, serviço e configuração são trocados pelos dele e o esforço volta ao padrão sem aviso. O arquivo republica o serviço sharp do Astro sem mudar nada, só para que o `config` do projeto sobreviva a essa troca.
 
 ## Considered Options
 
+- **Esforço 1 ou 2**: o build a frio cai para 2 min 10 s ou 2 min 57 s, contra os 4 min 22 s do 3, e o conjunto AVIF engorda +2,3% e +2,4% — mais de três vezes o que o 3 cobra. Medidos no acervo inteiro, os dois são a mesma troca: tempo de build barato pago em peso de página.
 - **Encurtar a escada de larguras**: menos variantes, mesmo compressor. Sai caro em peso — tirar degraus obriga o navegador a pedir a variante seguinte, maior — e rendia de 24% a 36% de tempo, contra os 74% do esforço. Não vale pagar em bytes o que o esforço dá de graça.
 - **Manter o padrão do sharp**: é o que estava, e custa dezessete minutos de build a frio sem nada em troca.
 - **Um serviço de imagem escrito do zero**: controle total (esforço, subamostragem de croma, qualidade por formato), e a manutenção de um serviço próprio a cada versão do Astro. O que se queria era um parâmetro.
