@@ -1,0 +1,185 @@
+---
+/**
+ * O bloco Compartilhe da Ficha: o rótulo e a fileira de destinos, separados do resto da Ficha
+ * por um filete. Quem abre a página de um Projeto manda o link a alguém sem copiá-lo da barra
+ * de endereço.
+ *
+ * Os quatro destinos são âncoras montadas no build (`compartilhe.ts`) e funcionam sem
+ * JavaScript. Os dois botões dependem do navegador: o compartilhamento nativo só existe onde
+ * `navigator.share` existe — por isso nasce `hidden` e o script o revela —, e o copiar link
+ * precisa da área de transferência. O que os dois enviam é a mesma URL canônica das âncoras.
+ *
+ * O bloco não depende das imagens Open Graph: quem compartilha já leva link e título certos, e
+ * a OG gerada no build (#13) só melhora o cartão depois.
+ */
+import { destinosDeCompartilhamento, tituloCompartilhado } from './compartilhe';
+import Icone from './Icone.astro';
+
+interface Props {
+  /** Nome do Projeto, que vai na mensagem junto ao nome do site. */
+  titulo: string;
+  /** Rota da página, sem domínio e sem barra final: a forma canônica do site (ADR 0007). */
+  rota: string;
+}
+
+const { titulo, rota } = Astro.props;
+
+if (Astro.site === undefined) {
+  throw new Error('sem `site` em astro.config.ts, o Compartilhe não tem URL canônica');
+}
+const url = new URL(rota, Astro.site).href;
+const destinos = destinosDeCompartilhamento(titulo, url);
+---
+
+<div class="share" data-url={url} data-titulo={tituloCompartilhado(titulo)}>
+  <span class="rotulo">Compartilhe</span>
+  <div class="share-row">
+    <button type="button" class="nativo" aria-label="Compartilhar" title="Compartilhar" hidden>
+      <Icone nome="compartilhar" />
+    </button>
+    {destinos.map(({ tipo, rotulo, dica, href, externo }) => (
+      <a
+        href={href}
+        aria-label={rotulo}
+        title={dica}
+        {...(externo ? { target: '_blank', rel: 'noopener' } : {})}
+      >
+        <Icone nome={tipo} />
+      </a>
+    ))}
+    <button type="button" class="copiar" aria-label="Copiar link" title="Copiar link">
+      <Icone nome="link" />
+    </button>
+  </div>
+  {/* Nasce vazio: um retorno só aparece depois do clique, e uma região viva vazia não anuncia nada. */}
+  <span class="toast" role="status"></span>
+</div>
+
+<style>
+  .share {
+    margin-top: 26px;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .rotulo {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-right: 8px;
+  }
+  /* A fileira não quebra: os seis controles descem juntos para a linha de baixo, nunca no meio. */
+  .share-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: nowrap;
+  }
+  .share a,
+  .share button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    color: var(--ink);
+    border-radius: 50%;
+    transition:
+      background 0.3s,
+      color 0.3s;
+  }
+  /* O `display` acima vence o `[hidden]` da folha do navegador: sem esta linha o botão
+    nativo apareceria em todo navegador, inclusive onde `navigator.share` não existe. */
+  .share button[hidden] {
+    display: none;
+  }
+  /* Só onde há ponteiro: no toque o estado ficaria preso no último botão tocado. */
+  @media (hover: hover) {
+    .share a:hover,
+    .share button:hover {
+      background: var(--navy);
+      color: var(--paper);
+    }
+  }
+  .share :global(svg) {
+    width: 17px;
+    height: 17px;
+  }
+  .toast {
+    font-size: 13px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-left: 6px;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .toast.on {
+    opacity: 1;
+  }
+  /* Na tela estreita o rótulo e o aviso tomam a linha inteira, e a fileira fica só com os
+    controles. O alvo continua de 38 px: é o que o Preview de fato desenha nas duas larguras,
+    e encolhê-lo só afastaria do mínimo de 24 px da WCAG 2.2. */
+  @media (max-width: 640px) {
+    .rotulo,
+    .toast {
+      flex-basis: 100%;
+      margin-bottom: 4px;
+    }
+    .rotulo {
+      margin-right: 0;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .share a,
+    .share button,
+    .toast {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  const bloco = document.querySelector<HTMLElement>('.share');
+  if (bloco !== null) {
+    const url = bloco.dataset.url ?? location.href;
+    const titulo = bloco.dataset.titulo ?? document.title;
+    const toast = bloco.querySelector<HTMLElement>('.toast');
+    const nativo = bloco.querySelector<HTMLButtonElement>('.nativo');
+    const copiar = bloco.querySelector<HTMLButtonElement>('.copiar');
+
+    /** O retorno do copiar link: visível para quem vê e anunciado pela região viva. */
+    let aTempo = 0;
+    const avisar = (texto: string) => {
+      if (toast === null) return;
+      toast.textContent = texto;
+      toast.classList.add('on');
+      clearTimeout(aTempo);
+      aTempo = window.setTimeout(() => toast.classList.remove('on'), 2200);
+    };
+
+    // O botão nativo só existe onde o navegador o tem — no celular, quase sempre; no desktop,
+    // quase nunca. Nasce `hidden` no HTML para não piscar um controle que não funcionaria.
+    if (nativo !== null && typeof navigator.share === 'function') {
+      nativo.hidden = false;
+      nativo.addEventListener('click', () => {
+        // Fechar a folha do sistema sem escolher destino rejeita a promessa: não é erro.
+        navigator.share({ title: titulo, url }).catch(() => {});
+      });
+    }
+
+    copiar?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+        avisar('Link copiado');
+      } catch {
+        // Sem permissão para a área de transferência resta o caminho manual, que sempre existe.
+        avisar('Copie da barra de endereço');
+      }
+    });
+  }
+</script>

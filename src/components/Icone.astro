@@ -1,12 +1,13 @@
 ---
 /**
  * Ícones de linha do site (traço 1.6, cantos arredondados): os quatro Contatos, a seta dos
- * botões e as duas do carrossel. O SVG herda a cor do texto; o tamanho vem de quem usa. Decorativo: quem precisa de
- * rótulo põe no link.
+ * botões, as duas do carrossel e os três do bloco Compartilhe. O SVG herda a cor do texto; o
+ * tamanho vem de quem usa. Decorativo: quem precisa de rótulo põe no link.
  */
 import type { TipoContato } from '../config';
 
-export type NomeDeIcone = TipoContato | 'seta' | 'anterior' | 'proximo';
+export type NomeDeIcone =
+  TipoContato | 'seta' | 'anterior' | 'proximo' | 'compartilhar' | 'facebook' | 'link';
 
 interface Props {
   nome: NomeDeIcone;
@@ -25,6 +26,10 @@ const tracos: Record<NomeDeIcone, string> = {
   seta: '<path d="M5 12h14M13 6l6 6-6 6"/>',
   anterior: '<path d="M15 5l-7 7 7 7"/>',
   proximo: '<path d="M9 5l7 7-7 7"/>',
+  compartilhar:
+    '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.6M8.2 13.2l7.6 4.6"/>',
+  facebook: '<path d="M14 8h3V4h-3a4 4 0 0 0-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8z"/>',
+  link: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>',
 };
 ---
 

@@ -2,6 +2,9 @@
 /**
  * Ficha técnica de um Projeto: os dados objetivos, sob o título "Detalhes do projeto".
  * O nome da equipe vira link só quando o Projeto traz a URL — o campo de texto nunca traz HTML.
+ *
+ * O painel é o canto da página do Projeto que não é galeria; quem monta a página decide o que
+ * mais entra nele, pelo slot, sem que a Ficha passe a saber de compartilhamento.
  */
 import type { CollectionEntry } from 'astro:content';
 
@@ -38,6 +41,8 @@ const {
       )}
     </dd>
   </dl>
+  {/* O que mais couber no painel da Ficha: hoje o bloco Compartilhe, posto pela página. */}
+  <slot />
 </aside>
 
 <style>

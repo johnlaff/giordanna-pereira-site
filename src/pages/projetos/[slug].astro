@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import Compartilhe from '../../components/Compartilhe.astro';
 import Ficha from '../../components/Ficha.astro';
 import Galeria from '../../components/Galeria.astro';
 import { ordenarProjetos, vizinhosNaOrdem } from '../../content.schema';
@@ -32,7 +33,9 @@ const { titulo, tipo, descricao, ferramentas, galeria } = projeto.data;
           ))}
         </ul>
       </div>
-      <Ficha ficha={projeto.data} />
+      <Ficha ficha={projeto.data}>
+        <Compartilhe titulo={titulo} rota={`/projetos/${projeto.id}`} />
+      </Ficha>
     </div>
     <Galeria imagens={galeria} titulo={titulo} />
     {vizinhos && (
