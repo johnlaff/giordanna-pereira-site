@@ -12,6 +12,10 @@ export default defineConfig({
   session: false,
   // Imagens geradas no build pelo sharp (AVIF + WebP), não pelo Cloudflare Images.
   adapter: cloudflare({ imageService: 'compile' }),
+  // A qualidade das variantes não mora aqui: um `image.service` apontando para o sharp é
+  // descartado pelo adapter da Cloudflare, e a configuração do serviço não entra no hash do
+  // arquivo gerado — mudá-la deixaria o cache de imagens servindo as variantes antigas. Ela
+  // é `qualidadeDeImagem`, em `src/config.ts`, passada por imagem.
   image: { layout: 'constrained' },
   // Fontes baixadas no build e servidas do próprio domínio: nenhuma requisição ao Google Fonts em runtime.
   fonts: [

@@ -19,8 +19,16 @@ A imagem que representa o Projeto no card da grade e na imagem de compartilhamen
 _Avoid_: cover, thumbnail, destaque
 
 **Galeria**:
-A lista ordenada de imagens de um Projeto. Renders vêm primeiro; pranchas, por último.
+A lista ordenada de imagens de um Projeto. Renders vêm primeiro; pranchas, por último. As imagens entram em linhas justificadas — cada linha preenche a largura, com a mesma altura dentro dela — e nenhuma perde mais de um quarto da altura: quando preencher a largura custaria mais que isso, a linha cede altura, e se nem assim couber, ela termina antes da borda.
 _Avoid_: gallery, fotos, álbum
+
+**Abertura**:
+A primeira imagem da Galeria quando é paisagem: ocupa a largura toda em faixa de no máximo meia largura de altura, recortada no centro. Diante de uma imagem quase quadrada, a faixa cede altura para respeitar o teto de recorte da Galeria.
+_Avoid_: hero, destaque, capa da galeria
+
+**Lightbox**:
+A tela cheia que abre ao clicar numa imagem da Galeria, com zoom, navegação em loop e a legenda de posição e Projeto. É um diálogo: prende o foco enquanto está aberto e o devolve à imagem ao fechar.
+_Avoid_: modal, overlay, visualizador
 
 **Render**:
 Imagem de perspectiva realista de um Projeto.

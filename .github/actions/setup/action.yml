@@ -20,14 +20,15 @@ runs:
     - run: pnpm install --frozen-lockfile
       shell: bash
     # Sem as variantes de imagem prontas, o build leva minutos (o custo está medido em
-    # docs/esteira.md). A chave acompanha só src/assets, porque é de lá que elas saem: uma
-    # edição de texto no CMS não pode invalidar o cache inteiro. O prefixo de reserva
-    # aproveita o cache anterior e deixa o build gerar apenas o que faltar.
+    # docs/esteira.md). A chave acompanha o que decide as variantes: as imagens de origem e
+    # os parâmetros de src/imagens.ts. Uma edição de texto no CMS não invalida o cache; uma
+    # mudança de qualidade invalida, porque as variantes antigas deixaram de valer. O prefixo
+    # de reserva aproveita o cache anterior e deixa o build gerar apenas o que faltar.
     - if: inputs.imagens == 'true'
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: node_modules/.astro/assets
-        key: astro-assets-${{ runner.os }}-${{ hashFiles('src/assets/**') }}
+        key: astro-assets-${{ runner.os }}-${{ hashFiles('src/assets/**', 'src/imagens.ts') }}
         restore-keys: astro-assets-${{ runner.os }}-
     - if: inputs.chromium == 'true'
       id: playwright
