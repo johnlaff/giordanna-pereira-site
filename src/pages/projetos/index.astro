@@ -12,9 +12,6 @@ import { ordenarProjetos } from '../../content.schema';
 import Base from '../../layouts/Base.astro';
 
 const projetos = ordenarProjetos(await getCollection('projetos'));
-
-/** A primeira linha da grade carrega de imediato: é o que o visitante vê antes de rolar. */
-const PRIMEIRA_LINHA = 3;
 ---
 
 <Base titulo={textos.titulo} descricao={textos.descricao} secao="projetos">
@@ -29,7 +26,12 @@ const PRIMEIRA_LINHA = 3;
         const lugar = lugarNaGrade(i, projetos.length);
         return (
           <div class:list={['card-wrap', 'rv', lugar.largura, { dobra: lugar.dobraEmDuasColunas }]}>
-            <CardProjeto projeto={projeto} sizes={lugar.sizes} prioritaria={i < PRIMEIRA_LINHA} />
+            <CardProjeto
+              projeto={projeto}
+              sizes={lugar.sizes}
+              naPrimeiraLinha={lugar.naPrimeiraLinha}
+              abreAGrade={i === 0}
+            />
           </div>
         );
       })}
@@ -61,7 +63,9 @@ const PRIMEIRA_LINHA = 3;
     --proporcao: 16 / 9.6;
   }
   /* Em duas colunas o destaque muda de critério: quem abre a grade é o primeiro card de um
-     total ímpar, porque é ele que deixaria o buraco no fim. */
+     total ímpar, porque é ele que deixaria o buraco no fim. Os dois pontos de quebra abaixo
+     são os de `grade.ts` (`TRES_COLUNAS`, `DUAS_COLUNAS`), um pixel abaixo: é de lá que sai
+     a largura que cada card pede ao navegador, e as duas medidas precisam concordar. */
   @media (max-width: 1000px) {
     .grade {
       grid-template-columns: repeat(2, minmax(0, 1fr));

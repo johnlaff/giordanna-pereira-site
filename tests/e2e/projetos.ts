@@ -35,3 +35,10 @@ export const projetos = readdirSync(pasta)
     };
   })
   .sort((a, b) => a.dados.ordem - b.dados.ordem);
+
+/**
+ * O Projeto tem imagem para mostrar fora da própria página: a Capa definida no arquivo ou,
+ * sem ela, a primeira da Galeria. É a mesma regra de `capaDe`, em `src/content.schema.ts`.
+ */
+export const temCapa = ({ dados }: { dados: Projeto }): boolean =>
+  dados.capa !== undefined || dados.galeria.length > 0;

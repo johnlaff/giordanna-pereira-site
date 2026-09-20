@@ -8,9 +8,10 @@ import { rotas } from './rotas.ts';
  * intermediária — e o que garante que a Grade nova não introduza um.
  *
  * Cinco larguras: as quatro da conferência visual (§5 do HANDOFF) e mais a tela estreita de
- * 320 px, onde uma medida fixa esquecida estoura primeiro.
+ * 320 px, onde uma medida fixa esquecida estoura primeiro. As rotas são as de `rotas.ts`:
+ * treze hoje, e as catorze do Preview quando a página de contato entrar (#11).
  */
-const LARGURAS = [1440, 1280, 1024, 768, 320];
+const LARGURAS = [1440, 1024, 768, 375, 320];
 
 /**
  * A única exceção esperada, como no Preview: a imagem do hero é maior que a tela de propósito

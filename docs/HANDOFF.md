@@ -62,7 +62,7 @@ Documento de decisão completo (análise de mercado 2026, comparações, fontes)
 13. **Analytics**: Cloudflare Web Analytics (sem cookies, sem banner).
 14. **Idioma**: só português. Estrutura preparada para EN futuro (i18n do Astro/Sveltia), sem implementar agora.
 15. **Contas**: GitHub, Cloudflare e Resend no nome do João. Registro.br como no item 11.
-16. **SEO**: `@astrojs/sitemap`, `robots.txt`, OG por página (imagens em `og/`), JSON-LD `Person` (home) e `CreativeWork` (projeto), `<title>`/`description` por página.
+16. **SEO**: `/sitemap.xml` e `/robots.txt` gerados pelo próprio repositório, de `src/rotas.ts`, sem a integração `@astrojs/sitemap` (ADR 0010); OG por página (imagens em `og/`), JSON-LD `Person` (home) e `CreativeWork` (projeto), `<title>`/`description` por página.
 17. **Acessibilidade**: WCAG 2.2 AA; axe sem violações em todas as rotas; foco visível; `prefers-reduced-motion` respeitado (preview já faz).
 
 ## 5. Spec (insumo do `/to-spec`)

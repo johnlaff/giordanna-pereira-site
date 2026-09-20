@@ -19,7 +19,7 @@ test('a transição entre páginas é a nativa do navegador, declarada em CSS', 
   expect(navegacao, 'o navegador não encontrou a regra @view-transition').toBe('auto');
 });
 
-test('a página de destino é pré-buscada antes do clique, e nada que não exista', async ({
+test('o link interno é pré-buscado antes do clique, e o de página inexistente não', async ({
   page,
 }) => {
   const pedidos: string[] = [];
@@ -30,12 +30,18 @@ test('a página de destino é pré-buscada antes do clique, e nada que não exis
   });
 
   await page.goto('/');
-  // O prefetch do Astro espera o navegador ficar ocioso; o link dos Projetos está no
-  // cabeçalho, visível desde o primeiro quadro.
+  expect(pedidos, 'a página foi buscada antes de alguém demonstrar interesse').not.toContain(
+    '/projetos',
+  );
+
+  // O item Contato ainda aponta para uma página que não existe (#11): o prefetch não pode
+  // persegui-la. O interesse pelos Projetos vem depois e serve de marco — quando a busca
+  // dele chega, a fila de ociosidade do Astro já passou pelo Contato.
+  await page.locator('.nav a[href="/contato"]').hover();
+  await page.locator('.nav a[href="/projetos"]').hover();
   await expect.poll(() => pedidos.includes('/projetos')).toBe(true);
 
-  // O item Contato do cabeçalho ainda aponta para uma página que não existe (#11): buscá-la
-  // sozinho gastaria um 404 em cada visita, e é o que `rotasPendentes` evita.
+  expect(pedidos).not.toContain('/contato');
   expect(falhas).toEqual([]);
 });
 

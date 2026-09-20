@@ -21,11 +21,13 @@ interface Props {
   projeto: CollectionEntry<'projetos'>;
   /** A largura que o card ocupa em cada faixa de tela (`grade.ts`). */
   sizes: string;
-  /** Os primeiros cards da Grade carregam de imediato; o resto, ao se aproximar da tela. */
-  prioritaria: boolean;
+  /** Os cards da primeira linha carregam de imediato; o resto, ao se aproximar da tela. */
+  naPrimeiraLinha: boolean;
+  /** O card que abre a Grade: é ele que o navegador mede como carregamento da página. */
+  abreAGrade: boolean;
 }
 
-const { projeto, sizes, prioritaria } = Astro.props;
+const { projeto, sizes, naPrimeiraLinha, abreAGrade } = Astro.props;
 const { titulo, tipo } = projeto.data;
 const capa = capaDe(projeto);
 ---
@@ -39,16 +41,16 @@ const capa = capaDe(projeto);
       quality={qualidadeDeImagem}
       sizes={sizes}
       alt=""
-      loading={prioritaria ? 'eager' : 'lazy'}
+      loading={naPrimeiraLinha ? 'eager' : 'lazy'}
       decoding="async"
-      fetchpriority={prioritaria ? 'high' : undefined}
+      fetchpriority={abreAGrade ? 'high' : undefined}
     />
   ) : (
     <span class="sem-capa">
       <EmBreve />
     </span>
   )}
-  <span class="veu" aria-hidden="true"></span>
+  <span class="penumbra" aria-hidden="true"></span>
   {/* O nome já é o rótulo do link; aqui ele é pintura, e repeti-lo ao leitor de tela só
     faria o card ser anunciado duas vezes. */}
   <span class="sobreposicao" aria-hidden="true">
@@ -94,7 +96,9 @@ const capa = capaDe(projeto);
     width: 100%;
     height: 100%;
   }
-  .veu {
+  /* O escurecimento que dá contraste ao nome sobre a Capa. Não é o Véu: esse nome, no
+     glossário, é da transição entre páginas, que mora em `global.css`. */
+  .penumbra {
     position: absolute;
     inset: 0;
     background: rgba(35, 45, 56, 0);
@@ -177,8 +181,8 @@ const capa = capaDe(projeto);
   }
 
   /* O estado revelado: o mesmo para o cursor e para o foco do teclado. */
-  .card:hover .veu,
-  .card:focus-visible .veu {
+  .card:hover .penumbra,
+  .card:focus-visible .penumbra {
     background: rgba(35, 45, 56, 0.55);
   }
   .card:hover .marca i,
@@ -203,7 +207,7 @@ const capa = capaDe(projeto);
   /* O card sem Capa: o painel do Em breve já ocupa o centro com o seu recado, então o nome
      desce para o pé do card, em tinta sobre o claro. Sem véu — escurecer um painel que o site
      desenhou só serviria para tirar contraste de um texto que já está legível. */
-  .sem-capa ~ .veu,
+  .sem-capa ~ .penumbra,
   .sem-capa ~ .sobreposicao .marca {
     display: none;
   }
@@ -227,7 +231,7 @@ const capa = capaDe(projeto);
   /* Tela de toque: não há como passar o mouse, então o estado revelado é o estado normal —
      véu um pouco mais leve, porque aqui ele fica o tempo todo sobre a Capa. */
   @media (hover: none) {
-    .veu {
+    .penumbra {
       background: rgba(35, 45, 56, 0.5);
     }
     .marca i {
@@ -247,7 +251,7 @@ const capa = capaDe(projeto);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .veu,
+    .penumbra,
     .marca i,
     .texto,
     .sem-capa ~ .sobreposicao .texto {

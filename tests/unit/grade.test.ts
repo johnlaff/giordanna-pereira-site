@@ -35,6 +35,17 @@ test('em duas colunas, só o primeiro de um total ímpar ocupa a linha', () => {
   assert.equal(lugarNaGrade(0, 10).dobraEmDuasColunas, false);
 });
 
+const primeiraLinha = (total: number, ate: number) =>
+  Array.from({ length: ate }, (_, i) => lugarNaGrade(i, total).naPrimeiraLinha);
+
+test('a primeira linha acaba quando as seis colunas se esgotam', () => {
+  // O destaque de linha inteira é sozinho na primeira linha; os dois de meia linha dividem
+  // a delas; sem destaque, cabem três. É o que decide quais Capas carregam de imediato.
+  assert.deepEqual(primeiraLinha(10, 4), [true, false, false, false]);
+  assert.deepEqual(primeiraLinha(11, 3), [true, true, false]);
+  assert.deepEqual(primeiraLinha(9, 4), [true, true, true, false]);
+});
+
 test('cada card pede a variante da sua caixa nas telas largas', () => {
   assert.match(lugarNaGrade(0, 10).sizes, /\(min-width: 1240px\) 1136px/);
   assert.match(lugarNaGrade(1, 10).sizes, /\(min-width: 1240px\) 361px/);

@@ -24,13 +24,27 @@ export interface LugarNaGrade {
   largura: LarguraNaGrade;
   /** Em duas colunas este card ocupa as duas: só o primeiro, e só com um total ímpar. */
   dobraEmDuasColunas: boolean;
+  /**
+   * O card está na primeira linha da grade de três colunas — a que aparece antes de rolar.
+   * Quantos cards são depende do destaque: um, quando o primeiro ocupa a linha inteira; dois,
+   * quando os dois primeiros ocupam meia; três, quando ninguém se destaca.
+   */
+  naPrimeiraLinha: boolean;
   /** A largura que o card ocupa em cada faixa de tela, para o navegador escolher a variante. */
   sizes: string;
 }
 
-/** Onde a grade deixa de ter três colunas e onde deixa de ter duas. */
+/**
+ * Onde a grade deixa de ter três colunas e onde deixa de ter duas. As mesmas medidas estão
+ * nas media queries de `src/pages/projetos/index.astro`, do outro lado — lá em `max-width`,
+ * um pixel abaixo. Um desacordo entre as duas não quebra a página: faz o navegador baixar a
+ * variante da largura errada, em silêncio.
+ */
 export const TRES_COLUNAS = 1001;
 export const DUAS_COLUNAS = 561;
+
+/** Quantas das seis colunas da grade cada largura ocupa. */
+const COLUNAS: Record<LarguraNaGrade, number> = { terco: 2, metade: 3, inteira: 6 };
 
 /**
  * As faixas de tela de cada largura, de cima para baixo. As medidas descontam a margem lateral
@@ -41,17 +55,17 @@ const EM_TRES_COLUNAS: Record<LarguraNaGrade, readonly (readonly [string, string
   inteira: [
     ['(min-width: 1240px)', '1136px'],
     ['(min-width: 1100px)', 'calc(100vw - 104px)'],
-    ['(min-width: 1001px)', 'calc(100vw - 80px)'],
+    [`(min-width: ${TRES_COLUNAS}px)`, 'calc(100vw - 80px)'],
   ],
   metade: [
     ['(min-width: 1240px)', '555px'],
     ['(min-width: 1100px)', 'calc((100vw - 104px - 2vw) / 2)'],
-    ['(min-width: 1001px)', 'calc((100vw - 80px - 2vw) / 2)'],
+    [`(min-width: ${TRES_COLUNAS}px)`, 'calc((100vw - 80px - 2vw) / 2)'],
   ],
   terco: [
     ['(min-width: 1240px)', '361px'],
     ['(min-width: 1100px)', 'calc((100vw - 104px - 4vw) / 3)'],
-    ['(min-width: 1001px)', 'calc((100vw - 80px - 4vw) / 3)'],
+    [`(min-width: ${TRES_COLUNAS}px)`, 'calc((100vw - 80px - 4vw) / 3)'],
   ],
 };
 
@@ -59,30 +73,43 @@ const EM_TRES_COLUNAS: Record<LarguraNaGrade, readonly (readonly [string, string
 const EM_DUAS_COLUNAS = {
   coluna: [
     ['(min-width: 700px)', 'calc((100vw - 98px) / 2)'],
-    ['(min-width: 561px)', 'calc((100vw - 62px) / 2)'],
+    [`(min-width: ${DUAS_COLUNAS}px)`, 'calc((100vw - 62px) / 2)'],
   ],
   linha: [
     ['(min-width: 700px)', 'calc(100vw - 80px)'],
-    ['(min-width: 561px)', 'calc(100vw - 48px)'],
+    [`(min-width: ${DUAS_COLUNAS}px)`, 'calc(100vw - 48px)'],
   ],
 } as const;
 
 /** Numa coluna só, todo card ocupa a largura da tela menos a margem lateral. */
 const EM_UMA_COLUNA = [['', 'calc(100vw - 48px)']] as const;
 
+/** Quanto o Projeto ocupa na grade de três colunas, pela posição dele e pelo total. */
+const larguraDe = (indice: number, total: number): LarguraNaGrade => {
+  const sobra = total % 3;
+  if (sobra === 1 && indice === 0) return 'inteira';
+  if (sobra === 2 && indice < 2) return 'metade';
+  return 'terco';
+};
+
 /**
  * O lugar de um Projeto na Grade, pela posição dele na Ordem e pelo total de Projetos.
  * `indice` é a posição na sequência ordenada, contada de zero.
  */
 export const lugarNaGrade = (indice: number, total: number): LugarNaGrade => {
-  const sobra = total % 3;
-  const largura: LarguraNaGrade =
-    sobra === 1 && indice === 0 ? 'inteira' : sobra === 2 && indice < 2 ? 'metade' : 'terco';
+  const largura = larguraDe(indice, total);
   const dobraEmDuasColunas = total % 2 === 1 && indice === 0;
+  // A primeira linha acaba quando as seis colunas se esgotam, e os cards antes deste é que
+  // as gastam: com um destaque de linha inteira, o segundo Projeto já é da segunda linha.
+  const colunasAntes = Array.from({ length: indice }, (_, i) => larguraDe(i, total)).reduce(
+    (soma, largura) => soma + COLUNAS[largura],
+    0,
+  );
 
   return {
     largura,
     dobraEmDuasColunas,
+    naPrimeiraLinha: colunasAntes < 6,
     sizes: porFaixa([
       ...EM_TRES_COLUNAS[largura],
       ...(dobraEmDuasColunas ? EM_DUAS_COLUNAS.linha : EM_DUAS_COLUNAS.coluna),

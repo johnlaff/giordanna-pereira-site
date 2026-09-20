@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { projetos as textos } from '../../src/config.ts';
-import { projetos } from './projetos.ts';
+import { projetos, temCapa } from './projetos.ts';
 
 /**
  * As linhas da grade, lidas da página: cada linha é a lista de índices dos cards que dividem
@@ -34,6 +34,16 @@ test('a Grade lista todos os Projetos na Ordem, cada um levando à sua página',
       `${projeto.dados.titulo} — ${projeto.dados.tipo}`,
     );
   }
+});
+
+test('só a Capa que abre a Grade carrega de imediato e com prioridade', async ({ page }) => {
+  await page.goto('/projetos');
+  // Com dez Projetos o destaque ocupa a linha inteira, e é sozinho na primeira linha: as
+  // demais Capas estão abaixo da dobra e não podem disputar banda com ela.
+  const capas = page.locator('.grade .card img');
+  await expect(capas.first()).toHaveAttribute('loading', 'eager');
+  await expect(capas.first()).toHaveAttribute('fetchpriority', 'high');
+  await expect(capas.nth(1)).toHaveAttribute('loading', 'lazy');
 });
 
 test('o item Projetos do cabeçalho marca a página atual', async ({ page }) => {
@@ -75,13 +85,14 @@ test('em 375 px a grade vira uma coluna', async ({ page }) => {
 
 // A Capa é a do conteúdo: a definida no arquivo, ou a primeira imagem da Galeria. Um Projeto
 // cadastrado sem nenhuma das duas mostra o Em breve desenhado pelo site, nunca um buraco.
-for (const { rota, dados } of projetos) {
-  const temCapa = dados.capa !== undefined || dados.galeria.length > 0;
-  test(`o card de ${rota} mostra ${temCapa ? 'a Capa' : 'o Em breve'}`, async ({ page }) => {
+for (const projeto of projetos) {
+  const { rota } = projeto;
+  const comCapa = temCapa(projeto);
+  test(`o card de ${rota} mostra ${comCapa ? 'a Capa' : 'o Em breve'}`, async ({ page }) => {
     await page.goto('/projetos');
     const card = page.locator(`.grade .card[href="${rota}"]`);
-    await expect(card.locator('img')).toHaveCount(temCapa ? 1 : 0);
-    await expect(card.getByText('Imagens em breve')).toHaveCount(temCapa ? 0 : 1);
+    await expect(card.locator('img')).toHaveCount(comCapa ? 1 : 0);
+    await expect(card.getByText('Imagens em breve')).toHaveCount(comCapa ? 0 : 1);
   });
 }
 
@@ -121,15 +132,15 @@ test.describe('tela de toque', () => {
     // refletir a consulta, o teste viraria um falso verde e é melhor falhar aqui.
     expect(await page.evaluate(() => matchMedia('(hover: none)').matches)).toBe(true);
 
-    for (const { rota, dados } of projetos) {
-      const card = page.locator(`.grade .card[href="${rota}"]`);
+    for (const projeto of projetos) {
+      const card = page.locator(`.grade .card[href="${projeto.rota}"]`);
       await expect(card.locator('.texto')).toHaveCSS('opacity', '1');
-      // Sobre a Capa o nome precisa do véu para ter contraste; sobre o painel do Em breve,
-      // que o site desenha claro, o nome é escrito em tinta e véu nenhum entra.
-      const temCapa = dados.capa !== undefined || dados.galeria.length > 0;
-      const veu = card.locator('.veu');
-      await expect(veu).toHaveCSS('display', temCapa ? 'block' : 'none');
-      if (temCapa) await expect(veu).toHaveCSS('background-color', 'rgba(35, 45, 56, 0.5)');
+      // Sobre a Capa o nome precisa da penumbra para ter contraste; sobre o painel do Em
+      // breve, que o site desenha claro, o nome é escrito em tinta e nada o escurece.
+      const penumbra = card.locator('.penumbra');
+      await expect(penumbra).toHaveCSS('display', temCapa(projeto) ? 'block' : 'none');
+      if (temCapa(projeto))
+        await expect(penumbra).toHaveCSS('background-color', 'rgba(35, 45, 56, 0.5)');
     }
   });
 });
