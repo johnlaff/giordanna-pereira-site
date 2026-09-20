@@ -1,0 +1,34 @@
+---
+/** A CTA que fecha a home: o convite e o caminho para a Grade de projetos. */
+import { cta } from '../config';
+import Icone from './Icone.astro';
+---
+
+<section class="shell cta rv">
+  <h2>
+    {cta.titulo} <em>{cta.enfase}</em>
+  </h2>
+  <a class="btn" href={cta.href}>
+    {cta.rotulo}
+    <Icone nome="seta" />
+  </a>
+</section>
+
+<style>
+  .cta {
+    padding: clamp(70px, 12vh, 130px) 0;
+    text-align: center;
+  }
+  .cta h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: var(--fs-cta);
+    line-height: 1.1;
+    max-width: 18ch;
+    margin: 0 auto 28px;
+  }
+  .cta h2 em {
+    font-style: normal;
+    color: var(--ink-soft);
+  }
+</style>
