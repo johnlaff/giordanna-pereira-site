@@ -194,10 +194,11 @@ const cruzarAPonta = async (page: Page, rotulo: 'Próximo depoimento' | 'Depoime
 
 test('o salto que fecha o giro não aparece na tela', async ({ page }) => {
   await abrirOsDepoimentos(page);
-  const volta = await trilho(page).evaluate((faixa) => {
+  const { passo, volta } = await trilho(page).evaluate((faixa) => {
     const cards = [...faixa.children] as HTMLElement[];
+    const passo = cards[1]!.offsetLeft - cards[0]!.offsetLeft;
     // A lista aparece três vezes na faixa: as cópias da frente, os Depoimentos e as de trás.
-    return (cards.length / 3) * (cards[1]!.offsetLeft - cards[0]!.offsetLeft);
+    return { passo, volta: (cards.length / 3) * passo };
   });
 
   // Onde a posição pula uma volta inteira, o que está na tela tem de ser o mesmo antes e
@@ -209,8 +210,10 @@ test('o salto que fecha o giro não aparece na tela', async ({ page }) => {
       .map(({ de, para }) => ({ de: de!, para }));
     expect(saltos.length, `o giro não fechou na ponta ${ponta}`).toBeGreaterThan(0);
     for (const { de, para } of saltos) {
-      expect(Math.abs(Math.abs(para.posicao - de.posicao) - volta)).toBeLessThan(2);
       expect(para.emCena, `o salto mudou o que estava na tela (${ponta})`).toEqual(de.emCena);
+      // Uma volta exata, com a folga de meio card: o quadro do salto pode ter avançado
+      // alguns pixels da animação que vinha antes dele.
+      expect(Math.abs(Math.abs(para.posicao - de.posicao) - volta)).toBeLessThan(passo / 2);
     }
   };
 
@@ -233,24 +236,21 @@ test('as setas do teclado andam de Depoimento em Depoimento', async ({ page }) =
   expect((await emCena(page))[0]).toBe(depoimentos[0]?.nome);
 });
 
-/** As posições da faixa quadro a quadro: uma animação passa por posições intermediárias. */
-const posicoesQuadroAQuadro = async (page: Page, acao: () => Promise<void>) => {
-  const coleta = page.evaluate(
-    (duracao) =>
-      new Promise<number[]>((resolve) => {
-        const faixa = document.querySelector('.qtrack')!;
-        const posicoes: number[] = [];
-        const relogio = setInterval(() => posicoes.push(Math.round(faixa.scrollLeft)), 16);
-        setTimeout(() => {
-          clearInterval(relogio);
-          resolve(posicoes);
-        }, duracao);
-      }),
-    700,
-  );
-  await acao();
-  return new Set(await coleta).size;
-};
+/**
+ * Quantas posições distintas a faixa mostrou ao trocar de Depoimento: uma animação passa por
+ * várias, um salto vai direto ao destino. O clique parte de dentro da página, junto com o
+ * relógio da amostragem, para a medida não depender da ida e volta do comando.
+ */
+const posicoesAoAndar = (page: Page, rotulo: string) =>
+  page.evaluate(async (nome) => {
+    const faixa = document.querySelector('.qtrack')!;
+    const posicoes: number[] = [];
+    const relogio = setInterval(() => posicoes.push(Math.round(faixa.scrollLeft)), 16);
+    document.querySelector<HTMLElement>(`.qbtn[aria-label="${nome}"]`)!.click();
+    await new Promise((pronto) => setTimeout(pronto, 900));
+    clearInterval(relogio);
+    return new Set(posicoes).size;
+  }, rotulo);
 
 test('com prefers-reduced-motion o carrossel troca de Depoimento sem deslizar', async ({
   page,
@@ -259,11 +259,8 @@ test('com prefers-reduced-motion o carrossel troca de Depoimento sem deslizar', 
   await abrirOsDepoimentos(page);
   await expect(page.locator('.qcard').first()).toHaveCSS('transition-property', 'none');
 
-  const posicoes = await posicoesQuadroAQuadro(page, () =>
-    page.getByRole('button', { name: 'Próximo depoimento' }).click(),
-  );
   // Antes e depois, nada no meio.
-  expect(posicoes).toBeLessThanOrEqual(2);
+  expect(await posicoesAoAndar(page, 'Próximo depoimento')).toBeLessThanOrEqual(2);
   await esperarParado(page);
   expect((await emCena(page))[0]).toBe(depoimentos[1]?.nome);
 });
@@ -272,117 +269,119 @@ test('sem prefers-reduced-motion o carrossel desliza até o próximo Depoimento'
   page,
 }) => {
   await abrirOsDepoimentos(page);
-  const posicoes = await posicoesQuadroAQuadro(page, () =>
-    page.getByRole('button', { name: 'Próximo depoimento' }).click(),
-  );
-  expect(posicoes).toBeGreaterThan(3);
-});
-
-test('o reposicionamento espera o ponteiro soltar', async ({ page }) => {
-  test.skip(({ isMobile }) => isMobile === true, 'gestos de mouse não existem no celular');
-  await abrirOsDepoimentos(page);
-  // Arrastar para a direita a partir do primeiro card leva a faixa para as cópias da frente,
-  // onde o giro precisa saltar. Com o botão pressionado, o salto tem de esperar.
-  await arrastar(page, await superficieDoCard(page), 250, { soltar: false });
-  const durante = await rolagem(page);
-  await page.waitForTimeout(400);
-  expect(Math.abs((await rolagem(page)) - durante)).toBeLessThanOrEqual(2);
-
-  await page.mouse.up();
+  expect(await posicoesAoAndar(page, 'Próximo depoimento')).toBeGreaterThan(3);
   await esperarParado(page);
-  expect((await emCena(page))[0]).toBe(depoimentos[ULTIMO]?.nome);
+  expect((await emCena(page))[0]).toBe(depoimentos[1]?.nome);
 });
 
-test('arrastar pela superfície do card move o carrossel e não seleciona texto', async ({
-  page,
-}) => {
+test.describe('com o mouse', () => {
   test.skip(({ isMobile }) => isMobile === true, 'gestos de mouse não existem no celular');
-  await abrirOsDepoimentos(page);
-  const origem = await superficieDoCard(page);
-  expect(
-    await page.evaluate(
+
+  test('o reposicionamento espera o ponteiro soltar', async ({ page }) => {
+    await abrirOsDepoimentos(page);
+    // Arrastar para a direita a partir do primeiro card leva a faixa para as cópias da
+    // frente, onde o giro precisa saltar. Com o botão pressionado, o salto tem de esperar.
+    await arrastar(page, await superficieDoCard(page), 250, { soltar: false });
+    const durante = await rolagem(page);
+    await page.waitForTimeout(400);
+    expect(Math.abs((await rolagem(page)) - durante)).toBeLessThanOrEqual(2);
+
+    await page.mouse.up();
+    await esperarParado(page);
+    expect((await emCena(page))[0]).toBe(depoimentos[ULTIMO]?.nome);
+  });
+
+  test('arrastar pela superfície do card move o carrossel e não seleciona texto', async ({
+    page,
+  }) => {
+    await abrirOsDepoimentos(page);
+    const origem = await superficieDoCard(page);
+    expect(
+      await page.evaluate(
+        ({ x, y }) => getComputedStyle(document.elementFromPoint(x, y)!).cursor,
+        origem,
+      ),
+    ).toBe('grab');
+
+    const antes = await rolagem(page);
+    await arrastar(page, origem, -300, { soltar: false });
+    const durante = await page.evaluate(() => ({
+      cursor: getComputedStyle(document.querySelector('.qtrack')!).cursor,
+      arrastando: document.querySelector('.qtrack')!.classList.contains('drag'),
+      selecionado: getSelection()?.toString().length ?? 0,
+    }));
+    await page.mouse.up();
+    await esperarParado(page);
+
+    expect(durante).toEqual({ cursor: 'grabbing', arrastando: true, selecionado: 0 });
+    expect(await rolagem(page)).toBeGreaterThan(antes);
+    expect(await page.evaluate(() => getSelection()?.toString().length ?? 0)).toBe(0);
+    // O cursor volta ao repouso: nada de mão fechada presa depois do gesto.
+    await expect(trilho(page)).not.toHaveClass(/\bdrag\b/);
+  });
+
+  test('o texto do card é selecionável e não arrasta o carrossel', async ({ page }) => {
+    await abrirOsDepoimentos(page);
+    const comTexto = depoimentos.findIndex(({ texto }) => texto !== undefined);
+    const paragrafo = page.locator('.qcard:not(.clone)').nth(comTexto).locator('p');
+    const caixa = await paragrafo.boundingBox();
+    if (caixa === null) throw new Error('o card com texto não está na página');
+    const origem = { x: caixa.x + 40, y: caixa.y + 20 };
+
+    const cursor = await page.evaluate(
       ({ x, y }) => getComputedStyle(document.elementFromPoint(x, y)!).cursor,
       origem,
-    ),
-  ).toBe('grab');
+    );
+    expect(['auto', 'text', 'default']).toContain(cursor);
 
-  const antes = await rolagem(page);
-  await arrastar(page, origem, -300, { soltar: false });
-  const durante = await page.evaluate(() => ({
-    cursor: getComputedStyle(document.querySelector('.qtrack')!).cursor,
-    arrastando: document.querySelector('.qtrack')!.classList.contains('drag'),
-    selecionado: getSelection()?.toString().length ?? 0,
-  }));
-  await page.mouse.up();
-  await esperarParado(page);
+    const antes = await rolagem(page);
+    await arrastar(page, origem, -300);
+    expect(await rolagem(page)).toBe(antes);
+    expect(await page.evaluate(() => getSelection()?.toString().length ?? 0)).toBeGreaterThan(0);
+    await expect(trilho(page)).not.toHaveClass(/\bdrag\b/);
+  });
 
-  expect(durante).toEqual({ cursor: 'grabbing', arrastando: true, selecionado: 0 });
-  expect(await rolagem(page)).toBeGreaterThan(antes);
-  expect(await page.evaluate(() => getSelection()?.toString().length ?? 0)).toBe(0);
-  // O cursor volta ao repouso: nada de mão fechada presa depois do gesto.
-  await expect(trilho(page)).not.toHaveClass(/\bdrag\b/);
+  test('movimento abaixo do limiar não move o carrossel', async ({ page }) => {
+    await abrirOsDepoimentos(page);
+    const antes = await rolagem(page);
+    const { x, y } = await superficieDoCard(page);
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x - 3, y + 1);
+    await page.mouse.up();
+    await page.waitForTimeout(400);
+    expect(await rolagem(page)).toBe(antes);
+  });
 });
 
-test('o texto do card é selecionável e não arrasta o carrossel', async ({ page }) => {
-  test.skip(({ isMobile }) => isMobile === true, 'gestos de mouse não existem no celular');
-  await abrirOsDepoimentos(page);
-  const comTexto = depoimentos.findIndex(({ texto }) => texto !== undefined);
-  const paragrafo = page.locator('.qcard:not(.clone)').nth(comTexto).locator('p');
-  const caixa = await paragrafo.boundingBox();
-  if (caixa === null) throw new Error('o card com texto não está na página');
-  const origem = { x: caixa.x + 40, y: caixa.y + 20 };
-
-  const cursor = await page.evaluate(
-    ({ x, y }) => getComputedStyle(document.elementFromPoint(x, y)!).cursor,
-    origem,
-  );
-  expect(['auto', 'text', 'default']).toContain(cursor);
-
-  const antes = await rolagem(page);
-  await arrastar(page, origem, -300);
-  expect(await rolagem(page)).toBe(antes);
-  expect(await page.evaluate(() => getSelection()?.toString().length ?? 0)).toBeGreaterThan(0);
-  await expect(trilho(page)).not.toHaveClass(/\bdrag\b/);
-});
-
-test('movimento abaixo do limiar não move o carrossel', async ({ page }) => {
-  test.skip(({ isMobile }) => isMobile === true, 'gestos de mouse não existem no celular');
-  await abrirOsDepoimentos(page);
-  const antes = await rolagem(page);
-  const { x, y } = await superficieDoCard(page);
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  await page.mouse.move(x - 3, y + 1);
-  await page.mouse.up();
-  await page.waitForTimeout(400);
-  expect(await rolagem(page)).toBe(antes);
-});
-
-test('o dedo cruza a ponta do carrossel sem quebrar o giro', async ({ page }) => {
+test.describe('no toque', () => {
   test.skip(({ isMobile }) => isMobile !== true, 'o gesto de toque só existe no celular');
-  await abrirOsDepoimentos(page);
-  const caixa = await trilho(page).boundingBox();
-  if (caixa === null) throw new Error('a faixa do carrossel não está na página');
-  const cdp = await page.context().newCDPSession(page);
-  const x = caixa.x + caixa.width / 2;
-  const y = caixa.y + caixa.height / 2;
 
-  // Deslizar para a direita a partir do primeiro card: o dedo passa para as cópias da frente
-  // e fica parado meio segundo antes de sair da tela, quando o giro finalmente pode saltar.
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
-  for (let i = 1; i <= 10; i++) {
-    await cdp.send('Input.dispatchTouchEvent', {
-      type: 'touchMove',
-      touchPoints: [{ x: x + i * 18, y }],
-    });
-    await page.waitForTimeout(16);
-  }
-  const durante = await rolagem(page);
-  await page.waitForTimeout(400);
-  expect(Math.abs((await rolagem(page)) - durante)).toBeLessThanOrEqual(2);
+  test('o dedo cruza a ponta do carrossel sem quebrar o giro', async ({ page }) => {
+    await abrirOsDepoimentos(page);
+    const caixa = await trilho(page).boundingBox();
+    if (caixa === null) throw new Error('a faixa do carrossel não está na página');
+    const cdp = await page.context().newCDPSession(page);
+    const x = caixa.x + caixa.width / 2;
+    const y = caixa.y + caixa.height / 2;
 
-  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  await esperarParado(page);
-  expect((await emCena(page))[0]).toBe(depoimentos[ULTIMO]?.nome);
-  await cdp.detach();
+    // Deslizar para a direita a partir do primeiro card: o dedo passa para as cópias da
+    // frente e fica parado antes de sair da tela, quando o giro finalmente pode saltar.
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+    for (let i = 1; i <= 10; i++) {
+      await cdp.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x: x + i * 18, y }],
+      });
+      await page.waitForTimeout(16);
+    }
+    const durante = await rolagem(page);
+    await page.waitForTimeout(400);
+    expect(Math.abs((await rolagem(page)) - durante)).toBeLessThanOrEqual(2);
+
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await esperarParado(page);
+    expect((await emCena(page))[0]).toBe(depoimentos[ULTIMO]?.nome);
+    await cdp.detach();
+  });
 });

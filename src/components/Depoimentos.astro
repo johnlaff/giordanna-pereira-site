@@ -32,6 +32,9 @@ const EM_BREVE = 'Depoimento em\u00a0breve.';
       <span class="sec-rule" aria-hidden="true"></span>
     </div>
     <div class="qcar rv" role="region" aria-roledescription="carrossel" aria-label={secao.rotulo}>
+      {/* Cada card é uma `figure` com a sua legenda, e é esse o papel que ele anuncia: o
+        `group` que o padrão de carrossel sugere não é permitido numa `figure` com
+        `figcaption` (regra `aria-allowed-role` do axe), e a posição já vem no rótulo. */}
       {/* A faixa recebe o foco para quem navega pelo teclado: é ela que rola, e as setas do
         teclado andam de card em card. Uma região que rola e não é alcançável pelo teclado é
         violação de WCAG 2.1.1 (a regra `scrollable-region-focusable` do axe), e é isso que a
@@ -41,7 +44,6 @@ const EM_BREVE = 'Depoimento em\u00a0breve.';
         {lista.map(({ data }, i) => (
           <figure
             class:list={['qcard', { soon: data.texto === undefined }]}
-            role="group"
             aria-roledescription="depoimento"
             aria-label={`${i + 1} de ${lista.length}`}
           >
