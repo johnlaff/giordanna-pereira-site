@@ -11,6 +11,8 @@
   --line-light: rgba(242, 239, 233, 0.22);
   /* Reserva de imagem: o cinza claro que sustenta o render antes de ele pintar. */
   --img-bg: #e4e8ea;
+  /* Faixa clara: o cinza que separa uma seção da outra na home, sem ir ao escuro. */
+  --faixa-clara: #e4e8ea;
   /* Branco puro, um degrau acima do papel: o fundo do último nível da Familiaridade. */
   --branco: #ffffff;
   --gutter: 24px;

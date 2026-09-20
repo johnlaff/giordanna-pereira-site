@@ -131,6 +131,16 @@ export const familiaridade = {
   ] as readonly ItemDeFamiliaridade[],
 } as const;
 
+/**
+ * A seção de Depoimentos da home. O que cada card diz vem da collection `depoimentos`; daqui
+ * sai só a moldura da seção, que não passa pelo CMS.
+ */
+export const depoimentos = {
+  titulo: 'Quem já trabalhou comigo',
+  /** Como o leitor de tela anuncia o carrossel antes de entrar nos cards. */
+  rotulo: 'Depoimentos',
+} as const;
+
 /** A CTA que fecha a home: o convite e o caminho para a Grade de projetos. */
 export const cta = {
   titulo: 'Conheça mais',
