@@ -18,6 +18,13 @@ export const marca = {
 } as const;
 
 /**
+ * Como o site nomeia uma página: o nome dela e o do site, e só o do site na home. Fica aqui
+ * porque não é só o título da aba — é o mesmo par que viaja no que se compartilha.
+ */
+export const tituloDaPagina = (titulo?: string): string =>
+  titulo ? `${titulo} — ${site.nome}` : site.nome;
+
+/**
  * E-mail exibido no site. Constante única: Contatos, rodapé e a alternativa do formulário leem daqui.
  * Passa a `contato@giordannapereira.arq.br` no lançamento (#16).
  */

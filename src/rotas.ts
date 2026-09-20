@@ -18,8 +18,14 @@
 export const rotasPublicas = (slugs: readonly string[]): string[] => [
   '/',
   '/projetos',
-  ...slugs.map((slug) => `/projetos/${slug}`),
+  ...slugs.map(rotaDoProjeto),
 ];
+
+/**
+ * O endereço da página de um Projeto. A forma mora aqui para o sitemap, a navegação entre
+ * Projetos e o link que se compartilha nunca divergirem em silêncio.
+ */
+export const rotaDoProjeto = (slug: string): string => `/projetos/${slug}`;
 
 /** O que um caractere reservado do XML vira dentro de uma `<loc>`. */
 const escapado: Record<string, string> = {

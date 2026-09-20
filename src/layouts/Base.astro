@@ -3,7 +3,7 @@
 import { Font } from 'astro:assets';
 import Footer from '../components/Footer.astro';
 import Header, { type Secao } from '../components/Header.astro';
-import { site } from '../config';
+import { site, tituloDaPagina } from '../config';
 import '../styles/global.css';
 
 interface Props {
@@ -16,7 +16,7 @@ interface Props {
 }
 
 const { titulo, descricao = site.descricao, secao, hero = false } = Astro.props;
-const tituloCompleto = titulo ? `${titulo} — ${site.nome}` : site.nome;
+const tituloCompleto = tituloDaPagina(titulo);
 ---
 
 <!doctype html>
