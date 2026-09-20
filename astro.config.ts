@@ -1,5 +1,6 @@
 import cloudflare from '@astrojs/cloudflare';
 import { defineConfig, fontProviders } from 'astro/config';
+import { servicoDeImagem } from './src/imagens.ts';
 
 export default defineConfig({
   site: 'https://giordannapereira.arq.br',
@@ -12,11 +13,10 @@ export default defineConfig({
   session: false,
   // Imagens geradas no build pelo sharp (AVIF + WebP), não pelo Cloudflare Images.
   adapter: cloudflare({ imageService: 'compile' }),
-  // A qualidade das variantes não mora aqui: um `image.service` apontando para o sharp é
-  // descartado pelo adapter da Cloudflare, e a configuração do serviço não entra no hash do
-  // arquivo gerado — mudá-la deixaria o cache de imagens servindo as variantes antigas. Ela
-  // é `qualidadeDeImagem`, em `src/config.ts`, passada por imagem.
-  image: { layout: 'constrained' },
+  // O que decide as variantes mora em `src/imagens.ts`, e não aqui, porque a chave do cache
+  // de imagens do CI observa aquele caminho: a qualidade, passada por imagem, e o serviço,
+  // que carrega o esforço de compressão do AVIF — o que domina o tempo de build (ADR 0009).
+  image: { layout: 'constrained', service: servicoDeImagem },
   // Fontes baixadas no build e servidas do próprio domínio: nenhuma requisição ao Google Fonts em runtime.
   fonts: [
     {

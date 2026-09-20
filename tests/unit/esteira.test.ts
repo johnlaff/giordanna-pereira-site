@@ -21,10 +21,12 @@ const checksExigidos = new Set(
 
 test('o cache de imagens acompanha o que decide as variantes', () => {
   // A chave presa só a `src/assets` deixaria o cache servir variantes de outra qualidade: o
-  // build regeraria o acervo a cada corrida sem nunca conseguir gravar a chave de novo.
+  // build regeraria o acervo a cada corrida sem nunca conseguir gravar a chave de novo. O
+  // serviço entra pelo motivo inverso: o nome do arquivo gerado não registra a compressão,
+  // então uma mudança lá passaria despercebida e o cache continuaria servindo o antigo.
   const setup = readFileSync('.github/actions/setup/action.yml', 'utf8');
   const chave = /key: astro-assets-.*hashFiles\(([^)]*)\)/.exec(setup)?.[1] ?? '';
-  for (const caminho of ["'src/assets/**'", "'src/imagens.ts'"])
+  for (const caminho of ["'src/assets/**'", "'src/imagens.ts'", "'src/servico-de-imagem.ts'"])
     assert.ok(chave.includes(caminho), `fora da chave do cache: ${caminho}`);
 });
 
