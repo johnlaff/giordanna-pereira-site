@@ -28,6 +28,7 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 ## Estrutura
 
 - `astro.config.ts` — `output: 'static'`, adapter Cloudflare (`imageService: 'compile'`), Fonts API; `wrangler.jsonc` — assets em `dist/`, `not_found_handling: 404-page`
+- `src/imagens.ts` — o que decide as variantes de imagem (qualidade e esforço do AVIF), e `src/servico-de-imagem.ts`, o serviço que as grava; os dois estão na chave do cache de imagens do CI
 - `src/config.ts` — configuração tipada fora do CMS: `site`, `marca` (nome + CAU), `emailExibido` (constante única do e-mail) e `contatos`
 - `src/layouts/Base.astro` — casca de toda página (head, fontes, Header, `main`, Footer); props `titulo`, `descricao`, `secao` (item ativo da nav) e `hero` (cabeçalho transparente sobre o hero)
 - `src/pages/` — `index`, `404`, `projetos/[slug]`. Planejadas: `projetos/index`, `contato`, `api/contato.ts` (`prerender = false`)

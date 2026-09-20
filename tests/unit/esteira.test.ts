@@ -19,13 +19,29 @@ const checksExigidos = new Set(
     .map((c) => c.context),
 );
 
-test('o cache de imagens acompanha o que decide as variantes', () => {
-  // A chave presa só a `src/assets` deixaria o cache servir variantes de outra qualidade: o
-  // build regeraria o acervo a cada corrida sem nunca conseguir gravar a chave de novo.
-  const setup = readFileSync('.github/actions/setup/action.yml', 'utf8');
-  const chave = /key: astro-assets-.*hashFiles\(([^)]*)\)/.exec(setup)?.[1] ?? '';
-  for (const caminho of ["'src/assets/**'", "'src/imagens.ts'"])
+const setup = readFileSync('.github/actions/setup/action.yml', 'utf8');
+const linhaDoCache = (campo: 'key' | 'restore-keys') =>
+  new RegExp(`^\\s*${campo}: (astro-assets-.*)$`, 'm').exec(setup)?.[1] ?? '';
+
+// O que decide como uma variante é comprimida. O nome do arquivo gerado não registra isso,
+// então é a chave do cache que precisa registrar.
+const COMPRESSAO = ["'src/imagens.ts'", "'src/servico-de-imagem.ts'"];
+
+test('a chave do cache de imagens cobre imagens e compressão', () => {
+  const chave = linhaDoCache('key');
+  for (const caminho of ["'src/assets/**'", ...COMPRESSAO])
     assert.ok(chave.includes(caminho), `fora da chave do cache: ${caminho}`);
+});
+
+test('a reserva do cache de imagens não atravessa uma mudança de compressão', () => {
+  // Esta é a asserção que sustenta a outra. Com a compressão só na chave e uma reserva presa
+  // apenas ao sistema operacional, a corrida seguinte erraria a chave, cairia na reserva e
+  // receberia as variantes antigas — com os nomes certos, porque o nome não registra a
+  // compressão —, e o build as daria por prontas. A compressão tem de estar no prefixo.
+  const reserva = linhaDoCache('restore-keys');
+  assert.notEqual(reserva, '', 'a action não declara restore-keys');
+  for (const caminho of COMPRESSAO)
+    assert.ok(reserva.includes(caminho), `fora do prefixo de reserva: ${caminho}`);
 });
 
 test('o workflow dispara em pull_request e em push para main', () => {
