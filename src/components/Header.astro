@@ -3,6 +3,7 @@
  * Cabeçalho fixo. Sobre o hero da home ele começa transparente e fica sólido ao rolar;
  * nas demais páginas (e sem hero) é sólido desde o servidor, sem depender de JavaScript.
  */
+import { prefetchDe } from '../rotas';
 import Marca from './Marca.astro';
 
 export type Secao = 'home' | 'projetos' | 'contato';
@@ -28,7 +29,11 @@ const itens: { secao: Secao; href: string; rotulo: string }[] = [
   <Marca linha="cau" rotulo="Início — Giordanna Pereira" />
   <nav class="nav" aria-label="Navegação principal">
     {itens.map((item) => (
-      <a href={item.href} aria-current={item.secao === secao ? 'page' : undefined}>
+      <a
+        href={item.href}
+        aria-current={item.secao === secao ? 'page' : undefined}
+        data-astro-prefetch={prefetchDe(item.href)}
+      >
         {item.rotulo}
       </a>
     ))}

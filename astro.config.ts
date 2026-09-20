@@ -9,6 +9,12 @@ export default defineConfig({
   // faz o Worker servir a mesma forma; separados, o dev server recusaria o que a Produção
   // entrega. É daqui que o sitemap e as URLs de compartilhamento tiram a forma canônica.
   trailingSlash: 'never',
+  // Todo link interno é pré-buscado, e não só os marcados: com a página de destino em cache,
+  // a navegação fica instantânea sem roteador de cliente (ADR 0003). A estratégia é a padrão
+  // do Astro — ao passar o mouse ou receber o foco —, que gasta rede só no link que o
+  // visitante já escolheu. Um link para página que ainda não existe fica de fora, pelo
+  // `data-astro-prefetch` que `src/rotas.ts` decide.
+  prefetch: { prefetchAll: true },
   // Nada usa sessões; sem isto o adapter provisiona um namespace KV a cada deploy.
   session: false,
   // Imagens geradas no build pelo sharp (AVIF + WebP), não pelo Cloudflare Images.

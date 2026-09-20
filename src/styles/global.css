@@ -230,3 +230,31 @@ main {
     transition: none;
   }
 }
+
+/* ============ TRANSIÇÃO ENTRE PÁGINAS ============ */
+/* Transição nativa do navegador, de documento para documento: nenhum roteador de cliente,
+   nenhum clique interceptado, nenhum JavaScript. Onde não há suporte — Firefox e Safari
+   antigo —, a navegação é a comum, instantânea, e nada mais muda. */
+@view-transition {
+  navigation: auto;
+}
+/* A página que sai fica inteira enquanto a que entra aparece por cima. Fundindo as duas, o
+   fundo do documento — o navy que sustenta o overscroll — apareceria no meio da troca. */
+::view-transition-old(root) {
+  animation: none;
+  opacity: 1;
+}
+::view-transition-new(root) {
+  animation: entrar-na-pagina 0.28s var(--ease) both;
+}
+@keyframes entrar-na-pagina {
+  from {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+  }
+}

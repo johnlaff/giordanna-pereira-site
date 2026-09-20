@@ -1,0 +1,93 @@
+---
+/**
+ * A Grade de projetos: todos os Projetos na Ordem, em três colunas, com o primeiro em
+ * destaque quando a sobra da última linha permite (as medidas estão em `grade.ts`).
+ */
+import { getCollection } from 'astro:content';
+import CardProjeto from '../../components/CardProjeto.astro';
+import Revelar from '../../components/Revelar.astro';
+import { lugarNaGrade } from '../../components/grade';
+import { projetos as textos } from '../../config';
+import { ordenarProjetos } from '../../content.schema';
+import Base from '../../layouts/Base.astro';
+
+const projetos = ordenarProjetos(await getCollection('projetos'));
+---
+
+<Base titulo={textos.titulo} descricao={textos.descricao} secao="projetos">
+  <Revelar />
+  <div class="shell">
+    <div class="page-head">
+      <h1>{textos.titulo}</h1>
+      <p class="wide">{textos.chamada}</p>
+    </div>
+    <div class="grade">
+      {projetos.map((projeto, i) => {
+        const lugar = lugarNaGrade(i, projetos.length);
+        return (
+          <div class:list={['card-wrap', 'rv', lugar.largura, { dobra: lugar.dobraEmDuasColunas }]}>
+            <CardProjeto
+              projeto={projeto}
+              sizes={lugar.sizes}
+              naPrimeiraLinha={lugar.naPrimeiraLinha}
+              abreAGrade={i === 0}
+            />
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</Base>
+
+<style>
+  /* Seis colunas, e não três, para o card de meia linha (`metade`) caber sem uma grade à
+     parte: um terço ocupa duas, metade ocupa três, a linha inteira ocupa as seis. */
+  .grade {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(14px, 2vw, 26px);
+    padding-bottom: var(--sp-page);
+  }
+  /* A proporção do card desce por herança até a `.card` do componente, que é quem a aplica. */
+  .card-wrap {
+    grid-column: span 2;
+    min-width: 0;
+    --proporcao: 4 / 3;
+  }
+  .card-wrap.inteira {
+    grid-column: span 6;
+    --proporcao: 16 / 6.4;
+  }
+  .card-wrap.metade {
+    grid-column: span 3;
+    --proporcao: 16 / 9.6;
+  }
+  /* Em duas colunas o destaque muda de critério: quem abre a grade é o primeiro card de um
+     total ímpar, porque é ele que deixaria o buraco no fim. Os dois pontos de quebra abaixo
+     são os de `grade.ts` (`TRES_COLUNAS`, `DUAS_COLUNAS`), um pixel abaixo: é de lá que sai
+     a largura que cada card pede ao navegador, e as duas medidas precisam concordar. */
+  @media (max-width: 1000px) {
+    .grade {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .card-wrap,
+    .card-wrap.inteira,
+    .card-wrap.metade {
+      grid-column: span 1;
+      --proporcao: 4 / 3;
+    }
+    .card-wrap.dobra {
+      grid-column: span 2;
+      --proporcao: 16 / 8;
+    }
+  }
+  @media (max-width: 560px) {
+    .grade {
+      grid-template-columns: 1fr;
+    }
+    .card-wrap.dobra {
+      grid-column: span 1;
+      --proporcao: 4 / 3;
+    }
+  }
+</style>
