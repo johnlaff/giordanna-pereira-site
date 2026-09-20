@@ -1,15 +1,14 @@
 ---
+import Chamada from '../components/Chamada.astro';
+import Ferramentas from '../components/Ferramentas.astro';
+import Hero from '../components/Hero.astro';
+import Sobre from '../components/Sobre.astro';
 import Base from '../layouts/Base.astro';
 ---
 
-<Base secao="home">
-  <div class="shell">
-    <div class="page-head">
-      <h1>Espaços projetados para viver.</h1>
-      <p>
-        Arquiteta e Urbanista e Técnica em Edificações, integrando metodologia BIM do estudo
-        preliminar ao detalhamento&nbsp;executivo.
-      </p>
-    </div>
-  </div>
+<Base secao="home" hero>
+  <Hero />
+  <Sobre />
+  <Ferramentas />
+  <Chamada />
 </Base>

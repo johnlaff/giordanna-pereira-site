@@ -65,3 +65,71 @@ export const contatos: readonly Contato[] = [
     externo: false,
   },
 ];
+
+/**
+ * O hero da home. `titulo` e `destaque` são as duas linhas do h1; o destaque é a segunda,
+ * em tom mais claro. O espaço fino antes de "executivo" é um espaço inquebrável: a palavra
+ * não pode cair sozinha na última linha.
+ */
+export const hero = {
+  titulo: 'Espaços projetados',
+  destaque: 'para viver.',
+  subtitulo:
+    'Arquiteta e Urbanista e Técnica em Edificações, integrando metodologia BIM do estudo preliminar ao detalhamento executivo.',
+  /** Descrição do render para quem não vê a imagem de fundo. */
+  alt: 'Render do Edifício Vitalis: fachada curva com brises de madeira entre árvores.',
+  legenda: 'Edifício Vitalis, projeto acadêmico na UFU · Uberlândia, MG',
+  dica: 'Role para explorar',
+} as const;
+
+/** Uma linha da grade de credenciais do Sobre: um rótulo curto e o que ele reúne. */
+export type Credencial = { rotulo: string; texto: readonly string[] };
+
+export const sobre = {
+  titulo: 'Pronta para',
+  destaque: 'somar.',
+  retratoAlt: 'Retrato de Giordanna Pereira com capacete de obra',
+  paragrafos: [
+    'Arquiteta e Urbanista formada pela Universidade Federal de Uberlândia e Técnica em Edificações pelo CEFET - MG, com três anos de experiência prática em três escritórios, da criação à documentação executiva de projetos residenciais e comerciais.',
+    'Meu trabalho é pautado pela busca constante por soluções criativas e eficientes, sempre atenta às necessidades específicas e expectativas dos meus clientes. Acredito que a flexibilidade e diversidade são fundamentais, o que me permite desenvolver projetos adaptáveis e personalizados para cada perfil.',
+  ],
+  credenciais: [
+    {
+      rotulo: 'Formação',
+      texto: ['Técnico em Edificações · CEFET - MG', 'Arquitetura e Urbanismo · UFU'],
+    },
+    { rotulo: 'Atuação', texto: ['Uberlândia, Araxá · presencial, híbrido', 'Brasil · remoto'] },
+    { rotulo: 'Projetos', texto: ['Residenciais e comerciais'] },
+    {
+      rotulo: 'Serviços',
+      texto: ['Medição, modelagem, documentação, renderização, consultoria, reforma, interiores'],
+    },
+  ] as readonly Credencial[],
+} as const;
+
+/**
+ * Familiaridade: os softwares que Giordanna domina, em três níveis, do maior para o menor.
+ * É independente das Ferramentas de cada Projeto — o Pacote Office e o AutoCAD entram aqui
+ * e nenhum Projeto os lista.
+ */
+export type Nivel = 1 | 2 | 3;
+export type Ferramenta = { nome: string; nivel: Nivel };
+
+export const familiaridade: readonly Ferramenta[] = [
+  { nome: 'Archicad', nivel: 1 },
+  { nome: 'SketchUp + Layout', nivel: 2 },
+  { nome: 'Enscape', nivel: 2 },
+  { nome: 'Pacote Office', nivel: 2 },
+  { nome: 'Revit', nivel: 3 },
+  { nome: 'AutoCAD', nivel: 3 },
+  { nome: 'V-Ray', nivel: 3 },
+  { nome: 'Adobe Ai · Ps · Id', nivel: 3 },
+];
+
+/** O convite que fecha a home. */
+export const chamada = {
+  titulo: 'Conheça mais',
+  destaque: 'do meu trabalho.',
+  rotulo: 'Ver projetos',
+  href: '/projetos',
+} as const;

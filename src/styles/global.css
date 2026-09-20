@@ -169,3 +169,65 @@ main {
     flex-basis: 100%;
   }
 }
+
+/* ============ BOTÃO ============ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--paper);
+  background: var(--navy);
+  padding: 16px 28px;
+  font-size: 13px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 400;
+  transition:
+    background 0.3s,
+    gap 0.3s;
+}
+.btn:hover {
+  background: var(--navy-deep);
+  gap: 18px;
+}
+.btn:active {
+  opacity: 0.7;
+}
+.btn svg {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  transition: transform 0.3s var(--ease);
+}
+.btn:hover svg {
+  transform: translateX(4px);
+}
+
+/* ============ ENTRADA POR ROLAGEM ============ */
+/* Cada bloco `.rv` sobe e aparece quando entra na tela. Sem JavaScript nada disso acontece,
+   e o conteúdo precisa estar visível assim mesmo: a regra do `noscript` no Base cuida disso. */
+.rv {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.9s var(--ease),
+    transform 0.9s var(--ease);
+  transition-delay: var(--d, 0ms);
+}
+.rv.in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn svg {
+    transition: none;
+  }
+  .rv {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

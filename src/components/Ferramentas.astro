@@ -1,0 +1,72 @@
+---
+/**
+ * Familiaridade: os softwares que Giordanna domina, do maior nível para o menor. O nível é
+ * dito pela cor do bloco — escuro, névoa, branco —, e a ordem da lista repete a mesma
+ * informação para quem não vê cor nenhuma.
+ */
+import { familiaridade } from '../config';
+---
+
+<section class="shell tools">
+  <div class="sec-head">
+    <h2 class="sec-title">Ferramentas</h2>
+    <span class="sec-rule" aria-hidden="true"></span>
+  </div>
+  <ul class="tools-grid rv" aria-label="Ferramentas, da maior para a menor familiaridade">
+    {familiaridade.map((ferramenta) => (
+      <li class:list={['tool', `t${ferramenta.nivel}`]}>{ferramenta.nome}</li>
+    ))}
+  </ul>
+</section>
+
+<style>
+  .tools {
+    padding-bottom: clamp(40px, 6vh, 72px);
+  }
+  .tools-grid {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .tool {
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 400;
+    min-height: 72px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border: 1px solid transparent;
+  }
+  .tool.t1 {
+    background: var(--navy);
+    color: var(--paper);
+    border-color: var(--navy);
+  }
+  .tool.t2 {
+    background: var(--mist);
+    color: var(--ink);
+    border-color: var(--mist);
+  }
+  .tool.t3 {
+    background: #ffffff;
+    color: var(--ink);
+    border-color: var(--line);
+  }
+  @media (max-width: 820px) {
+    .tools-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 400px) {
+    .tool {
+      min-height: 60px;
+      padding: 12px 10px;
+      letter-spacing: 0.1em;
+    }
+  }
+</style>

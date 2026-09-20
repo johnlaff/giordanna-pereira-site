@@ -1,0 +1,322 @@
+---
+/**
+ * Hero da home: o render do Edifício Vitalis em tela cheia, com o título, o atalho para as
+ * redes e a faixa de rodapé com a dica de rolagem e a legenda do render.
+ *
+ * A imagem é maior que a tela de propósito — 106% de largura por 112% de altura, recuada pela
+ * margem negativa — para o Ken Burns aproximar sem nunca descobrir a borda. Ela é a maior
+ * imagem do site e a que mede o carregamento da página, então carrega de imediato e com
+ * prioridade, na variante que a largura da tela pedir: 1920 px no desktop comum e a nativa de
+ * 2304 px nas telas grandes.
+ */
+import { Picture } from 'astro:assets';
+import heroImagem from '../assets/hero.webp';
+import { contatos, hero } from '../config';
+import { qualidadeDeImagem } from '../imagens';
+import Icone from './Icone.astro';
+---
+
+<section class="hero">
+  <div class="hero-bg">
+    <div class="hero-img">
+      <Picture
+        src={heroImagem}
+        formats={['avif']}
+        fallbackFormat="webp"
+        quality={qualidadeDeImagem}
+        layout="none"
+        widths={[640, 960, 1280, 1920, 2304]}
+        sizes="106vw"
+        alt={hero.alt}
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+      />
+    </div>
+  </div>
+  <nav class="rail" aria-label="Redes sociais">
+    {contatos.map((contato) => (
+      <a
+        href={contato.href}
+        target={contato.externo ? '_blank' : undefined}
+        rel={contato.externo ? 'noopener' : undefined}
+        aria-label={contato.rotulo}
+        title={contato.rotulo}
+      >
+        <Icone nome={contato.tipo} />
+        <span aria-hidden="true">{contato.rotulo}</span>
+      </a>
+    ))}
+  </nav>
+  <div class="hero-content">
+    <h1>
+      {hero.titulo}
+      <br /> <em>{hero.destaque}</em>
+    </h1>
+    <p class="hero-sub">{hero.subtitulo}</p>
+  </div>
+  <div class="hero-foot">
+    <span class="scrollcue">
+      <b aria-hidden="true"></b>
+      {hero.dica}
+    </span>
+    <span class="hero-cap">{hero.legenda}</span>
+  </div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    height: 100vh;
+    height: 100svh;
+    min-height: 560px;
+    display: flex;
+    align-items: flex-end;
+    /* O escuro que sustenta o cabeçalho transparente antes de o render pintar. */
+    background: var(--navy-deep);
+    padding: 0 var(--gutter);
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    overflow: clip;
+  }
+  .hero-img {
+    width: 106%;
+    height: 112%;
+    margin: -6% -3%;
+    animation: kenburns 26s ease-in-out infinite alternate;
+  }
+  .hero-img :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 35%;
+  }
+  @keyframes kenburns {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.09) translateY(-1.6%);
+    }
+  }
+  /* O véu que devolve contraste ao texto claro: mais forte no topo e no canto do título. */
+  .hero-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to bottom, rgba(35, 45, 56, 0.62) 0%, rgba(35, 45, 56, 0) 22%),
+      linear-gradient(
+        15deg,
+        rgba(35, 45, 56, 0.88) 0%,
+        rgba(35, 45, 56, 0.42) 44%,
+        rgba(35, 45, 56, 0.06) 75%
+      );
+  }
+  .hero-content {
+    position: relative;
+    z-index: 2;
+    color: var(--paper);
+    padding: 0 0 clamp(96px, 16vh, 150px);
+    max-width: 1200px;
+  }
+  .hero-content > * {
+    animation: rise 0.9s var(--ease) both;
+  }
+  .hero-content > :nth-child(2) {
+    animation-delay: 0.12s;
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(22px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .hero h1 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: var(--fs-hero);
+    line-height: 1.06;
+  }
+  .hero h1 em {
+    font-style: normal;
+    font-weight: 400;
+    color: var(--mist);
+  }
+  .hero-sub {
+    margin-top: 26px;
+    max-width: 44ch;
+    font-size: var(--fs-lead);
+    color: rgba(242, 239, 233, 0.92);
+  }
+  .hero-foot {
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px 20px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--line-light);
+    padding: 16px 0 22px;
+    position: absolute;
+    left: var(--gutter);
+    right: var(--gutter);
+    bottom: 0;
+    color: rgba(242, 239, 233, 0.8);
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    animation: fadein 1s var(--ease) 0.5s both;
+  }
+  @keyframes fadein {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  .hero-cap {
+    text-transform: none;
+    letter-spacing: 0.02em;
+    font-size: 13px;
+  }
+  .scrollcue {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .scrollcue b {
+    display: block;
+    width: 1px;
+    height: 34px;
+    background: var(--sand);
+    animation: drip 2.2s ease-in-out infinite;
+    transform-origin: top;
+  }
+  @keyframes drip {
+    0% {
+      transform: scaleY(0);
+    }
+    45% {
+      transform: scaleY(1);
+    }
+    100% {
+      transform: scaleY(0);
+      transform-origin: bottom;
+    }
+  }
+  /* Atalho para as redes, colado à direita do hero. */
+  .rail {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: fadein 1s var(--ease) 0.5s both;
+  }
+  .rail a {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    color: rgba(242, 239, 233, 0.72);
+    transition: color 0.3s;
+  }
+  .rail :global(svg) {
+    width: 17px;
+    height: 17px;
+  }
+  .rail a span {
+    position: absolute;
+    right: calc(100% + 2px);
+    top: 50%;
+    transform: translate(6px, -50%);
+    white-space: nowrap;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--paper);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      opacity 0.3s var(--ease),
+      transform 0.3s var(--ease);
+  }
+  .rail a:hover,
+  .rail a:focus-visible {
+    color: var(--paper);
+  }
+  .rail a:hover span,
+  .rail a:focus-visible span {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+  .rail::before,
+  .rail::after {
+    content: '';
+    width: 1px;
+    height: 38px;
+    background: rgba(242, 239, 233, 0.35);
+  }
+  .rail::before {
+    margin: 0 auto 6px;
+  }
+  .rail::after {
+    margin: 6px auto 0;
+  }
+  .hero :global(:focus-visible) {
+    outline-color: var(--sand);
+  }
+  @media (max-width: 640px) {
+    .hero {
+      min-height: 640px;
+    }
+    .hero-cap {
+      display: none;
+    }
+    .rail {
+      top: 104px;
+      transform: none;
+      right: 10px;
+      gap: 0;
+    }
+    .rail a {
+      width: 38px;
+      height: 38px;
+    }
+    .rail::before,
+    .rail::after {
+      display: none;
+    }
+    .rail a span {
+      display: none;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero-img,
+    .scrollcue b {
+      animation: none;
+    }
+    .hero-content > *,
+    .hero-foot,
+    .rail {
+      animation: none;
+    }
+    .rail a,
+    .rail a span {
+      transition: none;
+    }
+  }
+</style>

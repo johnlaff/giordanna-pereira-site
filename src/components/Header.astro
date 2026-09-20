@@ -61,6 +61,22 @@ const itens: { secao: Secao; href: string; rotulo: string }[] = [
       background 0.35s var(--ease),
       box-shadow 0.35s;
   }
+  /* Sobre o hero o cabeçalho é transparente, e o que fica atrás dele é o céu do render: claro
+     demais para o texto em papel. Este véu, que desce até 40 px abaixo da barra para não
+     deixar borda, é o que garante os 4,5:1 da WCAG 2.2 AA em qualquer largura. O Preview
+     confiava só no degradê do hero e ficava em 136 de 255 no celular, quando o teto é 110. */
+  .hdr::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 -40px;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, rgba(35, 45, 56, 0.72), rgba(35, 45, 56, 0));
+    transition: opacity 0.35s var(--ease);
+  }
+  .hdr.solid::before {
+    opacity: 0;
+  }
   .hdr.solid {
     background: rgba(35, 45, 56, 0.97);
     box-shadow: 0 1px 0 rgba(242, 239, 233, 0.08);
@@ -109,6 +125,14 @@ const itens: { secao: Secao; href: string; rotulo: string }[] = [
   .nav a:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hdr,
+    .hdr::before,
+    .nav a,
+    .nav a::after {
+      transition: none;
+    }
   }
   @media (max-width: 640px) {
     .hdr {

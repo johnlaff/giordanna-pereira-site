@@ -32,6 +32,16 @@ const tituloCompleto = titulo ? `${titulo} — ${site.nome}` : site.nome;
     {/* Só o subset latin entra no preload: o latin-ext é buscado sob demanda pelo unicode-range. */}
     <Font cssVariable="--font-serif" preload={[{ subset: 'latin' }]} />
     <Font cssVariable="--font-sans" preload={[{ subset: 'latin' }]} />
+    {/* Os blocos `.rv` entram na tela pela mão do observador abaixo. Sem JavaScript ninguém
+      os revela, então aqui eles nascem visíveis: o movimento é enfeite, o conteúdo não. */}
+    <noscript>
+      <style is:inline>
+        .rv {
+          opacity: 1;
+          transform: none;
+        }
+      </style>
+    </noscript>
   </head>
   <body>
     <Header secao={secao} hero={hero} />
@@ -39,5 +49,25 @@ const tituloCompleto = titulo ? `${titulo} — ${site.nome}` : site.nome;
       <slot />
     </main>
     <Footer />
+    <script>
+      // Cada bloco `.rv` aparece uma vez, ao entrar na tela, e sai da observação em seguida.
+      const blocos = document.querySelectorAll('.rv');
+      if ('IntersectionObserver' in window) {
+        const observador = new IntersectionObserver(
+          (entradas) => {
+            for (const entrada of entradas)
+              if (entrada.isIntersecting) {
+                entrada.target.classList.add('in');
+                observador.unobserve(entrada.target);
+              }
+          },
+          // A entrada dispara quando o bloco já avançou um pouco na tela, não na borda.
+          { rootMargin: '0px 0px -10% 0px' },
+        );
+        for (const bloco of blocos) observador.observe(bloco);
+      } else {
+        for (const bloco of blocos) bloco.classList.add('in');
+      }
+    </script>
   </body>
 </html>
