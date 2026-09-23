@@ -181,9 +181,16 @@ const faixaDoCabecalho = async (page: Page) => {
 
   const medidas: number[] = [];
   for (const segundos of [0, 13, 26]) {
-    await page.addStyleTag({
-      content: `.hero-img{animation-play-state:paused;animation-delay:-${segundos}s}`,
-    });
+    // Pela Web Animations API, e não por uma folha injetada: a CSP barra `<style>` sem hash.
+    await page.evaluate((ms) => {
+      for (const animacao of document.getAnimations()) {
+        const alvo = (animacao.effect as KeyframeEffect | null)?.target;
+        if (alvo?.closest('.hero-img')) {
+          animacao.pause();
+          animacao.currentTime = ms;
+        }
+      }
+    }, segundos * 1000);
     const tela = lerPng(await page.screenshot());
     let soma = 0;
     let pontos = 0;

@@ -29,6 +29,19 @@ import { servicosDe, type Servicos } from './servicos.ts';
 export type Recusa =
   'indisponivel' | 'formato' | 'grande' | 'isca' | 'campos' | 'verificacao' | 'envio';
 
+/**
+ * Os headers de segurança do site (ADR 0005). O `public/_headers` só vale para o que é
+ * estático; esta é a cópia da única resposta que o Worker escreve. `seguranca.spec.ts` cobra
+ * as duas com a mesma lista, então uma não muda sem a outra.
+ */
+const HEADERS_DE_SEGURANCA = {
+  'Strict-Transport-Security': 'max-age=63072000; includeSubDomains',
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+};
+
 const resposta = (status: number, corpo: object): Response =>
   new Response(JSON.stringify(corpo), {
     status,
@@ -36,6 +49,7 @@ const resposta = (status: number, corpo: object): Response =>
       'Content-Type': 'application/json; charset=utf-8',
       // Cada envio é único: nem o navegador nem a Cloudflare podem guardar a resposta.
       'Cache-Control': 'no-store',
+      ...HEADERS_DE_SEGURANCA,
     },
   });
 

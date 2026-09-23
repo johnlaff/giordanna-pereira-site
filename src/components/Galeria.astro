@@ -68,7 +68,6 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
       <button
         type="button"
         class:list={['item', { abertura: i === 0 && abreEmFaixa }]}
-        style={`aspect-ratio:${imagem.width}/${imagem.height}`}
         data-proporcao={(imagem.width / imagem.height).toFixed(4)}
         aria-label={`Abrir imagem ${i + 1} de ${imagens.length} em tela cheia`}
       >
@@ -122,9 +121,8 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
         const item = itens[caixa.indice]!;
         item.style.width = `${caixa.largura}px`;
         item.style.height = `${caixa.altura}px`;
-        item.style.aspectRatio = 'auto';
-        // O `aspect-ratio` e o `max-height` são o andaime de quem não tem JavaScript; com o
-        // arranjo medido, quem manda é a altura calculada, que pode passar de meia largura
+        // A proporção da imagem e o `max-height` são o andaime de quem não tem JavaScript; com
+        // o arranjo medido, quem manda é a altura calculada, que pode passar de meia largura
         // para não recortar demais.
         item.style.maxHeight = 'none';
         // Só o arranjo sabe a caixa de cada imagem: uma sozinha na linha ocupa a Galeria

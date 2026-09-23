@@ -2,7 +2,7 @@ import { expect, test, type APIRequestContext } from '@playwright/test';
 import sharp from 'sharp';
 import { errosDeJsonLd } from '../schema-org.ts';
 import { projetos, temCapa } from './projetos.ts';
-import { rotas } from './rotas.ts';
+import { rota404, rotas } from './rotas.ts';
 
 /**
  * O que o WhatsApp, o LinkedIn e o buscador leem de cada página: as tags Open Graph, o cartão
@@ -11,7 +11,7 @@ import { rotas } from './rotas.ts';
  */
 
 /** As rotas da suíte, menos a que existe para dar 404. */
-const PUBLICAS = rotas.filter((rota) => rota !== '/nao-existe');
+const PUBLICAS = rotas.filter((rota) => rota !== rota404);
 
 const meta = (html: string, chave: string): string | undefined => {
   const tag = [...html.matchAll(/<meta\b[^>]*>/g)]

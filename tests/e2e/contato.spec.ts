@@ -180,6 +180,26 @@ test.describe('sem chaves, o envio falha fechado', () => {
   });
 });
 
+// O limite de envios é uma regra da zona na Cloudflare (#14), não do Worker: acima dele, quem
+// responde é a borda, com 429 e uma página HTML dela. O formulário trata como qualquer recusa.
+test('barrado pelo limite de envios da zona, o formulário mostra o e-mail alternativo', async ({
+  page,
+}) => {
+  await page.route('**/api/contato', (route) =>
+    route.fulfill({
+      status: 429,
+      contentType: 'text/html',
+      body: '<!doctype html><title>Access denied | rate limited</title>',
+    }),
+  );
+  await page.goto('/contato');
+  await preencher(page);
+  await page.click('#f-send');
+  await expect(page.locator('#f-fail')).toBeVisible();
+  await expect(page.locator('#f-fail')).toContainText(emailExibido);
+  await expect(page.locator('#f-ok')).toBeHidden();
+});
+
 test.describe('no modo de teste', () => {
   test('um envio válido mostra a confirmação no lugar do formulário', async ({ page }) => {
     await page.goto(`${urlDoModoDeTeste}/contato`);

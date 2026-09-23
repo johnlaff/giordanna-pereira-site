@@ -10,7 +10,7 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 - `pnpm dev` — dev server
 - `pnpm check` — `astro check` (tipos) + ESLint + Prettier (`pnpm format` corrige)
 - `pnpm build` — build de produção em `dist/` (`dist/client/` são os assets estáticos)
-- `pnpm test` — build → `pnpm test:unit` (runner do Node, `tests/unit/`) → `pnpm test:e2e` (Playwright + axe em todas as rotas de `tests/e2e/rotas.ts`, contra `dist/` servido por `wrangler dev`)
+- `pnpm test` — build → `pnpm test:unit` (runner do Node, `tests/unit/`) → `pnpm test:e2e` (Playwright + axe em todas as rotas de `tests/e2e/rotas.ts`, contra `dist/` servido por `wrangler dev`, e o MDN HTTP Observatory contra um Worker local em HTTPS; precisa do `openssl`)
 - `pnpm test:ui` — Playwright com interface, para depurar
 - `pnpm lighthouse` — Lighthouse CI contra o Worker local, orçamento em `lighthouserc.yml` (LCP < 2,5 s, CLS < 0,1, acessibilidade 100)
 
@@ -19,7 +19,7 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 - Imagens em `src/assets/` são redimensionamentos determinísticos dos originais do Drive (sem retoque). Melhoria de renders por IA é possibilidade futura, não parte do fluxo atual.
 - Em toda galeria: renders primeiro, pranchas por último. Capas e ordem dos projetos vêm do conteúdo, não do código.
 - Conteúdo vive nas collections `projetos` e `depoimentos` em `src/content/`, como arquivos de dados com campos em pt-BR sem acento (tabelas em `CONTEXT.md`); `descricao` é texto simples e nenhum campo aceita HTML. Imagens em `src/assets/` (WebP ≤ 2560 px). O schema Zod é a verdade: build quebra se faltar campo, imagem ou se `ordem` repetir.
-- Sem requisição a domínio externo além do Turnstile (fontes self-hosted pela Fonts API). CSP gerada pelo Astro (`security.csp`).
+- Sem requisição a domínio externo além do Turnstile e do beacon do Web Analytics (fontes self-hosted pela Fonts API). CSP gerada pelo Astro (`security.csp`), sem `style` nem script inline escrito à mão; os outros headers de segurança em `public/_headers` (ADR 0005). Observatory A ou mais em toda rota (ADR 0013).
 - Sem segredos no repo: chaves do Resend, Turnstile e do autenticador do Sveltia ficam em variáveis do Worker.
 - Toda correção vem com teste. Nada entra em `main` com Playwright/axe vermelho. Acessibilidade alvo: WCAG 2.2 AA.
 - Todo movimento novo (animação, transição, carrossel, lightbox, View Transitions) entra com o seu bloco `@media (prefers-reduced-motion: reduce)`, espelhando o preview.
@@ -37,9 +37,10 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 - `src/components/` — Header, Footer, Marca, Icone, Ficha, Galeria (linhas justificadas em `galeria.linhas.ts` e lightbox PhotoSwipe), EmBreve, Hero, Sobre, Ferramentas, Depoimentos (carrossel infinito por cópias nas duas pontas), CTA, CardProjeto (larguras e `sizes` da grade em `grade.ts`), Revelar (entrada dos blocos `.rv`, só na página que os tem), FormContato
 - `src/styles/` — `tokens.css` (cores, tipografia, espaçamento) e `global.css` (reset, scaffold de página, transição nativa entre páginas)
 - `src/compartilhamento/` — o que se lê de um link compartilhado: os Cartões de compartilhamento (`og:image` 1200×630, um por rota pública, em `cartoes.ts`), desenhados no fim do build pelo sharp (`desenho.ts`, com as fontes em `fontes/`) e gravados em `og/` pela integração de `integracao.ts` (ADR 0012), e o JSON-LD `Person` da home e `CreativeWork` de cada Projeto (`dados-estruturados.ts`). As tags Open Graph ficam no `Base.astro`, que recebe `rota` e `dadosEstruturados` de cada página
+- `public/_headers` — HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` e `Permissions-Policy` de toda resposta estática; o adapter soma a ele o cache imutável de `/_astro/*`
 - Planejado: `public/admin/` — Sveltia CMS (`index.html`, `config.yml`)
 - `tests/schema-org.ts` — validador de JSON-LD contra o vocabulário do schema.org, usado nos testes de unidade e no e2e
-- `tests/e2e/` — Playwright + axe (rotas em `rotas.ts`; o formulário roda também contra Workers no modo de teste, em `modo-de-teste.ts`); `tests/unit/` — runner do Node; `docs/` — HANDOFF, ADRs, `esteira.md`, `agents/` (config do tracker), `reference/` (preview)
+- `tests/e2e/` — Playwright + axe (rotas em `rotas.ts`; o formulário roda também contra Workers no modo de teste, em `modo-de-teste.ts`; CSP, headers e as duas origens da Cloudflare em `seguranca.spec.ts`; o Observatory num Worker em HTTPS, em `observatorio.ts`); `tests/unit/` — runner do Node; `docs/` — HANDOFF, ADRs, `esteira.md`, `agents/` (config do tracker), `reference/` (preview)
 - `.github/workflows/ci.yml` — jobs `check`, `build`, `e2e`, `lighthouse`, `audit` (nomes = checks exigidos pelo ruleset); `.github/actions/setup` — action composta; `.github/rulesets/` — fonte dos rulesets de `main`, aplicados via `gh api`; `renovate.json`; `scripts/lighthouse.ts`
 - `.claude/hooks/session-start.sh` — gancho de SessionStart que prepara o container das sessões do Claude Code na web (Node da `.node-version` pelo nvm, dependências e o Chromium da versão do Playwright); não roda fora do ambiente remoto
 

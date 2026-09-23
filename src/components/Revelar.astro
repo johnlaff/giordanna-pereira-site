@@ -4,20 +4,11 @@
  *
  * Mora num componente, e não na casca, porque o ADR 0003 pede que o JavaScript de cada
  * página carregue só onde é usado — a página de Projeto e a 404 não têm bloco nenhum para
- * revelar. Quem tiver `.rv` põe este componente na página, antes do conteúdo.
+ * revelar. Quem tiver `.rv` põe este componente na página, antes do conteúdo. Sem JavaScript
+ * ninguém revela nada, e o conteúdo aparece assim mesmo pela regra `scripting: none` do
+ * `global.css`.
  */
 ---
-
-{/* Sem JavaScript ninguém revela nada, e o conteúdo precisa aparecer assim mesmo: o
-  movimento é enfeite, o conteúdo não. A regra vem antes do conteúdo para não haver piscada. */}
-<noscript>
-  <style is:inline>
-    .rv {
-      opacity: 1;
-      transform: none;
-    }
-  </style>
-</noscript>
 
 <script>
   const blocos = document.querySelectorAll('.rv');

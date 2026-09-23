@@ -1,9 +1,16 @@
 import { expect, test } from '@playwright/test';
 import { rotas } from './rotas.ts';
 
-// ADR 0005: nenhuma requisição a domínio externo. O Turnstile só carrega quando o build tem a
-// chave de site (ADR 0011), e a suíte roda sem ela; o beacon do Web Analytics entra em #14.
-const hostsPermitidos = new Set(['localhost', '127.0.0.1']);
+// ADR 0005: nenhuma requisição a domínio de fora além das duas origens da Cloudflare, o
+// Turnstile e o beacon do Web Analytics. A suíte roda sem nenhum dos dois — o Turnstile só
+// carrega quando o build tem a chave de site (ADR 0011), e o beacon é a zona que injeta —, e
+// `seguranca.spec.ts` prova com dublês que a CSP os deixa rodar.
+const hostsPermitidos = new Set([
+  'localhost',
+  '127.0.0.1',
+  'challenges.cloudflare.com',
+  'static.cloudflareinsights.com',
+]);
 
 for (const rota of rotas) {
   test(`só requisições ao próprio domínio em ${rota}`, async ({ page }) => {
