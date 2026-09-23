@@ -30,7 +30,7 @@ export const scanner = realpathSync(join(pacote, 'src/scan.js'));
  * `pnpm install` não depender da rede, e para `localhost` a lista é irrelevante. Sem o
  * arquivo, porém, o scanner nem abre.
  */
-const prepararScanner = () => {
+export const prepararScanner = () => {
   const preload = join(pacote, 'conf/hsts-preload.json');
   if (!existsSync(preload)) writeFileSync(preload, '{}');
 };
@@ -44,7 +44,7 @@ const gerarCertificado = () => {
     'rsa:2048',
     '-nodes',
     '-days',
-    '1',
+    '30',
     '-subj',
     '/CN=127.0.0.1',
     '-addext',
@@ -58,7 +58,6 @@ const gerarCertificado = () => {
 
 // Rodado como comando de `webServer` pelo `playwright.config.ts`.
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  prepararScanner();
   gerarCertificado();
   const worker = spawn(
     'pnpm',
@@ -86,5 +85,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     { stdio: 'inherit' },
   );
   for (const sinal of ['SIGINT', 'SIGTERM'] as const) process.on(sinal, () => worker.kill(sinal));
-  worker.on('exit', (codigo) => process.exit(codigo ?? 0));
+  // Morto por sinal que não veio daqui, o Worker sai sem código: isso é falha, não sucesso.
+  worker.on('exit', (codigo, sinal) => process.exit(codigo ?? (sinal ? 1 : 0)));
 }

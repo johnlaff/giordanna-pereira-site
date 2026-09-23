@@ -93,22 +93,36 @@ test('o lightbox abre, navega e amplia sem violação de CSP', async ({ page }) 
   expect(await violacoes()).toEqual([]);
 });
 
+/** Os headers de segurança que toda resposta do site leva, estática ou do Worker. */
+const conferirHeaders = (headers: Record<string, string>) => {
+  // Dois anos, subdomínios inclusos: o que o HSTS preload exige, sem ainda pedir a inclusão.
+  expect(headers['strict-transport-security']).toBe('max-age=63072000; includeSubDomains');
+  expect(headers['x-content-type-options']).toBe('nosniff');
+  expect(headers['x-frame-options']).toBe('DENY');
+  expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+  // Nada no site usa câmera, microfone, localização ou pagamento; a política os desliga para
+  // a página e para o iframe do Turnstile.
+  const permissoes = headers['permissions-policy'] ?? '';
+  for (const recurso of ['camera', 'microphone', 'geolocation', 'payment', 'usb'])
+    expect(permissoes).toContain(`${recurso}=()`);
+};
+
 for (const rota of rotas) {
   test(`${rota} responde com os headers de segurança`, async ({ request }) => {
-    const resposta = await request.get(rota);
-    const headers = resposta.headers();
-    // Dois anos, subdomínios inclusos: o que o HSTS preload exige, sem ainda pedir a inclusão.
-    expect(headers['strict-transport-security']).toBe('max-age=63072000; includeSubDomains');
-    expect(headers['x-content-type-options']).toBe('nosniff');
-    expect(headers['x-frame-options']).toBe('DENY');
-    expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
-    // Nada no site usa câmera, microfone, localização ou pagamento; a política os desliga para
-    // a página e para o iframe do Turnstile.
-    const permissoes = headers['permissions-policy'] ?? '';
-    for (const recurso of ['camera', 'microphone', 'geolocation', 'payment', 'usb'])
-      expect(permissoes).toContain(`${recurso}=()`);
+    conferirHeaders((await request.get(rota)).headers());
   });
 }
+
+// O `public/_headers` só vale para o que é estático; a resposta do Worker leva os seus.
+test('o endpoint do contato responde com os headers de segurança', async ({ request, baseURL }) => {
+  const resposta = await request.post('/api/contato', {
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', Origin: baseURL ?? '' },
+    data: 'nome=Ana',
+  });
+  // Sem chaves, o Worker da suíte recusa tudo (ADR 0011): a recusa também é resposta dele.
+  expect(resposta.status()).toBe(503);
+  conferirHeaders(resposta.headers());
+});
 
 /**
  * Serve `rota` com `trecho` logo antes do `</body>`, como a Cloudflare faz ao injetar o beacon
@@ -172,4 +186,27 @@ test('o Turnstile carrega o script e o desafio sob a CSP', async ({ page }) => {
   await page.goto('/contato');
   await expect.poll(() => page.frames().some((frame) => frame.url() === desafio)).toBe(true);
   expect(await violacoes()).toEqual([]);
+});
+
+test.describe('sem JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+
+  // Sem JavaScript ninguém revela os blocos `.rv`, e o conteúdo aparece assim mesmo. A regra
+  // que garante isso não pode ser um `<style>` dentro de `<noscript>`: sem hash no build, a CSP
+  // o barra e o conteúdo some.
+  for (const rota of ['/', '/projetos', '/contato']) {
+    test(`os blocos que entram ao rolar aparecem em ${rota}`, async ({ page }) => {
+      const violacoes: string[] = [];
+      page.on('console', (mensagem) => {
+        if (/Content Security Policy/i.test(mensagem.text())) violacoes.push(mensagem.text());
+      });
+      await page.goto(rota);
+      const opacidades = await page
+        .locator('.rv')
+        .evaluateAll((blocos) => blocos.map((bloco) => getComputedStyle(bloco).opacity));
+      expect(opacidades.length).toBeGreaterThan(0);
+      expect(opacidades.every((opacidade) => opacidade === '1')).toBe(true);
+      expect(violacoes).toEqual([]);
+    });
+  }
 });

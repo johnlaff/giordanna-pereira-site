@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { certificado, hostDoObservatorio, scanner } from './observatorio.ts';
-import { rotas } from './rotas.ts';
+import { certificado, hostDoObservatorio, prepararScanner, scanner } from './observatorio.ts';
+import { rota404, rotas } from './rotas.ts';
 
 type Varredura = {
   scan: { grade: string; score: number };
@@ -16,6 +16,7 @@ type Varredura = {
  * inteira: a CSP de cada página, os headers de `public/_headers`, SRI, cookies e CORS.
  */
 const varrer = async (rota: string): Promise<Varredura> => {
+  prepararScanner();
   // Sem proxy: a varredura é da própria máquina, e o scanner herdaria o do ambiente.
   const env: NodeJS.ProcessEnv = { ...process.env, NODE_EXTRA_CA_CERTS: certificado };
   for (const nome of ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy']) delete env[nome];
@@ -28,7 +29,7 @@ const varrer = async (rota: string): Promise<Varredura> => {
 };
 
 // A 404 fica de fora: o Observatory só varre página que responde 2xx ou 3xx.
-for (const rota of rotas.filter((rota) => rota !== '/nao-existe')) {
+for (const rota of rotas.filter((rota) => rota !== rota404)) {
   test(`HTTP Observatory dá A ou mais a ${rota}`, async () => {
     // A varredura é do servidor, não do navegador: basta um projeto do Playwright.
     test.skip(test.info().project.name !== 'desktop', 'a varredura não depende da tela');

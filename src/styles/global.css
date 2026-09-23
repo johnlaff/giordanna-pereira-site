@@ -206,7 +206,8 @@ main {
 
 /* ============ ENTRADA POR ROLAGEM ============ */
 /* Cada bloco `.rv` sobe e aparece quando entra na tela. Sem JavaScript nada disso acontece,
-   e o conteúdo precisa estar visível assim mesmo: a regra do `noscript` no Base cuida disso. */
+   e o conteúdo precisa estar visível assim mesmo: a regra `scripting: none`, abaixo, cuida
+   disso. Um `<style>` dentro de `<noscript>` faria o mesmo, mas sem hash no build a CSP o barra. */
 .rv {
   opacity: 0;
   transform: translateY(28px);
@@ -217,6 +218,12 @@ main {
 .rv.in {
   opacity: 1;
   transform: none;
+}
+@media (scripting: none) {
+  .rv {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
