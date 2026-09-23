@@ -1,5 +1,6 @@
 import cloudflare from '@astrojs/cloudflare';
 import { defineConfig, envField, fontProviders } from 'astro/config';
+import { cartoesDeCompartilhamento } from './src/compartilhamento/integracao.ts';
 import { servicoDeImagem } from './src/imagens.ts';
 
 export default defineConfig({
@@ -41,6 +42,9 @@ export default defineConfig({
       CONTATO_REMETENTE: envField.string({ context: 'server', access: 'secret', optional: true }),
     },
   },
+  // Os Cartões de compartilhamento (og:image), desenhados no fim do build a partir do conteúdo:
+  // um por rota pública, em `og/` (ADR 0012).
+  integrations: [cartoesDeCompartilhamento()],
   // Imagens geradas no build pelo sharp (AVIF + WebP), não pelo Cloudflare Images.
   adapter: cloudflare({ imageService: 'compile' }),
   // O que decide as variantes mora em `src/imagens.ts`, e não aqui, porque a chave do cache

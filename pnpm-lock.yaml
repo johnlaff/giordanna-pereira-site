@@ -20,6 +20,12 @@ importers:
       photoswipe:
         specifier: ^5.4.4
         version: 5.4.4
+      sharp:
+        specifier: ^0.35.4
+        version: 0.35.4(@types/node@24.13.5)
+      yaml:
+        specifier: ^2.9.1
+        version: 2.9.1
     devDependencies:
       '@astrojs/check':
         specifier: ^0.9.10
@@ -66,9 +72,6 @@ importers:
       wrangler:
         specifier: ^4.135.0
         version: 4.135.0(@types/node@24.13.5)
-      yaml:
-        specifier: ^2.9.1
-        version: 2.9.1
 
 packages:
 
