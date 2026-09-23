@@ -1,5 +1,6 @@
 import cloudflare from '@astrojs/cloudflare';
-import { defineConfig, fontProviders } from 'astro/config';
+import { defineConfig, envField, fontProviders } from 'astro/config';
+import { cartoesDeCompartilhamento } from './src/compartilhamento/integracao.ts';
 import { servicoDeImagem } from './src/imagens.ts';
 
 export default defineConfig({
@@ -17,6 +18,33 @@ export default defineConfig({
   prefetch: { prefetchAll: true },
   // Nada usa sessões; sem isto o adapter provisiona um namespace KV a cada deploy.
   session: false,
+  // As variáveis que o site lê, e em que momento (ADR 0011). A chave de site do Turnstile é
+  // pública e vai no HTML, por isso entra no build. As do Worker são lidas a cada pedido —
+  // `access: 'secret'` é o que o Astro chama de "lida em runtime, nunca embutida no build", e
+  // vale também para as que não são segredo: o modo de teste, em especial, não pode ficar
+  // gravado num build. Todas são opcionais para o build passar sem elas; quem falha fechado na
+  // falta de chave é o endpoint (`src/contato/ambiente.ts`).
+  env: {
+    schema: {
+      PUBLIC_TURNSTILE_SITE_KEY: envField.string({
+        context: 'client',
+        access: 'public',
+        optional: true,
+      }),
+      CONTATO_MODO: envField.string({ context: 'server', access: 'secret', optional: true }),
+      RESEND_API_KEY: envField.string({ context: 'server', access: 'secret', optional: true }),
+      TURNSTILE_SECRET_KEY: envField.string({
+        context: 'server',
+        access: 'secret',
+        optional: true,
+      }),
+      CONTATO_DESTINO: envField.string({ context: 'server', access: 'secret', optional: true }),
+      CONTATO_REMETENTE: envField.string({ context: 'server', access: 'secret', optional: true }),
+    },
+  },
+  // Os Cartões de compartilhamento (og:image), desenhados no fim do build a partir do conteúdo:
+  // um por rota pública, em `og/` (ADR 0012).
+  integrations: [cartoesDeCompartilhamento()],
   // Imagens geradas no build pelo sharp (AVIF + WebP), não pelo Cloudflare Images.
   adapter: cloudflare({ imageService: 'compile' }),
   // O que decide as variantes mora em `src/imagens.ts`, e não aqui, porque a chave do cache

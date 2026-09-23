@@ -1,0 +1,185 @@
+---
+/**
+ * A página de contato: os quatro Contatos de um lado e o formulário do outro, como no Preview.
+ * No celular os dois blocos empilham, e os Contatos viram uma grade de dois por dois.
+ */
+import FormContato from '../components/FormContato.astro';
+import Revelar from '../components/Revelar.astro';
+import { contato, contatos } from '../config';
+import Base from '../layouts/Base.astro';
+
+const [inicio, fim] = contato.chamada;
+---
+
+<Base titulo={contato.titulo} descricao={contato.descricao} secao="contato" rota="/contato">
+  <Revelar />
+  <div class="shell contact">
+    <div class="page-head">
+      <h1>
+        {inicio} <br class="mb" />
+        {fim}
+      </h1>
+      <p>{contato.subtitulo}</p>
+    </div>
+    <div class="cgrid">
+      <aside class="cinfo rv">
+        <div class="form-head">
+          <h2>{contato.canais.titulo}</h2>
+          <p>{contato.canais.chamada}</p>
+        </div>
+        <ul class="c-list">
+          {contatos.map(({ rotulo, href, texto, externo }) => (
+            <li>
+              <a href={href} {...(externo ? { target: '_blank', rel: 'noopener' } : {})}>
+                <small>{rotulo}</small>
+                <span>{texto}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </aside>
+      <div class="cform rv">
+        <div class="form-head">
+          <h2>{contato.formulario.titulo}</h2>
+          <p>{contato.formulario.chamada}</p>
+        </div>
+        <FormContato />
+      </div>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .contact {
+    text-align: center;
+    padding-bottom: var(--sp-page);
+  }
+  .contact .page-head {
+    padding-bottom: 0;
+  }
+  .contact .page-head h1,
+  .contact .page-head p {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .contact .page-head h1 {
+    text-wrap: initial;
+    font-size: calc(var(--fs-page) * 0.72);
+  }
+  .contact .page-head p {
+    margin-top: 8px;
+    font-size: 15px;
+  }
+  @media (min-width: 861px) {
+    .contact .page-head {
+      padding-top: calc(var(--hdr-h) + 40px);
+    }
+    .contact br.mb {
+      display: none;
+    }
+  }
+  @media (max-width: 640px) {
+    .contact .page-head h1 {
+      font-size: 34px;
+    }
+  }
+  .cgrid {
+    max-width: 1100px;
+    margin: clamp(20px, 3.5vh, 40px) auto 0;
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 7fr);
+    gap: clamp(36px, 7vw, 110px);
+    align-items: start;
+    text-align: left;
+  }
+  .form-head {
+    margin: 0 0 18px;
+  }
+  .form-head h2 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: var(--fs-form);
+    line-height: 1.15;
+  }
+  .form-head p {
+    color: var(--ink-soft);
+    font-size: 15px;
+    margin-top: 8px;
+  }
+  .c-list {
+    list-style: none;
+    margin-top: 6px;
+  }
+  .c-list li {
+    border-bottom: 1px solid var(--line);
+  }
+  .c-list li:first-child {
+    border-top: 1px solid var(--line);
+  }
+  .c-list a {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 16px 4px;
+    text-decoration: none;
+    color: var(--ink);
+    transition: color 0.3s;
+  }
+  .c-list a:hover span {
+    color: var(--ink-soft);
+  }
+  .c-list small {
+    font-size: 11px;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .c-list span {
+    font-size: 17px;
+    overflow-wrap: anywhere;
+  }
+  @media (max-width: 860px) {
+    .cgrid {
+      grid-template-columns: 1fr;
+      gap: 28px;
+      text-align: center;
+    }
+    .cinfo .form-head p {
+      display: none;
+    }
+    .c-list {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .c-list li,
+    .c-list a {
+      min-width: 0;
+    }
+    .c-list li,
+    .c-list li:first-child {
+      border: 1px solid var(--line);
+    }
+    .c-list a {
+      align-items: center;
+      padding: 12px 8px;
+      gap: 2px;
+    }
+    /* Quatro canais em duas colunas: o endereço longo encurta, e o link inteiro segue valendo. */
+    .c-list span {
+      font-size: 14px;
+      overflow: hidden;
+      overflow-wrap: normal;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .c-list a {
+      transition: none;
+    }
+  }
+</style>

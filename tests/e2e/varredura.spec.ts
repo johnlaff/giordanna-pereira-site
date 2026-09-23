@@ -9,7 +9,7 @@ import { rotas } from './rotas.ts';
  *
  * Cinco larguras: as quatro da conferência visual (§5 do HANDOFF) e mais a tela estreita de
  * 320 px, onde uma medida fixa esquecida estoura primeiro. As rotas são as de `rotas.ts`:
- * treze hoje, e as catorze do Preview quando a página de contato entrar (#11).
+ * as catorze do Preview, com a página de contato.
  */
 const LARGURAS = [1440, 1024, 768, 375, 320];
 

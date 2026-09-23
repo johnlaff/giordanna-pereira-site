@@ -3,6 +3,8 @@
 import { Font } from 'astro:assets';
 import Footer from '../components/Footer.astro';
 import Header, { type Secao } from '../components/Header.astro';
+import { caminhoDoCartao } from '../compartilhamento/cartoes';
+import { jsonLd } from '../compartilhamento/dados-estruturados';
 import { site, tituloDaPagina } from '../config';
 import '../styles/global.css';
 
@@ -13,10 +15,26 @@ interface Props {
   secao?: Secao | undefined;
   /** A página abre com hero escuro sob o cabeçalho (só a home). */
   hero?: boolean;
+  /**
+   * A rota canônica da página, quando ela é pública: é o endereço que o leitor de link anuncia
+   * e o que escolhe o Cartão de compartilhamento. Sem ela (a 404), vale o Cartão da home.
+   */
+  rota?: string | undefined;
+  /** Os dados estruturados da página, em JSON-LD (`compartilhamento/dados-estruturados.ts`). */
+  dadosEstruturados?: object | undefined;
 }
 
-const { titulo, descricao = site.descricao, secao, hero = false } = Astro.props;
+const {
+  titulo,
+  descricao = site.descricao,
+  secao,
+  hero = false,
+  rota,
+  dadosEstruturados,
+} = Astro.props;
 const tituloCompleto = tituloDaPagina(titulo);
+if (Astro.site === undefined) throw new Error('sem `site` em astro.config.ts, o OG não tem URL');
+const cartao = new URL(caminhoDoCartao(rota ?? '/'), Astro.site).href;
 ---
 
 <!doctype html>
@@ -26,6 +44,22 @@ const tituloCompleto = tituloDaPagina(titulo);
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{tituloCompleto}</title>
     <meta name="description" content={descricao} />
+    {/* O que o WhatsApp, o LinkedIn e os demais mostram de um link colado numa conversa. */}
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content={site.nome} />
+    <meta property="og:title" content={tituloCompleto} />
+    <meta property="og:description" content={descricao} />
+    {rota !== undefined && <meta property="og:url" content={new URL(rota, Astro.site).href} />}
+    <meta property="og:image" content={cartao} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={tituloCompleto} />
+    <meta name="twitter:card" content="summary_large_image" />
+    {dadosEstruturados !== undefined && (
+      <script is:inline type="application/ld+json" set:html={jsonLd(dadosEstruturados)}></script>
+    )}
     <meta name="theme-color" content="#232D38" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />

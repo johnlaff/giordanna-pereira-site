@@ -3,7 +3,7 @@
  *
  * A lista sai do conteúdo, e não de uma relação escrita à mão: um Projeto novo, cadastrado no
  * CMS, entra no sitemap no mesmo build em que ganha página. As páginas que não são conteúdo —
- * a home e a Grade — são as duas únicas escritas aqui, e uma rota nova de outro tipo entra
+ * a home, a Grade e o contato — são as únicas escritas aqui, e uma rota nova de outro tipo entra
  * nesta função, no lugar onde ela deve aparecer para o buscador.
  *
  * Fica fora dos endpoints por ser texto puro, verificável sem o runtime do Astro: o que os
@@ -11,7 +11,8 @@
  */
 
 /**
- * As rotas na ordem em que o sitemap as apresenta: a home, a Grade e cada Projeto na Ordem.
+ * As rotas na ordem em que o sitemap as apresenta: a home, a Grade, cada Projeto na Ordem e,
+ * por último, o contato.
  * Sem barra final, a forma canônica do site (ADR 0007) — a única barra é a da home, que é a
  * raiz do domínio e não existe sem ela.
  */
@@ -19,6 +20,7 @@ export const rotasPublicas = (slugs: readonly string[]): string[] => [
   '/',
   '/projetos',
   ...slugs.map(rotaDoProjeto),
+  '/contato',
 ];
 
 /**
@@ -63,11 +65,11 @@ export const robotsDe = (site: URL): string =>
   );
 
 /**
- * As rotas que o site ainda vai ganhar. O link já está no lugar, como no Preview, mas o
- * prefetch não pode persegui-lo: a página não existe, e cada visita gastaria uma requisição
- * para receber um 404. A página de contato entra em #11, e a lista esvazia com ela.
+ * As rotas que o site ainda vai ganhar. Um link para uma delas pode estar no lugar antes da
+ * página, como o do contato esteve até #11, mas o prefetch não pode persegui-lo: a página não
+ * existe, e cada visita gastaria uma requisição para receber um 404. Hoje nenhuma está pendente.
  */
-export const rotasPendentes: readonly string[] = ['/contato'];
+export const rotasPendentes: readonly string[] = [];
 
 /**
  * O que vale no `data-astro-prefetch` de um link interno: `false` enquanto a página não

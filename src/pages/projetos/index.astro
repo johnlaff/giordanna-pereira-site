@@ -14,7 +14,7 @@ import Base from '../../layouts/Base.astro';
 const projetos = ordenarProjetos(await getCollection('projetos'));
 ---
 
-<Base titulo={textos.titulo} descricao={textos.descricao} secao="projetos">
+<Base titulo={textos.titulo} descricao={textos.descricao} secao="projetos" rota="/projetos">
   <Revelar />
   <div class="shell">
     <div class="page-head">

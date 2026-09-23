@@ -5,12 +5,13 @@ import { prefetchDe, robotsDe, rotasPendentes, rotasPublicas, sitemapDe } from '
 const site = new URL('https://giordannapereira.arq.br');
 const locs = (xml: string) => [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, url]) => url ?? '');
 
-test('as rotas abrem pela home e pela Grade, e seguem na Ordem dos Projetos', () => {
+test('as rotas abrem pela home e pela Grade, seguem na Ordem dos Projetos e fecham no contato', () => {
   assert.deepEqual(rotasPublicas(['edificio-vitalis', 'mirante-cestes']), [
     '/',
     '/projetos',
     '/projetos/edificio-vitalis',
     '/projetos/mirante-cestes',
+    '/contato',
   ]);
 });
 
@@ -20,6 +21,7 @@ test('o sitemap publica uma URL absoluta por rota, sem barra final fora da home'
     'https://giordannapereira.arq.br/',
     'https://giordannapereira.arq.br/projetos',
     'https://giordannapereira.arq.br/projetos/edificio-vitalis',
+    'https://giordannapereira.arq.br/contato',
   ]);
 });
 
@@ -45,8 +47,7 @@ test('nenhuma rota pendente já está publicada', () => {
     assert.ok(!publicadas.has(rota), `${rota} já existe e não é mais pendente`);
 });
 
-test('só o link de uma página pendente fica fora do prefetch', () => {
-  assert.equal(prefetchDe('/contato'), 'false');
-  assert.equal(prefetchDe('/projetos'), undefined);
-  assert.equal(prefetchDe('/'), undefined);
+test('com a página de contato no ar, nenhum link da navegação fica fora do prefetch', () => {
+  assert.deepEqual(rotasPendentes, []);
+  for (const rota of ['/', '/projetos', '/contato']) assert.equal(prefetchDe(rota), undefined);
 });

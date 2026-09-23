@@ -39,7 +39,8 @@ const ano = new Date().getFullYear();
         © {ano} {site.nome}
       </span>
       <span class="rights">Todos os direitos reservados</span>
-      <a href="/contato" data-astro-prefetch={prefetchDe('/contato')}>
+      {/* A política curta mora na página de contato, junto do formulário que ela explica. */}
+      <a href="/contato#privacidade" data-astro-prefetch={prefetchDe('/contato')}>
         Política de privacidade
       </a>
     </div>

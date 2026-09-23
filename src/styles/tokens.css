@@ -15,6 +15,10 @@
   --faixa-clara: #e4e8ea;
   /* Branco puro, um degrau acima do papel: o fundo do último nível da Familiaridade. */
   --branco: #ffffff;
+  /* O vermelho de erro do formulário, o tom mais escuro do aviso de falha e o fundo dos campos. */
+  --erro: #b93a24;
+  --erro-forte: #8a2a18;
+  --campo: #fafbfa;
   --gutter: 24px;
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --fs-hero: 48px;

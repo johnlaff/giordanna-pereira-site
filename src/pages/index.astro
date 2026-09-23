@@ -5,10 +5,14 @@ import Ferramentas from '../components/Ferramentas.astro';
 import Hero from '../components/Hero.astro';
 import Revelar from '../components/Revelar.astro';
 import Sobre from '../components/Sobre.astro';
+import { dadosDaPessoa } from '../compartilhamento/dados-estruturados';
 import Base from '../layouts/Base.astro';
+
+if (Astro.site === undefined)
+  throw new Error('sem `site` em astro.config.ts, o JSON-LD não tem URL');
 ---
 
-<Base secao="home" hero>
+<Base secao="home" hero rota="/" dadosEstruturados={dadosDaPessoa(Astro.site)}>
   <Revelar />
   <Hero />
   <Sobre />

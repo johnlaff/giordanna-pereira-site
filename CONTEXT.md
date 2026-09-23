@@ -15,7 +15,7 @@ A categoria curta de um Projeto exibida junto ao título (ex.: "Comercial", "Res
 _Avoid_: kind, categoria, segmento
 
 **Capa**:
-A imagem que representa o Projeto no card da grade e na imagem de compartilhamento. Pode ser uma imagem que não está na galeria; quando não é definida, é a primeira imagem da galeria. A página do Projeto não usa a Capa: ela abre com a primeira imagem da Galeria.
+A imagem que representa o Projeto no card da grade e no Cartão de compartilhamento. Pode ser uma imagem que não está na galeria; quando não é definida, é a primeira imagem da galeria. A página do Projeto não usa a Capa: ela abre com a primeira imagem da Galeria.
 _Avoid_: cover, thumbnail, destaque
 
 **Galeria**:
@@ -45,6 +45,10 @@ _Avoid_: ficha, detalhes, dados técnicos
 **Compartilhe**:
 O bloco que fecha o painel da Ficha na página de um Projeto: o rótulo e a fileira de Destinos, com o compartilhamento do próprio aparelho e o copiar link.
 _Avoid_: share, social share, botões de compartilhar
+
+**Cartão de compartilhamento**:
+A imagem 1200×630 que aparece quando alguém cola o link de uma página no WhatsApp, no LinkedIn ou noutra rede (o `og:image`). Cada rota pública tem o seu, desenhado no build: o de um Projeto leva a Capa, o Tipo e o título; o de um Projeto Em breve, o desenho do estado Em breve.
+_Avoid_: OG, imagem OG, thumbnail, preview
 
 **Destino**:
 Um lugar para onde o bloco Compartilhe manda a página (WhatsApp, LinkedIn, Facebook, e-mail). É uma âncora montada no build, com o título da página e a URL canônica; não se confunde com Contato, que é um canal para falar com Giordanna.
@@ -87,6 +91,18 @@ _Avoid_: placeholder, mock, rascunho
 **Contato**:
 Um canal público para falar com Giordanna (WhatsApp, LinkedIn, Behance, e-mail), exibido na página de contato e no rodapé. Contatos, hero, Sobre e CTA são mantidos por João, não pelo CMS.
 _Avoid_: social, rede, link
+
+**Mensagem**:
+O que um visitante envia pelo formulário da página de contato (nome, e-mail, WhatsApp opcional, assunto e texto) e que chega por e-mail a Giordanna, com o visitante no `reply-to`. Não se confunde com Contato, que é o canal.
+_Avoid_: lead, submissão, formulário (para o conteúdo enviado)
+
+**Isca**:
+O campo `empresa` do formulário, invisível para quem vê e para quem ouve. Só um robô o preenche, e o Worker recusa a Mensagem que o traz preenchido.
+_Avoid_: honeypot (no código e nos textos em português)
+
+**Modo do formulário**:
+Se o Worker envia a Mensagem de verdade (as duas chaves presentes, em Produção ou numa versão de preview), com dublês (`CONTATO_MODO=teste`, só na suíte de testes) ou não envia nada (falta chave: falha fechado).
+_Avoid_: ambiente (que aqui nomeia Preview e Produção)
 
 ### Ambientes
 
