@@ -9,14 +9,15 @@ ci:
     startServerReadyTimeout: 60000
     url:
       # Uma rota por padrão de página, no pior caso de cada um: a home, a Grade de projetos
-      # com os dez cards, a Galeria mais pesada do site, uma Galeria média e o estado Em
-      # breve, que não carrega imagem alguma. Medir cada página de Projeto custaria minutos
-      # de CI para repetir o mesmo veredito.
+      # com os dez cards, a Galeria mais pesada do site, uma Galeria média, o estado Em
+      # breve, que não carrega imagem alguma, e o contato, a única página com formulário.
+      # Medir cada página de Projeto custaria minutos de CI para repetir o mesmo veredito.
       - http://localhost:8788/
       - http://localhost:8788/projetos
       - http://localhost:8788/projetos/edificio-vitalis
       - http://localhost:8788/projetos/consultorio-ginecocare
       - http://localhost:8788/projetos/mirante-cestes
+      - http://localhost:8788/contato
     numberOfRuns: 3
     settings:
       # O Chromium do Playwright não tem o sandbox setuid e o Ubuntu 24.04 do runner bloqueia

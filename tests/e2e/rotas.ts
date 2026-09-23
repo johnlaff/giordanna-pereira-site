@@ -9,5 +9,6 @@ export const rotas = [
   '/',
   '/projetos',
   ...projetos.map(({ rota }) => rota),
+  '/contato',
   '/nao-existe',
 ] as const;

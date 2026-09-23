@@ -1,3 +1,5 @@
+import { MINIMO_DA_MENSAGEM } from './contato/mensagem.ts';
+
 /**
  * Configuração tipada do site: o que a home, o cabeçalho, o rodapé e a página de contato
  * exibem e que não passa pelo CMS. Fica em código por decisão (HANDOFF §12).
@@ -167,4 +169,57 @@ export const cta = {
   enfase: 'do meu trabalho.',
   rotulo: 'Ver projetos',
   href: '/projetos',
+} as const;
+
+/**
+ * A página de contato: o cabeçalho, os dois blocos e tudo o que o formulário escreve na tela.
+ * O e-mail da alternativa, mostrado quando o envio falha, é o `emailExibido` acima, e não uma
+ * cópia: no lançamento (#16) ele troca num lugar só. Os assuntos do formulário moram em
+ * `src/contato/mensagem.ts`, porque o Worker também os confere.
+ *
+ * Os espaços inquebráveis seguem o Preview: "papel" e "úteis" não caem sozinhos na última linha.
+ */
+export const contato = {
+  titulo: 'Contato',
+  descricao:
+    'Fale com Giordanna Pereira, arquiteta e urbanista em Uberlândia, MG: projetos residenciais e comerciais, documentação executiva ou uma vaga na sua equipe.',
+  /** O h1 em duas partes: no celular a segunda desce para a linha de baixo. */
+  chamada: ['Tem um projeto', 'para tirar do papel?'],
+  subtitulo:
+    'Projetos residenciais e comerciais, documentação executiva ou uma vaga na sua equipe: escreva e eu respondo em até dois dias úteis.',
+  canais: { titulo: 'Contato direto', chamada: 'Escolha o canal que preferir.' },
+  formulario: {
+    titulo: 'Ou envie uma mensagem',
+    chamada: 'Poucos campos, sem cadastro. Uso seus dados só para responder.',
+    campos: {
+      nome: { rotulo: 'Nome', erro: 'Digite seu nome.' },
+      email: { rotulo: 'E-mail', erro: 'Digite um e-mail válido, como nome@exemplo.com.' },
+      whatsapp: { rotulo: 'WhatsApp', exemplo: '(34) 9 0000-0000' },
+      assunto: { rotulo: 'Assunto', vazio: 'Selecione', erro: 'Escolha um assunto.' },
+      mensagem: {
+        rotulo: 'Mensagem',
+        erro: `Conte um pouco sobre o projeto (pelo menos ${MINIMO_DA_MENSAGEM} caracteres).`,
+      },
+      consentimento: {
+        rotulo:
+          'Autorizo o uso dos meus dados apenas para responder a esta mensagem, conforme a LGPD.',
+        erro: 'Marque a autorização para enviar.',
+      },
+    },
+    /**
+     * A política de privacidade curta que o ticket pede: o que se coleta, para quê, onde fica e
+     * como pedir para apagar. É o único texto da página que o Preview não tem.
+     */
+    privacidade:
+      'Nome, e-mail, WhatsApp e mensagem chegam só à caixa de e-mail de Giordanna, servem apenas para responder a você e não vão para lista nem cadastro. Para apagá-los, peça por qualquer canal desta página.',
+    enviar: 'Enviar mensagem',
+    enviando: 'Enviando…',
+    nota: 'Resposta em até dois dias úteis.',
+    sucesso: {
+      titulo: 'Mensagem enviada.',
+      texto: 'Obrigada! Respondo em até dois dias úteis pelo e-mail informado.',
+    },
+    /** A falha: o `emailExibido`, como link, vai entre as duas partes da frase. */
+    falha: { antes: 'Não foi possível enviar agora. Escreva direto para ', depois: '.' },
+  },
 } as const;

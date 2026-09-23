@@ -19,9 +19,7 @@ test('a transição entre páginas é a nativa do navegador, declarada em CSS', 
   expect(navegacao, 'o navegador não encontrou a regra @view-transition').toBe('auto');
 });
 
-test('o link interno é pré-buscado antes do clique, e o de página inexistente não', async ({
-  page,
-}) => {
+test('o link interno é pré-buscado antes do clique, e não antes do interesse', async ({ page }) => {
   const pedidos: string[] = [];
   const falhas: string[] = [];
   page.on('request', (req) => pedidos.push(new URL(req.url()).pathname));
@@ -30,18 +28,15 @@ test('o link interno é pré-buscado antes do clique, e o de página inexistente
   });
 
   await page.goto('/');
-  expect(pedidos, 'a página foi buscada antes de alguém demonstrar interesse').not.toContain(
-    '/projetos',
-  );
+  for (const rota of ['/projetos', '/contato'])
+    expect(pedidos, `${rota} foi buscada antes de alguém demonstrar interesse`).not.toContain(rota);
 
-  // O item Contato ainda aponta para uma página que não existe (#11): o prefetch não pode
-  // persegui-la. O interesse pelos Projetos vem depois e serve de marco — quando a busca
-  // dele chega, a fila de ociosidade do Astro já passou pelo Contato.
-  await page.locator('.nav a[href="/contato"]').hover();
-  await page.locator('.nav a[href="/projetos"]').hover();
-  await expect.poll(() => pedidos.includes('/projetos')).toBe(true);
-
-  expect(pedidos).not.toContain('/contato');
+  // Até #11 o Contato apontava para uma página que não existia e ficava fora do prefetch; agora
+  // ele é um link como os outros, e o interesse basta para a página chegar antes do clique.
+  for (const rota of ['/projetos', '/contato']) {
+    await page.locator(`.nav a[href="${rota}"]`).hover();
+    await expect.poll(() => pedidos.includes(rota)).toBe(true);
+  }
   expect(falhas).toEqual([]);
 });
 
