@@ -162,6 +162,16 @@ test.describe('a página do CMS', () => {
   });
 });
 
+test.describe('num navegador em inglês', () => {
+  test.use({ locale: 'en-US' });
+
+  test('o CMS abre em português', async ({ page }) => {
+    await prepararCms(page);
+    await page.goto('/admin');
+    await expect(page.getByRole('button', { name: /Entrar com.*GitHub/ })).toBeVisible();
+  });
+});
+
 test.describe('cadastrar pelo CMS', () => {
   // O caminho de Giordanna com um Projeto novo: preenche, erra, corrige, sobe a foto do celular
   // e salva. O que conta é o que chega ao repositório: um `.yml` que o schema das collections

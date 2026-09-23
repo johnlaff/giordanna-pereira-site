@@ -20,6 +20,7 @@ if (csp === undefined) throw new Error('A página do CMS precisa da CSP do Astro
 
 csp.insertScriptResource('https://unpkg.com');
 csp.insertScriptResource("'wasm-unsafe-eval'");
+csp.insertStyleResource("'self'");
 csp.insertStyleResource("'unsafe-inline'");
 csp.insertDirective(
   "connect-src 'self' blob: data: https://api.github.com https://www.githubstatus.com https://unpkg.com",
@@ -49,11 +50,26 @@ csp.insertDirective("manifest-src 'self' blob:");
       </p>
     </noscript>
     <script>
-      import { init } from '@sveltia/cms';
       import { configuracaoDoCms } from '../admin/configuracao';
+
+      // O Sveltia fala a língua do navegador. Num celular em inglês, o CMS abriria em inglês:
+      // enquanto quem entra não escolher outra língua nas preferências do CMS, vale o português.
+      // A preferência precisa estar gravada antes de o Sveltia carregar, porque ele lê e grava
+      // as preferências já ao ser importado; por isso ele vem depois, por `import()`.
+      try {
+        const chave = 'sveltia-cms.prefs';
+        const preferencias = JSON.parse(localStorage.getItem(chave) ?? '{}') as {
+          locale?: string;
+        };
+        if (!preferencias.locale)
+          localStorage.setItem(chave, JSON.stringify({ ...preferencias, locale: 'pt-BR' }));
+      } catch {
+        // Sem armazenamento local, fica a língua do navegador.
+      }
 
       // O login volta para a origem em que o CMS está aberto: o workers.dev hoje, o domínio
       // depois do lançamento, sem mudar nada aqui.
+      const { init } = await import('@sveltia/cms');
       init({ config: configuracaoDoCms(location.origin) });
     </script>
   </body>

@@ -91,7 +91,10 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
       slug: '{{slug}}',
       summary: '{{titulo}}',
       // A lista aparece na Ordem do site, a mesma da grade.
-      sortable_fields: { fields: ['ordem', 'titulo'], default: { field: 'ordem' } },
+      sortable_fields: {
+        fields: ['ordem', 'titulo'],
+        default: { field: 'ordem', direction: 'ascending' },
+      },
       // As fotos vão para `src/assets/`, e o Projeto guarda o caminho relativo ao arquivo
       // dele, que é o que o `image()` das collections resolve.
       media_folder: '/src/assets',
@@ -184,7 +187,10 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
       // novo nasce com a data na frente, e por isso entra depois dos que já existem.
       slug: '{{year}}{{month}}{{day}}-{{slug}}',
       summary: '{{nome}}',
-      sortable_fields: { fields: ['slug', 'nome'], default: { field: 'slug' } },
+      sortable_fields: {
+        fields: ['slug', 'nome'],
+        default: { field: 'slug', direction: 'ascending' },
+      },
       fields: [
         { name: 'nome', label: 'Nome', widget: 'string', pattern: semHtml },
         {

@@ -81,7 +81,9 @@ está configurado. O que só o João faz, uma vez:
    próximo deploy (ou no botão Deploy da própria tela).
 3. **Convidar Giordanna** (repositório → Settings → Collaborators → Add people) com o papel
    **Write**, que é o que publica direto em `main` pelo bypass do ruleset. A conta dela precisa
-   de autenticação em dois fatores ligada antes de aceitar o convite.
+   de autenticação em dois fatores ligada antes de aceitar o convite. Num repositório pessoal o
+   GitHub não obriga isso de colaboradores: a conferência é com ela, em Settings → Password and
+   authentication da conta dela.
 4. **O teste de verdade**, pelo celular dela: abrir `/admin`, entrar com o GitHub, criar um
    Projeto com uma foto da galeria do celular e salvar. O commit aparece em `main`, o CI roda e
    o Workers Builds publica; o Projeto aparece em `/projetos` em alguns minutos.

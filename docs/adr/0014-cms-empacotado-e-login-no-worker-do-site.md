@@ -31,6 +31,11 @@ preview. O token pedido é `public_repo`, porque o repositório é público.
   interface, as fontes dela e, no Safari, que não codifica WebP, o codificador em WebAssembly
   que converte as fotos antes do commit. Os estilos são montados em tempo de execução, sem hash
   possível no build. As páginas públicas continuam com a CSP do ADR 0005.
+- O UNPKG entra no `script-src` inteiro, e não só nos caminhos do codificador: o módulo dele
+  importa `wasm-feature-detect` por uma faixa de versão (`@^1.2.11`), que o UNPKG resolve com
+  um redirecionamento, e um caminho na CSP não descreve essa URL. É a parte mais larga da
+  política, e é o preço de o upload do iPhone chegar em WebP. Se o Sveltia passar a empacotar
+  o codificador, o UNPKG sai do `script-src`.
 - A regra de só duas origens externas (ADR 0005) é do site público. O CMS é ferramenta de quem
   edita, fica fora do sitemap, com `noindex` e barrado no `robots.txt`.
 - A janela de login é uma navegação, e com a página 404 ligada a Cloudflare responde

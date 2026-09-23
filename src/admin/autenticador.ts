@@ -51,8 +51,9 @@ const PROVEDOR = 'github';
 
 /**
  * O que o token pode fazer: ler e gravar nos repositórios públicos de quem entra, e nada nos
- * privados. O repositório do site é público; o CMS pede `repo`, e a pedida não é levada em
- * conta, porque este endpoint é aberto a qualquer um e o token guarda o escopo que recebeu.
+ * privados. O repositório do site é público. O CMS manda o escopo que quer na janela
+ * (`auth_scope` de `src/admin/configuracao.ts`), e este endpoint não o lê: é aberto a qualquer
+ * um, e o token guarda o escopo que o GitHub concedeu, que é sempre este.
  */
 const ESCOPO = 'public_repo';
 
@@ -139,6 +140,7 @@ const credenciais = (variaveis: VariaveisDoLogin) => {
 
 const SEM_CHAVES = 'O login do CMS ainda não foi configurado: faltam as chaves do OAuth App.';
 
+/** 32 dígitos hexadecimais, o formato que `estadoGuardado` reconhece no cookie. */
 const estadoAleatorio = () => crypto.randomUUID().replaceAll('-', '');
 
 /** O primeiro passo: leva ao GitHub, ou diz ao CMS por que não. */
