@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { rotas } from './rotas.ts';
 
-// ADR 0005: nenhuma requisição a domínio externo. Turnstile e o beacon do Web Analytics entram em #11 e #14.
+// ADR 0005: nenhuma requisição a domínio externo. O Turnstile só carrega quando o build tem a
+// chave de site (ADR 0011), e a suíte roda sem ela; o beacon do Web Analytics entra em #14.
 const hostsPermitidos = new Set(['localhost', '127.0.0.1']);
 
 for (const rota of rotas) {

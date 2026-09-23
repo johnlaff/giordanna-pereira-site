@@ -88,6 +88,18 @@ _Avoid_: placeholder, mock, rascunho
 Um canal público para falar com Giordanna (WhatsApp, LinkedIn, Behance, e-mail), exibido na página de contato e no rodapé. Contatos, hero, Sobre e CTA são mantidos por João, não pelo CMS.
 _Avoid_: social, rede, link
 
+**Mensagem**:
+O que um visitante envia pelo formulário da página de contato (nome, e-mail, WhatsApp opcional, assunto e texto) e que chega por e-mail a Giordanna, com o visitante no `reply-to`. Não se confunde com Contato, que é o canal.
+_Avoid_: lead, submissão, formulário (para o conteúdo enviado)
+
+**Isca**:
+O campo `empresa` do formulário, invisível para quem vê e para quem ouve. Só um robô o preenche, e o Worker recusa a Mensagem que o traz preenchido.
+_Avoid_: honeypot (no código e nos textos em português)
+
+**Modo do formulário**:
+Se o Worker envia a Mensagem de verdade (as duas chaves presentes, em Produção ou numa versão de preview), com dublês (`CONTATO_MODO=teste`, só na suíte de testes) ou não envia nada (falta chave: falha fechado).
+_Avoid_: ambiente (que aqui nomeia Preview e Produção)
+
 ### Ambientes
 
 **Preview**:

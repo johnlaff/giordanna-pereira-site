@@ -45,7 +45,7 @@ O Worker `giordanna-pereira-site` está ligado ao repositório pelo Workers Buil
 
 `PNPM_VERSION` existe porque a imagem do Workers Builds traz pnpm 10 por padrão, e `pnpm-workspace.yaml` usa chaves do pnpm 11 (`allowBuilds`): sem ela o `sharp` não roda o script de instalação e o build de imagens quebra. Node vem de `.node-version`. O `wrangler deploy` na raiz é correto porque o adapter grava o redirecionamento para `dist/client/wrangler.json`.
 
-Segredos e variáveis do Worker (Resend, Turnstile, autenticador do Sveltia) ficam em Settings → Variables and Secrets do Worker, nunca no repositório nem no workflow. Rollback: Deployments → versão anterior → Rollback.
+Segredos e variáveis do Worker (Resend, Turnstile, autenticador do Sveltia) ficam em Settings → Variables and Secrets do Worker, nunca no repositório nem no workflow; a lista do formulário de contato, com a chave de site do Turnstile que entra como variável de build, está no ADR 0011. O CI roda sem nenhuma delas: o formulário falha fechado num Worker e roda com dublês noutro. Rollback: Deployments → versão anterior → Rollback.
 
 ## Proteção de `main`: rulesets
 

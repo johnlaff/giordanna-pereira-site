@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { projetos } from './projetos.ts';
 
-const ESPERADAS = ['/', '/projetos', ...projetos.map(({ rota }) => rota)];
+const ESPERADAS = ['/', '/projetos', ...projetos.map(({ rota }) => rota), '/contato'];
 
 const caminhosDoSitemap = (xml: string) =>
   [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, url]) => new URL(url ?? '').pathname);

@@ -1,0 +1,488 @@
+---
+/**
+ * O formulário de contato. Ele precisa de JavaScript: o Worker responde em JSON, que o
+ * navegador mostraria cru, e o Turnstile não roda sem script. Por isso a alternativa está
+ * sempre à mão, sem depender de nada: os quatro Contatos ficam ao lado, na mesma página.
+ *
+ * Com JavaScript, cada campo é conferido pelas mesmas regras que o Worker aplica
+ * (`src/contato/mensagem.ts`): o erro aparece quando o visitante sai do campo, some enquanto
+ * ele corrige, e o envio leva o foco ao primeiro campo que falta. Enviado, o formulário dá lugar
+ * à confirmação; recusado, por qualquer motivo, ele fica onde está e mostra o e-mail
+ * alternativo, lido da configuração tipada.
+ *
+ * O Turnstile só entra quando o build tem a chave de site (ADR 0011). Sem ela não há widget,
+ * nenhuma requisição sai para a Cloudflare, e o Worker — que também não terá a chave secreta —
+ * recusa o envio, falhando fechado.
+ */
+import { PUBLIC_TURNSTILE_SITE_KEY } from 'astro:env/client';
+import { contato, emailExibido } from '../config';
+import { assuntos, limites, MINIMO_DA_MENSAGEM } from '../contato/mensagem';
+import Icone from './Icone.astro';
+
+const { campos, falha, sucesso } = contato.formulario;
+---
+
+<form id="cf" class="rv" name="contato" method="post" action="/api/contato" novalidate>
+  {/* A isca: invisível para quem vê e para quem ouve, fora da ordem do Tab. Quem a preenche é
+    robô, e o Worker recusa o envio. */}
+  <div class="hp" aria-hidden="true">
+    <label>
+      Empresa <input name="empresa" tabindex="-1" autocomplete="off" />
+    </label>
+  </div>
+  <div class="f2">
+    <div class="fld">
+      <label for="f-nome">
+        {campos.nome.rotulo} <b>*</b>
+      </label>
+      <input
+        id="f-nome"
+        name="nome"
+        type="text"
+        autocomplete="name"
+        required
+        maxlength={limites.nome}
+      />
+      <span class="msg" id="e-nome">
+        {campos.nome.erro}
+      </span>
+    </div>
+    <div class="fld">
+      <label for="f-email">
+        {campos.email.rotulo} <b>*</b>
+      </label>
+      <input
+        id="f-email"
+        name="email"
+        type="email"
+        autocomplete="email"
+        inputmode="email"
+        required
+        maxlength={limites.email}
+      />
+      <span class="msg" id="e-email">
+        {campos.email.erro}
+      </span>
+    </div>
+  </div>
+  <div class="f2">
+    <div class="fld">
+      <label for="f-whatsapp">
+        {campos.whatsapp.rotulo} <small>(opcional)</small>
+      </label>
+      <input
+        id="f-whatsapp"
+        name="whatsapp"
+        type="tel"
+        autocomplete="tel"
+        inputmode="tel"
+        maxlength={limites.whatsapp}
+        placeholder={campos.whatsapp.exemplo}
+      />
+    </div>
+    <div class="fld">
+      <label for="f-assunto">
+        {campos.assunto.rotulo} <b>*</b>
+      </label>
+      <select id="f-assunto" name="assunto" required>
+        <option value="">{campos.assunto.vazio}</option>
+        {assuntos.map((assunto) => (
+          <option>{assunto}</option>
+        ))}
+      </select>
+      <span class="msg" id="e-assunto">
+        {campos.assunto.erro}
+      </span>
+    </div>
+  </div>
+  <div class="fld">
+    <label for="f-mensagem">
+      {campos.mensagem.rotulo} <b>*</b>
+    </label>
+    <textarea
+      id="f-mensagem"
+      name="mensagem"
+      required
+      minlength={MINIMO_DA_MENSAGEM}
+      maxlength={limites.mensagem}
+    ></textarea>
+    <span class="msg" id="e-mensagem">
+      {campos.mensagem.erro}
+    </span>
+  </div>
+  <label class="consent" id="consent-w">
+    <input type="checkbox" id="f-consentimento" name="consentimento" required />
+    <span>
+      {campos.consentimento.rotulo} <b>*</b>
+    </span>
+  </label>
+  <span class="msg msg-consentimento" id="e-consentimento">
+    {campos.consentimento.erro}
+  </span>
+  <p class="f-privacidade" id="privacidade">
+    {contato.formulario.privacidade}
+  </p>
+  {PUBLIC_TURNSTILE_SITE_KEY && (
+    <>
+      {/* `interaction-only`: o widget só aparece se o Turnstile precisar de um clique. Na
+          maioria dos envios ele trabalha sem mostrar nada, e a página fica como o Preview. */}
+      <div
+        class="cf-turnstile"
+        data-sitekey={PUBLIC_TURNSTILE_SITE_KEY}
+        data-appearance="interaction-only"
+        data-language="pt-br"
+      />
+      <script
+        is:inline
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        async
+        defer
+      ></script>
+    </>
+  )}
+  <div class="f-actions">
+    <button class="btn" type="submit" id="f-send">
+      <span class="rotulo" data-enviando={contato.formulario.enviando}>
+        {contato.formulario.enviar}
+      </span>
+      <Icone nome="seta" />
+    </button>
+    <p class="f-note">{contato.formulario.nota}</p>
+  </div>
+  <p class="f-fail" id="f-fail" role="alert" tabindex="-1" hidden>
+    {falha.antes}
+    <a href={`mailto:${emailExibido}`}>{emailExibido}</a>
+    {falha.depois}
+  </p>
+</form>
+<div class="f-ok" id="f-ok" role="status" tabindex="-1" hidden>
+  <b>{sucesso.titulo}</b>
+  <p>{sucesso.texto}</p>
+</div>
+
+<style>
+  form {
+    text-align: left;
+    display: grid;
+    gap: 12px;
+  }
+  .f2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 560px) {
+    .f2 {
+      grid-template-columns: 1fr;
+    }
+  }
+  .fld {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+  .fld label {
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 400;
+  }
+  .fld label b {
+    color: var(--ink);
+    font-weight: 400;
+  }
+  .fld label small {
+    text-transform: none;
+    letter-spacing: 0;
+  }
+  .fld input,
+  .fld select,
+  .fld textarea {
+    font: inherit;
+    font-weight: 300;
+    font-size: 16px;
+    color: var(--ink);
+    background: var(--campo);
+    border: 1px solid var(--line);
+    border-radius: 0;
+    padding: 10px 14px;
+    min-height: 44px;
+    transition:
+      border-color 0.25s,
+      box-shadow 0.25s;
+    width: 100%;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .fld select {
+    background-image:
+      linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%),
+      linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
+    background-position:
+      calc(100% - 20px) 55%,
+      calc(100% - 14px) 55%;
+    background-size: 6px 6px;
+    background-repeat: no-repeat;
+    padding-right: 40px;
+  }
+  .fld textarea {
+    min-height: 96px;
+    resize: vertical;
+  }
+  .fld input:focus,
+  .fld select:focus,
+  .fld textarea:focus {
+    outline: none;
+    border-color: var(--navy);
+    box-shadow: 0 0 0 3px rgba(46, 58, 72, 0.15);
+  }
+  .fld.err input,
+  .fld.err textarea,
+  .fld.err select {
+    border-color: var(--erro);
+  }
+  /* O erro de cada campo nasce escondido e só aparece com o `.err`: é também quando o script
+    liga o `aria-describedby`, para o leitor de tela não ler um erro que ainda não existe. */
+  .msg {
+    font-size: 13px;
+    color: var(--erro);
+    display: none;
+  }
+  .fld.err .msg,
+  .consent.err + .msg {
+    display: block;
+  }
+  /* A caixa não muda de cor sozinha: o erro dela é dito em texto, alinhado ao texto da caixa. */
+  .msg-consentimento {
+    padding-left: 30px;
+    margin-top: -6px;
+  }
+  .consent {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+  }
+  .consent input {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    flex: none;
+    accent-color: var(--navy);
+  }
+  .consent.err {
+    color: var(--erro);
+  }
+  /* A política curta fica sob o consentimento que ela explica, no mesmo corpo e tom, recuada
+    até o texto da caixa: lê-se como a continuação dele, não como um bloco novo. */
+  .f-privacidade {
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.5;
+    padding-left: 30px;
+    margin-top: -4px;
+    /* O link do rodapé traz o visitante até aqui: o cabeçalho fixo não pode cobrir o parágrafo. */
+    scroll-margin-top: calc(var(--hdr-h) + 24px);
+  }
+  .hp {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+  }
+  .f-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 18px;
+    margin-top: 2px;
+  }
+  @media (max-width: 560px) {
+    .f-actions {
+      flex-direction: column;
+      gap: 10px;
+    }
+  }
+  .f-actions .btn {
+    min-width: 240px;
+    justify-content: center;
+  }
+  .f-actions .btn[disabled] {
+    opacity: 0.6;
+    cursor: progress;
+  }
+  /* Enquanto envia, a seta sai: ela diz "vá", e não há para onde ir até a resposta chegar. */
+  .f-actions .btn[disabled] :global(svg) {
+    display: none;
+  }
+  .f-note {
+    font-size: 13px;
+    color: var(--ink-soft);
+    text-align: left;
+  }
+  .f-fail {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border: 1px solid var(--erro);
+    color: var(--erro-forte);
+    font-size: 15px;
+  }
+  .f-fail a {
+    color: inherit;
+  }
+  .f-ok {
+    border: 1px solid var(--line);
+    padding: 28px 24px;
+    text-align: center;
+  }
+  /* Uma regra que declara `display` vence o `[hidden]` da folha do navegador; estas garantem
+    que o escondido fica escondido. */
+  form[hidden],
+  .f-ok[hidden],
+  .f-fail[hidden] {
+    display: none;
+  }
+  .f-ok:focus {
+    outline: none;
+  }
+  .f-ok b {
+    display: block;
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-size: 28px;
+    margin-bottom: 8px;
+    font-variant-numeric: lining-nums;
+  }
+  .f-ok p {
+    color: var(--ink-soft);
+    font-size: 15px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fld input,
+    .fld select,
+    .fld textarea {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { assuntoValido, emailValido, mensagemValida, nomeValido } from '../contato/mensagem';
+
+  type Turnstile = { getResponse: () => string | undefined; reset: () => void };
+  const turnstile = () => (window as { turnstile?: Turnstile }).turnstile;
+
+  const form = document.querySelector<HTMLFormElement>('#cf');
+  const ok = document.querySelector<HTMLElement>('#f-ok');
+  const falha = document.querySelector<HTMLElement>('#f-fail');
+  const botao = document.querySelector<HTMLButtonElement>('#f-send');
+  const rotulo = botao?.querySelector<HTMLElement>('.rotulo');
+
+  if (form && ok && falha && botao && rotulo) {
+    const textoDoBotao = rotulo.textContent ?? '';
+
+    /**
+     * Os campos obrigatórios, pelo `name` — o id de cada um é `f-` mais o nome, e o do erro,
+     * `e-` mais o nome —, com a mesma regra que o Worker aplica.
+     */
+    const regras: [string, (campo: HTMLInputElement) => boolean][] = [
+      ['nome', (campo) => nomeValido(campo.value)],
+      ['email', (campo) => emailValido(campo.value)],
+      ['assunto', (campo) => assuntoValido(campo.value)],
+      ['mensagem', (campo) => mensagemValida(campo.value)],
+      ['consentimento', (campo) => campo.checked],
+    ];
+
+    /**
+     * Confere um campo. `mostrar` é o momento de acusar o erro (saída do campo, envio); fora
+     * dele, mexer no campo só apaga o erro já mostrado, e nunca acusa um campo que ainda está
+     * sendo preenchido. O texto do erro só vira descrição do campo enquanto o erro existe:
+     * ligado o tempo todo, o leitor de tela o leria num campo ainda vazio de culpa.
+     */
+    const conferir = (
+      nome: string,
+      regra: (campo: HTMLInputElement) => boolean,
+      mostrar: boolean,
+    ) => {
+      const campo = form.querySelector<HTMLInputElement>(`#f-${nome}`);
+      const bloco = campo?.closest('.fld, .consent');
+      if (!campo || !bloco) return true;
+      const valido = regra(campo);
+      if (mostrar || bloco.classList.contains('err')) {
+        bloco.classList.toggle('err', !valido);
+        campo.setAttribute('aria-invalid', String(!valido));
+        if (valido) campo.removeAttribute('aria-describedby');
+        else campo.setAttribute('aria-describedby', `e-${nome}`);
+      }
+      return valido;
+    };
+
+    for (const [nome, regra] of regras) {
+      const campo = form.querySelector(`#f-${nome}`);
+      campo?.addEventListener('blur', () => conferir(nome, regra, nome !== 'consentimento'));
+      campo?.addEventListener('input', () => conferir(nome, regra, false));
+      campo?.addEventListener('change', () => conferir(nome, regra, false));
+    }
+
+    /** O token do Turnstile, esperando um pouco se o widget ainda estiver resolvendo. */
+    const token = async (): Promise<void> => {
+      if (!form.querySelector('.cf-turnstile')) return;
+      for (let i = 0; i < 30 && !turnstile()?.getResponse(); i++)
+        await new Promise((pronto) => setTimeout(pronto, 100));
+    };
+
+    const enviando = (sim: boolean) => {
+      botao.disabled = sim;
+      rotulo.textContent = sim ? (rotulo.dataset['enviando'] ?? textoDoBotao) : textoDoBotao;
+      form.setAttribute('aria-busy', String(sim));
+    };
+
+    const recusado = () => {
+      enviando(false);
+      // O token já foi gasto nessa tentativa; um novo fica pronto para a próxima.
+      turnstile()?.reset();
+      falha.hidden = false;
+      falha.focus();
+    };
+
+    form.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+      if (botao.disabled) return;
+
+      let primeiro: HTMLElement | null = null;
+      for (const [nome, regra] of regras)
+        if (!conferir(nome, regra, true)) primeiro ??= form.querySelector(`#f-${nome}`);
+      if (primeiro) {
+        primeiro.focus();
+        return;
+      }
+
+      falha.hidden = true;
+      enviando(true);
+      await token();
+      try {
+        // A isca vai junto: é o Worker quem decide recusar, e quem a preencheu por engano —
+        // um preenchimento automático, digamos — recebe o e-mail alternativo, não um botão mudo.
+        const corpo = new URLSearchParams();
+        for (const [nome, valor] of new FormData(form))
+          if (typeof valor === 'string') corpo.append(nome, valor);
+        const resposta = await fetch(form.action, {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: corpo,
+        });
+        if (!resposta.ok) return recusado();
+      } catch {
+        return recusado();
+      }
+      form.hidden = true;
+      ok.hidden = false;
+      ok.focus();
+    });
+  }
+</script>
