@@ -50,8 +50,18 @@ export function cartoesDeCompartilhamento(): AstroIntegration {
       'astro:config:done': ({ config }) => {
         raiz = config.root;
       },
-      'astro:build:done': async ({ dir, logger }) => {
-        const cartoes = cartoesDoSite(lerProjetos(raiz));
+      'astro:build:done': async ({ dir, pages, logger }) => {
+        const projetos = lerProjetos(raiz);
+        // O `id` lido aqui precisa ser o slug que o loader deu à página. Para um nome de arquivo
+        // que o loader reescreve (maiúscula, acento, espaço) os dois divergiriam, e o og:image da
+        // página apontaria para um Cartão que não existe: melhor o build parar e dizer.
+        const paginas = new Set(pages.map(({ pathname }) => pathname.replace(/^\/|\/$/g, '')));
+        for (const { id } of projetos)
+          if (!paginas.has(`projetos/${id}`))
+            throw new Error(
+              `o Projeto "${id}" não tem página em /projetos/${id}: renomeie o arquivo em ${PASTA_DOS_PROJETOS} para letras minúsculas, sem acento e com hífen no lugar do espaço`,
+            );
+        const cartoes = cartoesDoSite(projetos);
         await Promise.all(cartoes.map((cartao) => gravar(cartao, raiz, dir)));
         logger.info(`${cartoes.length} Cartões de compartilhamento em og/`);
       },
@@ -59,7 +69,7 @@ export function cartoesDeCompartilhamento(): AstroIntegration {
       'astro:server:setup': ({ server }) => {
         server.middlewares.use((pedido, resposta, seguir) => {
           const caminho = pedido.url?.split('?')[0]?.slice(1);
-          if (!caminho?.startsWith('og/')) return seguir();
+          if (pedido.method !== 'GET' || !caminho?.startsWith('og/')) return seguir();
           const cartao = cartoesDoSite(lerProjetos(raiz)).find((c) => c.arquivo === caminho);
           if (cartao === undefined) return seguir();
           desenharCartao(cartao, raiz).then(

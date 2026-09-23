@@ -7,7 +7,7 @@
  * — as variantes do Astro levam um hash no nome — e existe até para o Projeto Em breve.
  */
 // A extensão é explícita porque o teste de unidade carrega este módulo pelo runner do Node.
-import { contatos, emailExibido, marca, site as dadosDoSite } from '../config.ts';
+import { contatos, emailExibido, marca, pessoa, site as dadosDoSite } from '../config.ts';
 import { rotaDoProjeto } from '../rotas.ts';
 import { caminhoDoCartao } from './cartoes.ts';
 
@@ -25,19 +25,20 @@ const giordanna = (site: URL) => ({
 export const dadosDaPessoa = (site: URL) => ({
   '@context': 'https://schema.org' as const,
   ...giordanna(site),
-  jobTitle: 'Arquiteta e urbanista',
+  jobTitle: pessoa.profissao,
   description: dadosDoSite.descricao,
   email: emailExibido,
   address: {
     '@type': 'PostalAddress' as const,
-    addressLocality: 'Uberlândia',
-    addressRegion: 'MG',
+    addressLocality: pessoa.cidade,
+    addressRegion: pessoa.estado,
     addressCountry: 'BR',
   },
   sameAs: perfis,
 });
 
-type Ficha = {
+/** O que o CreativeWork lê de um Projeto: um recorte dos campos da collection. */
+type Obra = {
   titulo: string;
   tipo: string;
   descricao: string;
@@ -52,19 +53,19 @@ type Ficha = {
  * portfólio, mesmo nos que outra pessoa assina. O Ano é texto livre ("2025 (acadêmico)"), e só
  * o ano do começo vira data.
  */
-export const dadosDoProjeto = (slug: string, ficha: Ficha, site: URL) => {
-  const [ano] = /^\d{4}\b/.exec(ficha.ano) ?? [];
+export const dadosDoProjeto = (slug: string, obra: Obra, site: URL) => {
+  const [ano] = /^\d{4}\b/.exec(obra.ano) ?? [];
   return {
     '@context': 'https://schema.org' as const,
     '@type': 'CreativeWork' as const,
-    name: ficha.titulo,
-    description: ficha.descricao,
-    genre: ficha.tipo,
+    name: obra.titulo,
+    description: obra.descricao,
+    genre: obra.tipo,
     url: new URL(rotaDoProjeto(slug), site).href,
     image: new URL(caminhoDoCartao(rotaDoProjeto(slug)), site).href,
-    creditText: ficha.equipe,
+    creditText: obra.equipe,
     contributor: giordanna(site),
-    locationCreated: { '@type': 'Place' as const, name: ficha.local },
+    locationCreated: { '@type': 'Place' as const, name: obra.local },
     ...(ano === undefined ? {} : { dateCreated: ano }),
     inLanguage: 'pt-BR',
   };

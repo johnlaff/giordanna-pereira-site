@@ -15,6 +15,7 @@
  */
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { marca as marcaDoSite } from '../config.ts';
 import type { Cartao } from './cartoes.ts';
 
 export const LARGURA = 1200;
@@ -31,6 +32,8 @@ const cor = {
   tinta: '#232D38',
   tintaSuave: '#5A646E',
   fundoDeImagem: '#E4E8EA',
+  /** `--line`: o traço fino do site, tinta a 16%. */
+  linha: 'rgb(46,58,72)',
 } as const;
 
 type Fonte = {
@@ -217,7 +220,7 @@ const emBreve = (() => {
   const cheio = { r: w(0.43) / 2, x: -w(0.17) + w(0.43) / 2, y: ALTURA + w(0.2) - w(0.43) / 2 };
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${LARGURA}" height="${ALTURA}">
   <rect width="100%" height="100%" fill="${cor.fundoDeImagem}"/>
-  <circle cx="${traco.x}" cy="${traco.y}" r="${traco.r}" fill="none" stroke="rgb(46,58,72)" stroke-opacity=".16"/>
+  <circle cx="${traco.x}" cy="${traco.y}" r="${traco.r}" fill="none" stroke="${cor.linha}" stroke-opacity=".16"/>
   <circle cx="${cheio.x}" cy="${cheio.y}" r="${cheio.r}" fill="${cor.areia}" fill-opacity=".22"/>
 </svg>`;
 })();
@@ -320,7 +323,7 @@ export async function desenharCartao(cartao: Cartao, raiz: URL): Promise<Buffer>
   const topoDaFileira = base - 26 - fileira;
   pos(Buffer.from(marca), MARGEM, topoDaFileira + (fileira - 34) / 2);
   const nome = await bloco(
-    `<span foreground="${cor.papel}" letter_spacing="${espacamento(corpoNome, 0.02)}">Giordanna Pereira</span>`,
+    `<span foreground="${cor.papel}" letter_spacing="${espacamento(corpoNome, 0.02)}">${escapar(marcaDoSite.nome)}</span>`,
     serifa,
     corpoNome,
   );
@@ -328,7 +331,7 @@ export async function desenharCartao(cartao: Cartao, raiz: URL): Promise<Buffer>
   pos(nome.png, xNome, topoDaFileira + baseNaLinha(serifa, corpoNome, fileira) - nome.primeiraBase);
   const larguraDoNome = (await sharp(nome.png).metadata()).width ?? 0;
   const area = await bloco(
-    `<span foreground="${cor.areia}" letter_spacing="${espacamento(corpoArea, 0.2)}">ARQUITETURA</span>`,
+    `<span foreground="${cor.areia}" letter_spacing="${espacamento(corpoArea, 0.2)}">${escapar(marcaDoSite.area.toLocaleUpperCase('pt-BR'))}</span>`,
     regular,
     corpoArea,
   );
@@ -341,7 +344,7 @@ export async function desenharCartao(cartao: Cartao, raiz: URL): Promise<Buffer>
   // O fundo e o véu vão por baixo de todo o texto; no Em breve, a legenda também.
   const fundo =
     cartao.fundo === undefined
-      ? { imagem: sharp(Buffer.from(emBreve)), pecas: [await legendaEmBreve()] }
+      ? { imagem: sharp(Buffer.from(emBreve)), pecas: [await legendaEmBreve(topoDaFileira)] }
       : {
           imagem: await cobrir(
             fileURLToPath(new URL(cartao.fundo, raiz)),
@@ -356,8 +359,12 @@ export async function desenharCartao(cartao: Cartao, raiz: URL): Promise<Buffer>
     .toBuffer();
 }
 
-/** A legenda do Em breve, centrada no Cartão como o componente a centra no bloco. */
-async function legendaEmBreve(): Promise<Peca> {
+/**
+ * A legenda do Em breve, centrada no Cartão como o componente a centra no bloco. Um título em
+ * duas linhas sobe a marca até o meio do Cartão; aí a legenda sobe também, para o meio do
+ * espaço livre acima da marca, em vez de encostar nela.
+ */
+async function legendaEmBreve(topoDaMarca: number): Promise<Peca> {
   const corpo = 14;
   const legenda = await bloco(
     `<span foreground="${cor.tintaSuave}" letter_spacing="${espacamento(corpo, 0.28)}">IMAGENS EM BREVE</span>`,
@@ -366,7 +373,9 @@ async function legendaEmBreve(): Promise<Peca> {
   );
   const { width = 0 } = await sharp(legenda.png).metadata();
   const linha = corpo * 1.65;
-  const topo = (ALTURA - linha) / 2;
+  const folga = 32;
+  const centro = (ALTURA - linha) / 2;
+  const topo = centro + linha + folga <= topoDaMarca ? centro : (topoDaMarca - folga - linha) / 2;
   // O espaçamento sobra depois da última letra, e o `text-indent` do componente põe o mesmo
   // tanto antes da primeira: a tinta fica no centro exato, que é onde ela vai aqui.
   return {

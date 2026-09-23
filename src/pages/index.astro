@@ -12,7 +12,7 @@ if (Astro.site === undefined)
   throw new Error('sem `site` em astro.config.ts, o JSON-LD não tem URL');
 ---
 
-<Base secao="home" hero rota="/" dados={dadosDaPessoa(Astro.site)}>
+<Base secao="home" hero rota="/" dadosEstruturados={dadosDaPessoa(Astro.site)}>
   <Revelar />
   <Hero />
   <Sobre />

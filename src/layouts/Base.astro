@@ -21,10 +21,17 @@ interface Props {
    */
   rota?: string | undefined;
   /** Os dados estruturados da página, em JSON-LD (`compartilhamento/dados-estruturados.ts`). */
-  dados?: object | undefined;
+  dadosEstruturados?: object | undefined;
 }
 
-const { titulo, descricao = site.descricao, secao, hero = false, rota, dados } = Astro.props;
+const {
+  titulo,
+  descricao = site.descricao,
+  secao,
+  hero = false,
+  rota,
+  dadosEstruturados,
+} = Astro.props;
 const tituloCompleto = tituloDaPagina(titulo);
 if (Astro.site === undefined) throw new Error('sem `site` em astro.config.ts, o OG não tem URL');
 const cartao = new URL(caminhoDoCartao(rota ?? '/'), Astro.site).href;
@@ -50,8 +57,8 @@ const cartao = new URL(caminhoDoCartao(rota ?? '/'), Astro.site).href;
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={tituloCompleto} />
     <meta name="twitter:card" content="summary_large_image" />
-    {dados !== undefined && (
-      <script is:inline type="application/ld+json" set:html={jsonLd(dados)}></script>
+    {dadosEstruturados !== undefined && (
+      <script is:inline type="application/ld+json" set:html={jsonLd(dadosEstruturados)}></script>
     )}
     <meta name="theme-color" content="#232D38" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

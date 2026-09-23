@@ -9,7 +9,8 @@
  * Astro para o teste de unidade carregá-lo direto.
  */
 // A extensão é explícita porque o teste de unidade carrega este módulo pelo runner do Node.
-import { contato, hero, projetos as grade } from '../config.ts';
+import { contato, hero, pessoa, projetos as grade } from '../config.ts';
+import { capaDe } from '../content.schema.ts';
 import { rotaDoProjeto } from '../rotas.ts';
 
 export type Cartao = {
@@ -47,9 +48,9 @@ type ProjetoDoCartao = {
   data: { titulo: string; tipo: string; capa?: string | undefined; galeria: readonly string[] };
 };
 
-/** A imagem que representa o Projeto: a mesma regra de `capaDe`, em `content.schema.ts`. */
-const fundoDe = ({ data }: ProjetoDoCartao): { fundo?: string } => {
-  const fundo = data.capa ?? data.galeria[0];
+/** O fundo é a imagem que representa o Projeto (`capaDe`); sem nenhuma, o Cartão é Em breve. */
+const fundoDe = (projeto: ProjetoDoCartao): { fundo?: string } => {
+  const fundo = capaDe(projeto);
   return fundo === undefined ? {} : { fundo };
 };
 
@@ -66,13 +67,13 @@ export const cartoesDoSite = (projetos: readonly ProjetoDoCartao[]): Cartao[] =>
     enquadramento: 0.3,
     titulo: hero.titulo,
     enfase: hero.enfase,
-    subtitulo: 'Arquiteta e urbanista · Uberlândia, MG',
+    subtitulo: `${pessoa.profissao} · ${pessoa.cidade}, ${pessoa.estado}`,
   },
   {
     arquivo: arquivoDoCartao('/projetos'),
     ...(projetos[0] === undefined ? {} : fundoDe(projetos[0])),
     titulo: grade.titulo,
-    subtitulo: 'Arquitetura, habitação, interiores e documentação executiva.',
+    subtitulo: grade.resumo,
   },
   ...projetos.map((projeto) => ({
     arquivo: arquivoDoCartao(rotaDoProjeto(projeto.id)),

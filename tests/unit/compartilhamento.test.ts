@@ -108,7 +108,7 @@ test('a home descreve Giordanna como Person, com os perfis dela e a cidade', () 
   assert.equal(pessoa.address.addressLocality, 'Uberlândia');
 });
 
-const ficha = {
+const campos = {
   titulo: 'Edifício Vitalis',
   tipo: 'Comercial · Bem-estar',
   descricao: 'Edifício comercial dedicado ao bem-estar.',
@@ -118,7 +118,7 @@ const ficha = {
 };
 
 test('cada Projeto é um CreativeWork, com a Ficha técnica e o Cartão como imagem', () => {
-  const obra = dadosDoProjeto('edificio-vitalis', ficha, site);
+  const obra = dadosDoProjeto('edificio-vitalis', campos, site);
   assert.deepEqual(errosDeJsonLd(obra), []);
   assert.equal(obra['@type'], 'CreativeWork');
   assert.equal(obra.name, 'Edifício Vitalis');
@@ -132,7 +132,7 @@ test('cada Projeto é um CreativeWork, com a Ficha técnica e o Cartão como ima
 
 test('um Ano que não começa por um ano fica fora do dateCreated', () => {
   // O Ano é texto livre no CMS; o schema.org só aceita data ISO nesse campo.
-  const obra = dadosDoProjeto('x', { ...ficha, ano: 'em andamento' }, site);
+  const obra = dadosDoProjeto('x', { ...campos, ano: 'em andamento' }, site);
   assert.equal('dateCreated' in obra, false);
   assert.deepEqual(errosDeJsonLd(obra), []);
 });
