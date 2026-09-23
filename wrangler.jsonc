@@ -13,6 +13,10 @@
     // Worker entrega /projetos/x direto e redireciona /projetos/x/ para lá. No padrão
     // ("auto-trailing-slash") seria o contrário, e todo link interno pagaria um 301.
     "html_handling": "drop-trailing-slash",
+    // Com a página 404 ligada, uma navegação (link, janela nova) a um caminho sem arquivo
+    // recebe a 404 sem passar pelo Worker. A janela de login do CMS navega até
+    // /api/admin/entrar (ADR 0014): as rotas da API vão ao Worker antes dos arquivos.
+    "run_worker_first": ["/api/*"],
   },
   "observability": { "enabled": true },
 }

@@ -21,6 +21,7 @@
 import type { Modo } from './modo.ts';
 import { emailDaMensagem, LIMITE_DO_CORPO, lerMensagem, type Campo } from './mensagem.ts';
 import { servicosDe, type Servicos } from './servicos.ts';
+import { HEADERS_DE_SEGURANCA } from '../headers-de-seguranca.ts';
 
 /**
  * Por que um envio foi recusado. O formulário trata todos do mesmo jeito — mostra o e-mail
@@ -28,19 +29,6 @@ import { servicosDe, type Servicos } from './servicos.ts';
  */
 export type Recusa =
   'indisponivel' | 'formato' | 'grande' | 'isca' | 'campos' | 'verificacao' | 'envio';
-
-/**
- * Os headers de segurança do site (ADR 0005). O `public/_headers` só vale para o que é
- * estático; esta é a cópia da única resposta que o Worker escreve. `seguranca.spec.ts` cobra
- * as duas com a mesma lista, então uma não muda sem a outra.
- */
-const HEADERS_DE_SEGURANCA = {
-  'Strict-Transport-Security': 'max-age=63072000; includeSubDomains',
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
-};
 
 const resposta = (status: number, corpo: object): Response =>
   new Response(JSON.stringify(corpo), {

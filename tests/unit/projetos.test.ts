@@ -57,7 +57,6 @@ test('campo obrigatório ausente falha', async () => {
     'ano',
     'area',
     'equipe',
-    'galeria',
     'ordem',
   ]) {
     const incompleto: Record<string, unknown> = { ...projeto };
@@ -77,6 +76,30 @@ test('imagem inexistente falha, na Galeria e na Capa', async () => {
 
 test('Galeria vazia é aceita: o Projeto fica Em breve', async () => {
   assert.equal((await validar({ galeria: [] })).success, true);
+});
+
+// O CMS não grava campo opcional vazio (`omit_empty_optional_fields`): um Projeto salvo sem
+// imagens chega sem a chave `galeria`, e é o mesmo Projeto Em breve.
+test('Galeria ausente é o mesmo que vazia: o Projeto fica Em breve', async () => {
+  const semGaleria: Record<string, unknown> = { ...projeto };
+  delete semGaleria['galeria'];
+  const resultado = await esquema.safeParseAsync(semGaleria);
+  assert.equal(resultado.success, true);
+  assert.deepEqual(resultado.data?.galeria, []);
+});
+
+test('a área segue o padrão brasileiro, com milhar em ponto, decimal em vírgula e m²', async () => {
+  for (const area of ['5,98 m²', '48 m²', '100 m²', '1.125,54 m²', '9.015,39 m²', '4.000 m²'])
+    assert.equal((await validar({ area })).success, true, `${area} deveria passar`);
+  for (const area of ['46,88', '46,88m²', '46.88 m²', '1125,54 m²', '46,88 m2', '46,888 m²', 'm²'])
+    assert.equal((await validar({ area })).success, false, `${area} deveria falhar`);
+});
+
+test('o ano tem quatro dígitos, com "(acadêmico)" opcional', async () => {
+  for (const ano of ['2010', '2026', '2025 (acadêmico)'])
+    assert.equal((await validar({ ano })).success, true, `${ano} deveria passar`);
+  for (const ano of ['25', '2025 academico', '2025(acadêmico)', 'dois mil', '2025 (Acadêmico)'])
+    assert.equal((await validar({ ano })).success, false, `${ano} deveria falhar`);
 });
 
 test('Capa é opcional e, quando existe, aponta para uma imagem do repositório', async () => {

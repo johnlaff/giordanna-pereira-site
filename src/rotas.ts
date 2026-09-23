@@ -56,13 +56,20 @@ export const sitemapDe = (rotas: readonly string[], site: URL): string =>
   ].join('\n');
 
 /**
- * O `robots.txt`. O site inteiro é público e o que há a dizer ao buscador é onde está o
- * sitemap; a área do CMS, que não é conteúdo, entra aqui quando existir (#15).
+ * O `robots.txt`. O site inteiro é público, menos o CMS e o login dele, que não são conteúdo;
+ * o resto que há a dizer ao buscador é onde está o sitemap. A página do CMS também se declara
+ * `noindex`, para o caso de alguém linká-la de fora.
  */
 export const robotsDe = (site: URL): string =>
-  ['User-agent: *', 'Allow: /', '', `Sitemap: ${new URL('/sitemap.xml', site).href}`, ''].join(
-    '\n',
-  );
+  [
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /admin',
+    'Disallow: /api/admin/',
+    '',
+    `Sitemap: ${new URL('/sitemap.xml', site).href}`,
+    '',
+  ].join('\n');
 
 /**
  * As rotas que o site ainda vai ganhar. Um link para uma delas pode estar no lugar antes da
