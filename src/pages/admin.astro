@@ -4,8 +4,11 @@
  * `Base.astro`: o CMS ocupa a tela inteira, com a interface dele, e nada do site aparece aqui.
  *
  * A configuração vem de `src/admin/configuracao.ts`; o login passa pelo Worker do próprio site
- * (ADR 0014). O Sveltia vem do npm, empacotado no build como o resto do JavaScript, e não do
- * CDN que a documentação dele sugere: a versão é a do lockfile, atualizada pelo Renovate.
+ * (ADR 0014). O Sveltia vem do npm, e não do CDN que a documentação dele sugere: a versão é a
+ * do lockfile, atualizada pelo Renovate. O arquivo dele entra no build como veio do pacote, sem
+ * passar pelo empacotador: empacotado, ele levaria para um arquivo à parte o carregador de
+ * módulos que o script da Galeria embute, e a Galeria esperaria mais uma ida à rede antes de
+ * medir as imagens e dizer ao navegador que variante baixar.
  *
  * A CSP desta página é mais larga que a do site, e só ela (ADR 0014). O CMS fala com a API do
  * GitHub e busca no UNPKG a tradução da interface e o codificador de WebP do Safari, que
@@ -13,6 +16,8 @@
  * de execução, que não têm hash no build.
  */
 import '../styles/tokens.css';
+// O pacote só exporta o módulo; o script clássico, que expõe `window.CMS`, é pego pelo caminho.
+import sveltia from '../../node_modules/@sveltia/cms/dist/sveltia-cms.js?url';
 
 // Sem a CSP do `astro.config.ts` ligada, a página não teria política nenhuma: o build para.
 const csp = Astro.csp;
@@ -50,12 +55,10 @@ csp.insertDirective("manifest-src 'self' blob:");
       </p>
     </noscript>
     <script>
-      import { configuracaoDoCms } from '../admin/configuracao';
-
       // O Sveltia fala a língua do navegador. Num celular em inglês, o CMS abriria em inglês:
       // enquanto quem entra não escolher outra língua nas preferências do CMS, vale o português.
       // A preferência precisa estar gravada antes de o Sveltia carregar, porque ele lê e grava
-      // as preferências já ao ser importado; por isso ele vem depois, por `import()`.
+      // as preferências assim que o arquivo dele roda.
       try {
         const chave = 'sveltia-cms.prefs';
         const preferencias = JSON.parse(localStorage.getItem(chave) ?? '{}') as {
@@ -66,11 +69,22 @@ csp.insertDirective("manifest-src 'self' blob:");
       } catch {
         // Sem armazenamento local, fica a língua do navegador.
       }
+      // Sem isto, o Sveltia se inicia sozinho e procura um `config.yml`.
+      Object.assign(window, { CMS_MANUAL_INIT: true });
+    </script>
+    <!-- Os três scripts rodam na ordem em que aparecem: os módulos e o `defer` esperam juntos o
+    fim da página. -->
+    <script is:inline defer src={sveltia}></script>
+    <script>
+      import type { CmsConfig } from '@sveltia/cms';
+      import { configuracaoDoCms } from '../admin/configuracao';
 
+      const { CMS } = window as unknown as {
+        CMS: { init: (opcoes: { config: CmsConfig }) => void };
+      };
       // O login volta para a origem em que o CMS está aberto: o workers.dev hoje, o domínio
       // depois do lançamento, sem mudar nada aqui.
-      const { init } = await import('@sveltia/cms');
-      init({ config: configuracaoDoCms(location.origin) });
+      CMS.init({ config: configuracaoDoCms(location.origin) });
     </script>
   </body>
 </html>

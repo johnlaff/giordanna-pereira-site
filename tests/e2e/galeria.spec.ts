@@ -169,6 +169,25 @@ test('as linhas da Galeria preenchem a largura toda, com uma só altura por linh
   }
 });
 
+// O arranjo reescreve o `sizes` de cada imagem, e só acerta a variante se rodar antes de o
+// navegador escolhê-la. O script da Galeria chega num arquivo só: se ele importasse outro, o
+// arranjo esperaria mais uma ida à rede e as imagens sairiam na variante do HTML, maior que a
+// caixa. Foi o que o Sveltia provocou ao entrar no build, pelo carregador de módulos que os
+// dois dividiriam (ADR 0014).
+test('o script da Galeria não espera outro arquivo para arranjar as imagens', async ({
+  page,
+  request,
+}) => {
+  await page.goto(rota);
+  const fontes = await page
+    .locator('script[type="module"][src]')
+    .evaluateAll((scripts) => scripts.map((script) => (script as HTMLScriptElement).src));
+  const daGaleria = fontes.filter((fonte) => fonte.includes('Galeria'));
+  expect(daGaleria).toHaveLength(1);
+  const codigo = await (await request.get(daGaleria[0]!)).text();
+  expect(codigo).not.toMatch(/(?:^|[;}\s])import\s*[{\w*][^;]*?from\s*["']/);
+});
+
 // A caixa de cada imagem sai do arranjo em linhas, não de uma fração fixa da largura: uma
 // imagem sozinha na linha ocupa a Galeria inteira. Vale para todo Projeto, porque é o arranjo
 // que decide, e ele muda com as proporções do conteúdo. Numa tela sem retina, a imagem pedida
