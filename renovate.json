@@ -16,6 +16,11 @@
     {
       "matchUpdateTypes": ["minor"],
       "groupName": "minors"
+    },
+    {
+      "description": "O astro check não roda com o compilador nativo do TypeScript 7 (withastro/roadmap#1321). Tirar quando o Astro suportar.",
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7"
     }
   ]
 }
