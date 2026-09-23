@@ -20,6 +20,16 @@ export const marca = {
 } as const;
 
 /**
+ * Quem é Giordanna em poucas palavras: o que o Cartão de compartilhamento da home escreve sob o
+ * título e o que os dados estruturados da home dizem dela.
+ */
+export const pessoa = {
+  profissao: 'Arquiteta e urbanista',
+  cidade: 'Uberlândia',
+  estado: 'MG',
+} as const;
+
+/**
  * Como o site nomeia uma página: o nome dela e o do site, e só o do site na home. Fica aqui
  * porque não é só o título da aba — é o mesmo par que viaja no que se compartilha.
  */
@@ -155,10 +165,13 @@ export const depoimentos = {
  * vem da collection; o cabeçalho da página não passa pelo CMS, como o resto deste arquivo.
  * O espaço antes de "galeria" é inquebrável: a palavra não pode cair sozinha na última linha.
  */
+const resumoDosProjetos = 'Arquitetura, habitação, interiores e documentação executiva.';
+
 export const projetos = {
   titulo: 'Projetos',
-  chamada:
-    'Arquitetura, habitação, interiores e documentação executiva. Cada projeto com sua ficha técnica e galeria.',
+  /** O que o portfólio reúne, numa frase: abre a chamada e é a linha do Cartão da Grade. */
+  resumo: resumoDosProjetos,
+  chamada: `${resumoDosProjetos} Cada projeto com sua ficha técnica e\u00a0galeria.`,
   descricao:
     'Os projetos de Giordanna Pereira: arquitetura, habitação de interesse social, interiores e documentação executiva, cada um com ficha técnica e galeria.',
 } as const;

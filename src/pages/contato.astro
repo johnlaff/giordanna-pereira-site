@@ -11,7 +11,7 @@ import Base from '../layouts/Base.astro';
 const [inicio, fim] = contato.chamada;
 ---
 
-<Base titulo={contato.titulo} descricao={contato.descricao} secao="contato">
+<Base titulo={contato.titulo} descricao={contato.descricao} secao="contato" rota="/contato">
   <Revelar />
   <div class="shell contact">
     <div class="page-head">

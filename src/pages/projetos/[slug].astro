@@ -1,5 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
+import { dadosDoProjeto } from '../../compartilhamento/dados-estruturados';
 import Compartilhe from '../../components/Compartilhe.astro';
 import Ficha from '../../components/Ficha.astro';
 import Galeria from '../../components/Galeria.astro';
@@ -17,9 +18,18 @@ export async function getStaticPaths() {
 
 const { projeto, vizinhos } = Astro.props;
 const { titulo, tipo, descricao, ferramentas, galeria } = projeto.data;
+if (Astro.site === undefined)
+  throw new Error('sem `site` em astro.config.ts, o JSON-LD não tem URL');
+const rota = rotaDoProjeto(projeto.id);
 ---
 
-<Base titulo={titulo} descricao={descricao} secao="projetos">
+<Base
+  titulo={titulo}
+  descricao={descricao}
+  secao="projetos"
+  rota={rota}
+  dadosEstruturados={dadosDoProjeto(projeto.id, projeto.data, Astro.site)}
+>
   <div class="shell">
     <div class="page-head">
       <h1>{titulo}</h1>
@@ -35,7 +45,7 @@ const { titulo, tipo, descricao, ferramentas, galeria } = projeto.data;
         </ul>
       </div>
       <Ficha ficha={projeto.data}>
-        <Compartilhe titulo={titulo} rota={rotaDoProjeto(projeto.id)} />
+        <Compartilhe titulo={titulo} rota={rota} />
       </Ficha>
     </div>
     <Galeria imagens={galeria} titulo={titulo} />
