@@ -1,0 +1,9 @@
+# Headers de segurança de toda resposta do site estático (ADR 0005). A CSP não mora aqui: ela
+# sai do Astro, numa meta tag por página, com o hash de cada script e estilo do build. O
+# adapter da Cloudflare põe no topo deste arquivo, no build, o cache imutável de /_astro/*.
+/*
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()

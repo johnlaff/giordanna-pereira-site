@@ -1,6 +1,12 @@
-# Dependências autorizadas a rodar scripts de instalação (pnpm bloqueia as demais).
+# Dependências autorizadas a rodar scripts de instalação (pnpm bloqueia as demais). As três
+# com `false` vêm com o HTTP Observatory (ADR 0013) e ficam barradas de propósito: os scripts
+# delas baixam listas da internet a cada instalação, inclusive no Workers Builds, e o teste
+# não precisa de nenhuma.
 allowBuilds:
+  '@mdn/mdn-http-observatory': false
   esbuild: true
+  libpq: false
+  node_extra_ca_certs_mozilla_bundle: false
   sharp: true
   workerd: true
 minimumReleaseAgeExclude:

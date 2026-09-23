@@ -33,6 +33,7 @@
     "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
     "@lhci/cli": "0.15.1",
+    "@mdn/mdn-http-observatory": "1.7.1",
     "@playwright/test": "^1.63.0",
     "@types/node": "^24.13.5",
     "eslint": "^10.10.0",

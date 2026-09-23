@@ -118,6 +118,25 @@ test('a abertura da Galeria ocupa a largura toda e não passa de meia largura em
   expect((caixaAbertura?.width ?? 0) / (caixaAbertura?.height ?? 1)).toBeCloseTo(esperada, 1);
 });
 
+test.describe('sem JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+
+  // Antes do arranjo — e para sempre, sem JavaScript — a Galeria se sustenta só no CSS e na
+  // proporção que o `width` e o `height` da imagem dão. Nada de `style` no HTML: a CSP o barra.
+  test('a abertura não passa de meia largura e recorta a imagem no centro', async ({ page }) => {
+    await page.goto(rota);
+    const abertura = page.locator('.gal .item').first();
+    const caixa = await abertura.boundingBox();
+    const imagem = await abertura.locator('img').boundingBox();
+    expect((caixa?.width ?? 0) / (caixa?.height ?? 1)).toBeCloseTo(2, 1);
+    expect((imagem?.y ?? 0) + (imagem?.height ?? 0) / 2).toBeCloseTo(
+      (caixa?.y ?? 0) + (caixa?.height ?? 0) / 2,
+      0,
+    );
+    expect(await page.locator('.gal [style]').count()).toBe(0);
+  });
+});
+
 test('as linhas da Galeria preenchem a largura toda, com uma só altura por linha', async ({
   page,
 }) => {

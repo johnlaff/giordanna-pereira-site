@@ -10,7 +10,7 @@ Como o código chega a Produção: integração contínua no GitHub Actions, dep
 | ------------ | ----------------------------------------------------------------------------------------------------------- |
 | `check`      | `pnpm check` (tipos, ESLint, Prettier) e `pnpm test:unit`                                                   |
 | `build`      | `pnpm build`                                                                                                |
-| `e2e`        | `pnpm test:e2e`: Playwright + axe em todas as rotas, contra `dist/` servido por `wrangler dev`              |
+| `e2e`        | `pnpm test:e2e`: Playwright + axe em todas as rotas, contra `dist/` servido por `wrangler dev`, e o MDN HTTP Observatory (ADR 0013) |
 | `lighthouse` | `pnpm lighthouse`: Lighthouse CI com o orçamento de `lighthouserc.yml`                                      |
 | `audit`      | `pnpm audit --prod --audit-level=high` e, em PR, a revisão de dependências do GitHub (`fail-on-severity: high`) |
 
@@ -44,6 +44,26 @@ O Worker `giordanna-pereira-site` está ligado ao repositório pelo Workers Buil
 | Builds for non-production branches      | ligado                                                            |
 
 `PNPM_VERSION` existe porque a imagem do Workers Builds traz pnpm 10 por padrão, e `pnpm-workspace.yaml` usa chaves do pnpm 11 (`allowBuilds`): sem ela o `sharp` não roda o script de instalação e o build de imagens quebra. Node vem de `.node-version`. O `wrangler deploy` na raiz é correto porque o adapter grava o redirecionamento para `dist/client/wrangler.json`.
+
+### O que é configuração da zona, e não do repositório
+
+A CSP, os headers de segurança e o teste de rede estão no repositório e no CI (ADR 0005). Três
+peças moram no painel da Cloudflare, na zona do domínio, e por isso só existem depois do #16:
+no `workers.dev` não há zona do João.
+
+- **Always Use HTTPS** (SSL/TLS → Edge Certificates): é o que redireciona `http://` para
+  `https://`. O Observatory do CI não mede esse redirecionamento (ADR 0013); sem ele, a nota do
+  domínio no site da MDN cai 20 pontos.
+- **Rate limit do formulário** (Security → WAF → Rate limiting rules, uma regra no plano
+  gratuito): se a requisição casar com `(http.request.uri.path eq "/api/contato" and
+  http.request.method eq "POST")`, contar por IP e, acima de **3 pedidos em 10 segundos**,
+  **bloquear por 10 segundos** (o máximo do plano gratuito), com a resposta padrão, que é 429.
+  O formulário trata o 429 como qualquer recusa e mostra o e-mail alternativo
+  (`tests/e2e/contato.spec.ts`). Verificação: quatro envios seguidos pelo formulário, o quarto
+  recusado; ou quatro `curl -X POST` para `/api/contato`, o quarto com 429.
+- **Web Analytics** (Analytics & Logs → Web Analytics → Add a site, com o domínio): na zona
+  proxied a Cloudflare injeta o beacon sozinha, e ele reporta para `/cdn-cgi/rum` na própria
+  origem, que a CSP já admite. Verificação: abrir duas ou três páginas e ver as visitas no painel.
 
 Segredos e variáveis do Worker (Resend, Turnstile, autenticador do Sveltia) ficam em Settings → Variables and Secrets do Worker, nunca no repositório nem no workflow; a lista do formulário de contato, com a chave de site do Turnstile que entra como variável de build, está no ADR 0011. O CI roda sem nenhuma delas: o formulário falha fechado num Worker e roda com dublês noutro. Rollback: Deployments → versão anterior → Rollback.
 

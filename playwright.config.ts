@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
 import { portaDoModoDeTeste, portaDoTeto } from './tests/e2e/modo-de-teste.ts';
+import { urlDoObservatorio } from './tests/e2e/observatorio.ts';
 
 // A suíte roda contra `dist/` servido pelo Worker local (wrangler dev), o mesmo runtime de Produção.
 const port = 8787;
@@ -42,13 +43,22 @@ export default defineConfig({
       },
     },
   ],
-  // Três Workers sobre o mesmo `dist/`. O primeiro é o de toda a suíte e sobe como a Produção
+  // Quatro Workers sobre o mesmo `dist/`. O primeiro é o de toda a suíte e sobe como a Produção
   // sem chaves: o formulário falha fechado nele. O segundo liga o modo de teste do formulário,
   // em que o Turnstile e o Resend são dublês (ADR 0011); só `contato.spec.ts` fala com ele. O
   // terceiro é o mesmo modo de teste, reservado ao envio acima do teto (ver `modo-de-teste.ts`).
+  // O quarto responde em HTTPS, para o HTTP Observatory (ver `observatorio.ts`).
   webServer: [
     worker(port, 9229),
     worker(portaDoModoDeTeste, 9230, '--var CONTATO_MODO:teste'),
     worker(portaDoTeto, 9231, '--var CONTATO_MODO:teste'),
+    {
+      command: 'node tests/e2e/observatorio.ts',
+      url: urlDoObservatorio,
+      ignoreHTTPSErrors: true,
+      reuseExistingServer: !process.env['CI'],
+      timeout: 120_000,
+      env: { WRANGLER_SEND_METRICS: 'false' },
+    },
   ],
 });

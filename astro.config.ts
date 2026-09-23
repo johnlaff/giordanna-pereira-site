@@ -18,6 +18,32 @@ export default defineConfig({
   prefetch: { prefetchAll: true },
   // Nada usa sessões; sem isto o adapter provisiona um namespace KV a cada deploy.
   session: false,
+  // A CSP de cada página, gerada pelo Astro com o hash de cada script e estilo que ele mesmo
+  // escreve (ADR 0005). As únicas origens de fora são as duas da Cloudflare: o Turnstile, que
+  // carrega o script e desenha o desafio num iframe, e o beacon do Web Analytics, que a zona
+  // injeta no fim do HTML e que manda os dados para a própria origem (`/cdn-cgi/rum`). Sem
+  // `strictDynamic`: com ele o navegador ignoraria a lista de hosts, e o beacon, que não tem
+  // hash do build, seria barrado em silêncio. `frame-ancestors` não vale numa meta tag; quem
+  // proíbe o site dentro de moldura alheia é o `X-Frame-Options` de `public/_headers`.
+  security: {
+    csp: {
+      directives: [
+        "default-src 'self'",
+        "connect-src 'self'",
+        'frame-src https://challenges.cloudflare.com',
+        "object-src 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+      ],
+      scriptDirective: {
+        resources: [
+          "'self'",
+          'https://challenges.cloudflare.com',
+          'https://static.cloudflareinsights.com',
+        ],
+      },
+    },
+  },
   // As variáveis que o site lê, e em que momento (ADR 0011). A chave de site do Turnstile é
   // pública e vai no HTML, por isso entra no build. As do Worker são lidas a cada pedido —
   // `access: 'secret'` é o que o Astro chama de "lida em runtime, nunca embutida no build", e
