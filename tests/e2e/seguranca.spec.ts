@@ -124,6 +124,31 @@ test('o endpoint do contato responde com os headers de segurança', async ({ req
   conferirHeaders(resposta.headers());
 });
 
+// O CMS fica fora das rotas públicas e da regra das duas origens (ADR 0014), mas não dos headers.
+test('o CMS responde com os headers de segurança', async ({ request }) => {
+  conferirHeaders((await request.get('/admin')).headers());
+});
+
+// A janela de login é uma navegação, como a do CMS: sem as rotas da API indo antes ao Worker,
+// ela receberia a página 404 dos arquivos estáticos.
+test('a janela de login do CMS é do Worker, com os headers de segurança e CSP só dela', async ({
+  request,
+}) => {
+  const resposta = await request.get('/api/admin/entrar?provider=github', {
+    headers: { 'Sec-Fetch-Mode': 'navigate', Accept: 'text/html' },
+  });
+  // Sem as chaves do OAuth App, o Worker da suíte falha fechado e diz o motivo ao CMS.
+  expect(resposta.status()).toBe(200);
+  expect(await resposta.text()).toContain('MISCONFIGURED_CLIENT');
+  const headers = resposta.headers();
+  conferirHeaders(headers);
+  expect(headers['cache-control']).toBe('no-store');
+  const csp = diretivas(headers['content-security-policy'] ?? '');
+  expect(csp.get('default-src')).toEqual(["'none'"]);
+  expect(csp.get('script-src')).toEqual([expect.stringMatching(/^'sha256-[\w+/]+=*'$/)]);
+  expect(csp.get('frame-ancestors')).toEqual(["'none'"]);
+});
+
 /**
  * Serve `rota` com `trecho` logo antes do `</body>`, como a Cloudflare faz ao injetar o beacon
  * na zona. O resto da resposta — a CSP inclusive — é o que o Worker entregou.

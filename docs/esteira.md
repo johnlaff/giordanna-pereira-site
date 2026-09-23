@@ -65,6 +65,30 @@ no `workers.dev` não há zona do João.
   proxied a Cloudflare injeta o beacon sozinha, e ele reporta para `/cdn-cgi/rum` na própria
   origem, que a CSP já admite. Verificação: abrir duas ou três páginas e ver as visitas no painel.
 
+### O login do CMS
+
+O Sveltia em `/admin` entra pelo GitHub, e o login passa pelo próprio Worker do site (ADR 0014).
+Sem as duas variáveis abaixo, `/admin` abre, mas o botão de entrar mostra que o OAuth App não
+está configurado. O que só o João faz, uma vez:
+
+1. **Criar o OAuth App** (GitHub → Settings → Developer settings → OAuth Apps → New OAuth App,
+   na conta dona do repositório). Nome: `Site da Giordanna`. Homepage URL: a origem onde o CMS
+   abre, hoje `https://giordanna-pereira-site.joaoaraxaiba.workers.dev`. Authorization callback
+   URL: a mesma origem com `/api/admin/retorno`. Device Flow desligado. Depois de criar, gerar
+   um client secret.
+2. **Cadastrar as variáveis** no Worker (Settings → Variables and Secrets), as duas do tipo
+   Secret: `GITHUB_CLIENT_ID` com o Client ID e `GITHUB_CLIENT_SECRET` com o segredo. Valem no
+   próximo deploy (ou no botão Deploy da própria tela).
+3. **Convidar Giordanna** (repositório → Settings → Collaborators → Add people) com o papel
+   **Write**, que é o que publica direto em `main` pelo bypass do ruleset. A conta dela precisa
+   de autenticação em dois fatores ligada antes de aceitar o convite.
+4. **O teste de verdade**, pelo celular dela: abrir `/admin`, entrar com o GitHub, criar um
+   Projeto com uma foto da galeria do celular e salvar. O commit aparece em `main`, o CI roda e
+   o Workers Builds publica; o Projeto aparece em `/projetos` em alguns minutos.
+
+No lançamento (#16), o OAuth App troca a Homepage e o callback para o domínio. O login funciona
+só na origem cadastrada nele: nas URLs de preview o CMS abre, mas não entra.
+
 Segredos e variáveis do Worker (Resend, Turnstile, autenticador do Sveltia) ficam em Settings → Variables and Secrets do Worker, nunca no repositório nem no workflow; a lista do formulário de contato, com a chave de site do Turnstile que entra como variável de build, está no ADR 0011. O CI roda sem nenhuma delas: o formulário falha fechado num Worker e roda com dublês noutro. Rollback: Deployments → versão anterior → Rollback.
 
 ## Proteção de `main`: rulesets

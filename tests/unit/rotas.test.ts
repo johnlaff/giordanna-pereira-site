@@ -39,6 +39,12 @@ test('o robots libera o site e aponta para o sitemap do próprio domínio', () =
   assert.equal(url, 'https://giordannapereira.arq.br/sitemap.xml');
 });
 
+test('o robots deixa o CMS e o login dele fora da busca', () => {
+  const robots = robotsDe(site);
+  assert.match(robots, /^Disallow: \/admin$/m);
+  assert.match(robots, /^Disallow: \/api\/admin\/$/m);
+});
+
 test('nenhuma rota pendente já está publicada', () => {
   // A lista de pendentes só faz sentido enquanto a página não existe: esquecê-la depois de o
   // ticket entrar deixaria o link sem prefetch para sempre, sem ninguém notar.

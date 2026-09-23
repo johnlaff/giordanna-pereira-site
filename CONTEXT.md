@@ -144,4 +144,6 @@ Identificadores sem acento nem cedilha; acentos só no rótulo que Giordanna vê
 `texto` é o único campo opcional: sem ele, o Depoimento aparece no estado Em breve. O
 Depoimento não tem Ordem própria como o Projeto — a posição dele não vira URL nem navegação,
 só a vez de aparecer no carrossel —, e a sequência é a do nome do arquivo, daí o prefixo
-numérico em `src/content/depoimentos/`.
+numérico em `src/content/depoimentos/`. Um Depoimento criado pelo CMS nasce com a data como
+prefixo (`20260923-ana`), e por isso entra depois dos que já existem, na ordem em que foram
+criados.

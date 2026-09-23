@@ -11,16 +11,44 @@
  */
 import { z } from 'astro/zod';
 
+/** Uma regra de forma de um campo e o que dizer a quem a quebrou. */
+export type Padrao = { regex: RegExp; mensagem: string };
+
 /**
- * Campo de texto editado no CMS. Nenhum aceita HTML: o que precisa virar link tem um campo
- * de URL próprio, para que uma colagem de editor de texto rico não chegue à página.
+ * As regras de forma dos campos, escritas uma vez para as duas barreiras: o formulário do CMS,
+ * que barra o erro antes do commit (`src/admin/configuracao.ts`), e este schema, que barra o
+ * build se algo passar por fora do CMS (ADR 0002). As mensagens falam com Giordanna, que é
+ * quem as lê no CMS.
+ */
+export const padroes = {
+  /** Nenhum campo aceita HTML: o que precisa virar link tem um campo de URL próprio. */
+  semHtml: {
+    regex: /^[^<>]*$/,
+    mensagem: 'Não use os sinais < e >: o campo não aceita HTML. Links vão no campo de link.',
+  },
+  /** O número como se escreve no Brasil — milhar com ponto, decimal com vírgula — e o m². */
+  area: {
+    regex: /^\d{1,3}(?:\.\d{3})*(?:,\d{1,2})? m²$/,
+    mensagem:
+      'Escreva a área como 46,88 m² ou 1.125,54 m²: milhar com ponto e decimal com vírgula.',
+  },
+  /** O ano da obra ou do projeto; "(acadêmico)" marca o que foi feito na faculdade. */
+  ano: {
+    regex: /^\d{4}(?: \(acadêmico\))?$/,
+    mensagem: 'Escreva o ano com quatro dígitos, como 2025, ou 2025 (acadêmico).',
+  },
+} satisfies Record<string, Padrao>;
+
+/**
+ * Campo de texto editado no CMS. Nenhum aceita HTML, para que uma colagem de editor de texto
+ * rico não chegue à página.
  */
 const texto = () =>
   z
     .string()
     .trim()
     .min(1, 'não pode ficar em branco')
-    .regex(/^[^<>]*$/, 'não aceita HTML: use o campo de URL para links');
+    .regex(padroes.semHtml.regex, padroes.semHtml.mensagem);
 
 export const esquemaDeProjeto = <T extends z.ZodType>(imagem: () => T) =>
   z.object({
@@ -31,12 +59,15 @@ export const esquemaDeProjeto = <T extends z.ZodType>(imagem: () => T) =>
     descricao: texto(),
     ferramentas: z.array(texto()).min(1, 'liste ao menos uma Ferramenta'),
     local: texto(),
-    ano: texto(),
-    area: texto(),
+    ano: texto().regex(padroes.ano.regex, padroes.ano.mensagem),
+    area: texto().regex(padroes.area.regex, padroes.area.mensagem),
     equipe: texto(),
     equipeUrl: z.url({ protocol: /^https$/ }).optional(),
-    /** Renders primeiro, pranchas por último. Vazia é o estado Em breve. */
-    galeria: z.array(imagem()),
+    /**
+     * Renders primeiro, pranchas por último. Vazia é o estado Em breve, e ausente é o mesmo que
+     * vazia: o CMS não grava campo opcional em branco.
+     */
+    galeria: z.array(imagem()).default([]),
     ordem: z.int(),
   });
 

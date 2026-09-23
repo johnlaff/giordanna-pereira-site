@@ -1,6 +1,6 @@
 # giordanna-pereira-site
 
-Portfólio de Giordanna Pereira (arquiteta e urbanista, Uberlândia/MG). Astro 7 + TypeScript, estático, hospedado em Cloudflare Workers (static assets), com um endpoint on-demand (`/api/contato`) e Sveltia CMS em `/admin`.
+Portfólio de Giordanna Pereira (arquiteta e urbanista, Uberlândia/MG). Astro 7 + TypeScript, estático, hospedado em Cloudflare Workers (static assets), com rotas on-demand (`/api/contato` e o login do CMS em `/api/admin/*`) e Sveltia CMS em `/admin`.
 
 Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Depois `CONTEXT.md`, `docs/adr/` e `docs/esteira.md` (CI, deploy, rulesets, Renovate).
 
@@ -27,20 +27,20 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 
 ## Estrutura
 
-- `astro.config.ts` — `output: 'static'`, adapter Cloudflare (`imageService: 'compile'`), Fonts API; `wrangler.jsonc` — assets em `dist/`, `not_found_handling: 404-page`
+- `astro.config.ts` — `output: 'static'`, adapter Cloudflare (`imageService: 'compile'`), Fonts API; `wrangler.jsonc` — assets em `dist/`, `not_found_handling: 404-page`, `run_worker_first: ["/api/*"]` (sem ele, uma navegação a uma rota da API recebe a 404 estática)
 - `src/imagens.ts` — o que decide as variantes de imagem (qualidade e esforço do AVIF), e `src/servico-de-imagem.ts`, o serviço que as grava; os dois estão na chave do cache de imagens do CI
 - `src/config.ts` — configuração tipada fora do CMS: `site`, `marca` (nome + CAU), `emailExibido` (constante única do e-mail), `contatos` e os textos das páginas (`hero`, `sobre`, `familiaridade`, `cta`, `projetos`)
 - `src/layouts/Base.astro` — casca de toda página (head, fontes, Header, `main`, Footer); props `titulo`, `descricao`, `secao` (item ativo da nav) e `hero` (cabeçalho transparente sobre o hero)
-- `src/pages/` — `index`, `404`, `projetos/index` (a Grade), `projetos/[slug]`, `contato`, os endpoints `sitemap.xml` e `robots.txt`, que servem o que sai de `src/rotas.ts` (as rotas públicas do site), e `api/contato.ts` (`prerender = false`), a única rota que o Worker executa
+- `src/pages/` — `index`, `404`, `projetos/index` (a Grade), `projetos/[slug]`, `contato`, os endpoints `sitemap.xml` e `robots.txt`, que servem o que sai de `src/rotas.ts` (as rotas públicas do site), `admin.astro` (o Sveltia CMS, com CSP própria mais larga, ADR 0014) e as rotas que o Worker executa (`prerender = false`): `api/contato.ts` e `api/admin/entrar.ts` e `retorno.ts`, o login do CMS
 - `src/contato/` — o formulário de contato do lado do Worker: `mensagem.ts` (regras dos campos, usadas também pelo navegador), `modo.ts` (variáveis do Worker, falha fechada), `servicos.ts` (Turnstile, Resend e os dublês do modo de teste), `receber.ts` (as defesas em ordem, do pedido à resposta). Variáveis declaradas no `env.schema` do `astro.config.ts`; o que o João cadastra na Cloudflare está no ADR 0011
 - `src/content/` — collections `projetos` (um `.yml` por Projeto) e `depoimentos` (um `.yml` por Depoimento, com prefixo numérico no nome: a sequência do carrossel é a do nome do arquivo). `src/content.config.ts` liga o loader ao contrato de `src/content.schema.ts`, que também garante a Ordem única
 - `src/components/` — Header, Footer, Marca, Icone, Ficha, Galeria (linhas justificadas em `galeria.linhas.ts` e lightbox PhotoSwipe), EmBreve, Hero, Sobre, Ferramentas, Depoimentos (carrossel infinito por cópias nas duas pontas), CTA, CardProjeto (larguras e `sizes` da grade em `grade.ts`), Revelar (entrada dos blocos `.rv`, só na página que os tem), FormContato
 - `src/styles/` — `tokens.css` (cores, tipografia, espaçamento) e `global.css` (reset, scaffold de página, transição nativa entre páginas)
 - `src/compartilhamento/` — o que se lê de um link compartilhado: os Cartões de compartilhamento (`og:image` 1200×630, um por rota pública, em `cartoes.ts`), desenhados no fim do build pelo sharp (`desenho.ts`, com as fontes em `fontes/`) e gravados em `og/` pela integração de `integracao.ts` (ADR 0012), e o JSON-LD `Person` da home e `CreativeWork` de cada Projeto (`dados-estruturados.ts`). As tags Open Graph ficam no `Base.astro`, que recebe `rota` e `dadosEstruturados` de cada página
-- `public/_headers` — HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` e `Permissions-Policy` de toda resposta estática; o adapter soma a ele o cache imutável de `/_astro/*`
-- Planejado: `public/admin/` — Sveltia CMS (`index.html`, `config.yml`)
+- `src/admin/` — o CMS: `configuracao.ts` (a configuração do Sveltia em TypeScript, com os padrões de campo de `src/content.schema.ts`; um teste de unidade confere que ela e o schema dizem a mesma coisa) e `autenticador.ts` (o login pelo GitHub, com `GITHUB_CLIENT_ID` e `GITHUB_CLIENT_SECRET` do Worker; o que o João cadastra está em `docs/esteira.md`)
+- `public/_headers` — HSTS, `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` e `Permissions-Policy` de toda resposta estática; o adapter soma a ele o cache imutável de `/_astro/*`. As respostas do Worker levam os mesmos, de `src/headers-de-seguranca.ts`
 - `tests/schema-org.ts` — validador de JSON-LD contra o vocabulário do schema.org, usado nos testes de unidade e no e2e
-- `tests/e2e/` — Playwright + axe (rotas em `rotas.ts`; o formulário roda também contra Workers no modo de teste, em `modo-de-teste.ts`; CSP, headers e as duas origens da Cloudflare em `seguranca.spec.ts`; o Observatory num Worker em HTTPS, em `observatorio.ts`); `tests/unit/` — runner do Node; `docs/` — HANDOFF, ADRs, `esteira.md`, `agents/` (config do tracker), `reference/` (preview)
+- `tests/e2e/` — Playwright + axe (rotas em `rotas.ts`; o formulário roda também contra Workers no modo de teste, em `modo-de-teste.ts`; CSP, headers e as duas origens da Cloudflare em `seguranca.spec.ts`; o Observatory num Worker em HTTPS, em `observatorio.ts`; o CMS em `admin.spec.ts`, que cadastra um Projeto pelo "Trabalhar com Repositório Local" do Sveltia sobre uma pasta do OPFS); `tests/unit/` — runner do Node; `docs/` — HANDOFF, ADRs, `esteira.md`, `agents/` (config do tracker), `reference/` (preview)
 - `.github/workflows/ci.yml` — jobs `check`, `build`, `e2e`, `lighthouse`, `audit` (nomes = checks exigidos pelo ruleset); `.github/actions/setup` — action composta; `.github/rulesets/` — fonte dos rulesets de `main`, aplicados via `gh api`; `renovate.json`; `scripts/lighthouse.ts`
 - `.claude/hooks/session-start.sh` — gancho de SessionStart que prepara o container das sessões do Claude Code na web (Node da `.node-version` pelo nvm, dependências e o Chromium da versão do Playwright); não roda fora do ambiente remoto
 

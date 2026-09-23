@@ -66,6 +66,14 @@ export default defineConfig({
       }),
       CONTATO_DESTINO: envField.string({ context: 'server', access: 'secret', optional: true }),
       CONTATO_REMETENTE: envField.string({ context: 'server', access: 'secret', optional: true }),
+      // O OAuth App do GitHub pelo qual Giordanna entra no CMS (ADR 0014). Sem os dois, o
+      // login falha fechado e diz ao CMS o que falta.
+      GITHUB_CLIENT_ID: envField.string({ context: 'server', access: 'secret', optional: true }),
+      GITHUB_CLIENT_SECRET: envField.string({
+        context: 'server',
+        access: 'secret',
+        optional: true,
+      }),
     },
   },
   // Os Cartões de compartilhamento (og:image), desenhados no fim do build a partir do conteúdo:

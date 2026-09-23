@@ -1,0 +1,74 @@
+---
+/**
+ * O Sveltia CMS, onde Giordanna cadastra Projetos e Depoimentos (ADR 0002). A página não usa o
+ * `Base.astro`: o CMS ocupa a tela inteira, com a interface dele, e nada do site aparece aqui.
+ *
+ * A configuração vem de `src/admin/configuracao.ts`; o login passa pelo Worker do próprio site
+ * (ADR 0014). O Sveltia vem do npm, empacotado no build como o resto do JavaScript, e não do
+ * CDN que a documentação dele sugere: a versão é a do lockfile, atualizada pelo Renovate.
+ *
+ * A CSP desta página é mais larga que a do site, e só ela (ADR 0014). O CMS fala com a API do
+ * GitHub e busca no UNPKG a tradução da interface e o codificador de WebP do Safari, que
+ * precisa de WebAssembly; as fontes da interface vêm do jsDelivr; e ele monta estilos em tempo
+ * de execução, que não têm hash no build.
+ */
+import '../styles/tokens.css';
+
+// Sem a CSP do `astro.config.ts` ligada, a página não teria política nenhuma: o build para.
+const csp = Astro.csp;
+if (csp === undefined) throw new Error('A página do CMS precisa da CSP do Astro (security.csp).');
+
+csp.insertScriptResource('https://unpkg.com');
+csp.insertScriptResource("'wasm-unsafe-eval'");
+csp.insertStyleResource("'unsafe-inline'");
+csp.insertDirective(
+  "connect-src 'self' blob: data: https://api.github.com https://www.githubstatus.com https://unpkg.com",
+);
+csp.insertDirective("img-src 'self' blob: data: https://*.githubusercontent.com");
+csp.insertDirective("font-src 'self' https://cdn.jsdelivr.net");
+csp.insertDirective("media-src 'self' blob:");
+csp.insertDirective('frame-src blob:');
+csp.insertDirective("worker-src 'self' blob:");
+csp.insertDirective("manifest-src 'self' blob:");
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>CMS · Giordanna Pereira</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <noscript>
+      <p class="sem-js">
+        O CMS precisa do JavaScript ligado no navegador. Ligue-o nas configurações e recarregue a
+        página.
+      </p>
+    </noscript>
+    <script>
+      import { init } from '@sveltia/cms';
+      import { configuracaoDoCms } from '../admin/configuracao';
+
+      // O login volta para a origem em que o CMS está aberto: o workers.dev hoje, o domínio
+      // depois do lançamento, sem mudar nada aqui.
+      init({ config: configuracaoDoCms(location.origin) });
+    </script>
+  </body>
+</html>
+
+<style>
+  /* Só o aviso sem JavaScript é do site; o resto da tela é a interface do Sveltia. */
+  .sem-js {
+    max-width: 36ch;
+    margin: 20vh auto 0;
+    padding: 0 24px;
+    font:
+      400 1.0625rem/1.6 system-ui,
+      sans-serif;
+    color: var(--ink);
+    text-align: center;
+  }
+</style>
