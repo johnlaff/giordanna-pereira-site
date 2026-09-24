@@ -1,6 +1,8 @@
 /**
  * A configuração do Sveltia CMS em `/admin`: onde está o conteúdo, como Giordanna entra e o
- * formulário de cada Projeto e Depoimento.
+ * formulário de cada Projeto, de cada Depoimento e dos dois blocos da home que ela edita, o
+ * Sobre e a Familiaridade. O resto da home — hero, CTA e Contatos — fica em `src/config.ts`,
+ * fora do CMS, por decisão (HANDOFF §12).
  *
  * O formulário espelha o schema das collections (`src/content.schema.ts`): cada campo que o
  * build exige é obrigatório aqui, e as regras de forma — área, ano, nada de HTML — são as
@@ -13,7 +15,7 @@
  * está aberto, que só o navegador sabe (ADR 0014).
  */
 import type { CmsConfig } from '@sveltia/cms';
-import { padroes, type Padrao } from '../content.schema.ts';
+import { NIVEIS, padroes, type Nivel, type Padrao } from '../content.schema.ts';
 
 /** O repositório onde o CMS lê e grava. */
 export const REPOSITORIO = 'johnlaff/giordanna-pereira-site';
@@ -31,6 +33,13 @@ const TETO_DA_FOTO = 2 * 1024 * 1024;
 const padrao = ({ regex, mensagem }: Padrao): [RegExp, string] => [regex, mensagem];
 
 const semHtml = padrao(padroes.semHtml);
+
+/** Como o CMS nomeia cada nível da Familiaridade: o número vai para o arquivo, o nome para ela. */
+const NOME_DO_NIVEL: Record<Nivel, string> = {
+  1: 'Mais familiaridade (bloco escuro)',
+  2: 'Familiaridade média (bloco cinza)',
+  3: 'Menos familiaridade (bloco branco)',
+};
 
 export const configuracaoDoCms = (origem: string): CmsConfig => ({
   // Tudo está aqui; sem isso o Sveltia ainda procuraria um `config.yml` ao lado da página.
@@ -207,6 +216,76 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
           required: false,
           hint: 'Sem texto, o depoimento aparece como Em breve.',
           pattern: semHtml,
+        },
+      ],
+    },
+    {
+      name: 'home',
+      label: 'Página inicial',
+      description: 'Os blocos da home que mudam com a sua carreira: Sobre e Ferramentas.',
+      format: 'yaml',
+      files: [
+        {
+          name: 'sobre',
+          label: 'Sobre',
+          file: 'src/content/home/sobre.yml',
+          fields: [
+            {
+              name: 'paragrafos',
+              label: 'Parágrafos',
+              label_singular: 'Parágrafo',
+              widget: 'list',
+              min: 1,
+              hint: 'A apresentação ao lado do retrato, na ordem em que aparece.',
+              field: { name: 'paragrafo', label: 'Parágrafo', widget: 'text', pattern: semHtml },
+            },
+            {
+              name: 'credenciais',
+              label: 'Credenciais',
+              label_singular: 'Credencial',
+              widget: 'list',
+              min: 1,
+              hint: 'A grade sob a apresentação, como Formação e Atuação.',
+              summary: '{{rotulo}}',
+              fields: [
+                { name: 'rotulo', label: 'Rótulo', widget: 'string', pattern: semHtml },
+                {
+                  name: 'linhas',
+                  label: 'Linhas',
+                  label_singular: 'Linha',
+                  widget: 'list',
+                  min: 1,
+                  hint: 'Cada linha aparece numa linha própria no site.',
+                  field: { name: 'linha', label: 'Linha', widget: 'string', pattern: semHtml },
+                },
+              ],
+            },
+          ],
+        },
+        {
+          name: 'familiaridade',
+          label: 'Ferramentas',
+          file: 'src/content/home/familiaridade.yml',
+          fields: [
+            {
+              name: 'itens',
+              label: 'Ferramentas',
+              label_singular: 'Ferramenta',
+              widget: 'list',
+              min: 1,
+              hint: 'O site mostra do maior nível para o menor; dentro de um nível, na ordem desta lista.',
+              summary: '{{nome}}',
+              fields: [
+                { name: 'nome', label: 'Nome', widget: 'string', pattern: semHtml },
+                {
+                  name: 'nivel',
+                  label: 'Nível',
+                  widget: 'select',
+                  options: NIVEIS.map((value) => ({ label: NOME_DO_NIVEL[value], value })),
+                },
+              ],
+            },
+          ],
         },
       ],
     },

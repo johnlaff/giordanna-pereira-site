@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import sharp from 'sharp';
 import { parse } from 'yaml';
 import { z } from 'astro/zod';
-import { esquemaDeProjeto } from '../../src/content.schema.ts';
+import { esquemaDeFamiliaridade, esquemaDeProjeto } from '../../src/content.schema.ts';
 
 /**
  * O CMS em `/admin` (ADR 0002 e 0014), no seam de sempre: a página construída, servida pelo
@@ -49,7 +49,7 @@ type Arquivo = { caminho: string; base64: string };
  */
 const abrirRepositorioLocal = async (page: Page, imagens: string[] = []) => {
   const arquivos: Arquivo[] = [
-    ...['src/content/projetos', 'src/content/depoimentos'].flatMap((pasta) =>
+    ...['src/content/projetos', 'src/content/depoimentos', 'src/content/home'].flatMap((pasta) =>
       readdirSync(pasta).map((nome) => `${pasta}/${nome}`),
     ),
     ...imagens,
@@ -317,5 +317,52 @@ test.describe('cadastrar pelo CMS', () => {
       capa: '/src/assets/aparecer-r02.webp',
       galeria: ['/src/assets/aparecer-r05.webp'],
     });
+  });
+});
+
+test.describe('editar a home pelo CMS', () => {
+  // O que Giordanna atualiza com a carreira: uma ferramenta nova na Familiaridade, com o nível
+  // escolhido numa lista, chega ao arquivo como o número que o schema aceita.
+  test('uma ferramenta nova chega ao arquivo da Familiaridade pronta para o build', async ({
+    page,
+  }) => {
+    test.slow();
+    await prepararCms(page);
+    await abrirRepositorioLocal(page);
+    await page.getByRole('treeitem', { name: 'Página inicial' }).click();
+    // Só os dois blocos que mudam com a carreira dela: hero, CTA e Contatos ficam no código.
+    for (const fora of ['Hero', 'CTA', 'Contatos'])
+      await expect(page.getByText(fora, { exact: true })).toHaveCount(0);
+    await page.getByRole('gridcell', { name: 'Ferramentas' }).click();
+
+    // O CMS só desenha os itens abertos que estão na tela. Com a lista recolhida, o item novo,
+    // que nasce aberto, é o único com campo de Nome.
+    await page.getByRole('button', { name: 'Recolher Tudo' }).click();
+    const nomes = page.getByRole('textbox', { name: 'Nome', exact: true });
+    await expect(nomes).toHaveCount(0);
+    await page.getByRole('button', { name: /Adicionar.*Ferramenta/ }).click();
+    await expect(nomes).toHaveCount(1);
+    const nome = nomes.first();
+    await expect(async () => {
+      await nome.fill('Lumion');
+      await expect(nome).toHaveValue('Lumion', { timeout: 1_000 });
+    }).toPass();
+    await page
+      .getByRole('radiogroup', { name: 'Nível' })
+      .getByRole('radio', { name: 'Familiaridade média (bloco cinza)' })
+      .check();
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+    await expect(page.getByText('Entrada salva.')).toBeVisible({ timeout: 30_000 });
+
+    const yml = await lerDoRepositorio(page, 'src/content/home/familiaridade.yml');
+    expect(yml).toBeDefined();
+    const { itens } = esquemaDeFamiliaridade().parse(
+      parse(Buffer.from(yml!, 'base64').toString('utf8')),
+    );
+    // As oito que já estavam continuam como estavam, e a nova entra no fim.
+    const antes = esquemaDeFamiliaridade().parse(
+      parse(readFileSync('src/content/home/familiaridade.yml', 'utf8')),
+    ).itens;
+    expect(itens).toEqual([...antes, { nome: 'Lumion', nivel: 2 }]);
   });
 });

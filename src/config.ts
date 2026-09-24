@@ -2,7 +2,8 @@ import { MINIMO_DA_MENSAGEM } from './contato/mensagem.ts';
 
 /**
  * Configuração tipada do site: o que a home, o cabeçalho, o rodapé e a página de contato
- * exibem e que não passa pelo CMS. Fica em código por decisão (HANDOFF §12).
+ * exibem e que não passa pelo CMS. Fica em código por decisão (HANDOFF §12); do Sobre e da
+ * Familiaridade, só a moldura mora aqui.
  */
 
 export const site = {
@@ -101,53 +102,24 @@ export const hero = {
   dica: 'Role para explorar',
 } as const;
 
-/** Uma linha da grade de credenciais do Sobre: um rótulo curto e o que ele reúne. */
-export type Credencial = { rotulo: string; texto: readonly string[] };
-
+/**
+ * A moldura do Sobre: o título e o retrato. A apresentação e as Credenciais vêm do CMS
+ * (`src/content/home/sobre.yml`).
+ */
 export const sobre = {
   titulo: 'Pronta para',
   enfase: 'somar.',
   retratoAlt: 'Retrato de Giordanna Pereira com capacete de obra',
-  paragrafos: [
-    'Arquiteta e Urbanista formada pela Universidade Federal de Uberlândia e Técnica em Edificações pelo CEFET - MG, com três anos de experiência prática em três escritórios, da criação à documentação executiva de projetos residenciais e comerciais.',
-    'Meu trabalho é pautado pela busca constante por soluções criativas e eficientes, sempre atenta às necessidades específicas e expectativas dos meus clientes. Acredito que a flexibilidade e diversidade são fundamentais, o que me permite desenvolver projetos adaptáveis e personalizados para cada perfil.',
-  ],
-  credenciais: [
-    {
-      rotulo: 'Formação',
-      texto: ['Técnico em Edificações · CEFET - MG', 'Arquitetura e Urbanismo · UFU'],
-    },
-    { rotulo: 'Atuação', texto: ['Uberlândia, Araxá · presencial, híbrido', 'Brasil · remoto'] },
-    { rotulo: 'Projetos', texto: ['Residenciais e comerciais'] },
-    {
-      rotulo: 'Serviços',
-      texto: ['Medição, modelagem, documentação, renderização, consultoria, reforma, interiores'],
-    },
-  ] as readonly Credencial[],
 } as const;
 
 /**
- * Familiaridade: os softwares que Giordanna domina, em três níveis, do maior para o menor.
- * É independente das Ferramentas de cada Projeto — o Pacote Office e o AutoCAD entram aqui
- * e nenhum Projeto os lista —, e por isso o item tem nome próprio, não o de Ferramenta.
+ * A moldura da Familiaridade. Os softwares e os níveis vêm do CMS
+ * (`src/content/home/familiaridade.yml`).
  */
-export type Nivel = 1 | 2 | 3;
-export type ItemDeFamiliaridade = { nome: string; nivel: Nivel };
-
 export const familiaridade = {
   titulo: 'Ferramentas',
   /** O que o leitor de tela anuncia antes da lista, já que a ordem é a informação. */
   rotulo: 'Ferramentas, da maior para a menor familiaridade',
-  itens: [
-    { nome: 'Archicad', nivel: 1 },
-    { nome: 'SketchUp + Layout', nivel: 2 },
-    { nome: 'Enscape', nivel: 2 },
-    { nome: 'Pacote Office', nivel: 2 },
-    { nome: 'Revit', nivel: 3 },
-    { nome: 'AutoCAD', nivel: 3 },
-    { nome: 'V-Ray', nivel: 3 },
-    { nome: 'Adobe Ai · Ps · Id', nivel: 3 },
-  ] as readonly ItemDeFamiliaridade[],
 } as const;
 
 /**

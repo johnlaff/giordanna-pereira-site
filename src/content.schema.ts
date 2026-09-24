@@ -1,9 +1,9 @@
 /**
- * Contrato do conteúdo editável: a forma de cada arquivo de Projeto e de Depoimento, as
- * invariantes entre eles — a Ordem única dos Projetos, a sequência dos Depoimentos — e as
- * leituras que derivam das duas: a sequência, os vizinhos de cada Projeto e a Capa. Tudo vale
- * no build e muda pelo mesmo motivo — uma mudança no que é um Projeto ou um Depoimento —,
- * por isso mora junto.
+ * Contrato do conteúdo editável: a forma de cada arquivo que Giordanna edita no CMS — Projeto,
+ * Depoimento, Sobre e Familiaridade —, as invariantes entre eles — a Ordem única dos Projetos,
+ * a sequência dos Depoimentos, os níveis da Familiaridade — e as leituras que derivam delas: a
+ * sequência, os vizinhos de cada Projeto, a Capa e a ordem da Familiaridade. Tudo vale no build
+ * e muda pelo mesmo motivo — uma mudança no que o CMS deixa editar —, por isso mora junto.
  *
  * O módulo fica fora de `content.config.ts` para o teste de contrato carregá-lo sem o runtime
  * do Astro: o validador de imagem entra por parâmetro, e é o `image()` do Astro em produção
@@ -78,6 +78,46 @@ export const esquemaDeDepoimento = () =>
     /** Sem texto, o Depoimento está cadastrado e aguardando: é o estado Em breve. */
     texto: texto().optional(),
   });
+
+/**
+ * O Sobre da home: a apresentação em parágrafos e a grade de Credenciais. O título da seção e
+ * o retrato ficam na configuração tipada (`src/config.ts`); daqui vem só o que muda com a
+ * carreira dela.
+ */
+export const esquemaDeSobre = () =>
+  z.object({
+    paragrafos: z.array(texto()).min(1, 'escreva ao menos um parágrafo'),
+    credenciais: z
+      .array(
+        z.object({
+          rotulo: texto(),
+          /** Cada linha vira uma linha no site, na mesma ordem. */
+          linhas: z.array(texto()).min(1, 'escreva ao menos uma linha'),
+        }),
+      )
+      .min(1, 'liste ao menos uma Credencial'),
+  });
+
+/** Os três níveis da Familiaridade: 1 é o de maior domínio, e o bloco mais escuro. */
+export const NIVEIS = [1, 2, 3] as const;
+export type Nivel = (typeof NIVEIS)[number];
+
+/** A Familiaridade da home: os softwares que Giordanna domina, cada um com o seu nível. */
+export const esquemaDeFamiliaridade = () =>
+  z.object({
+    itens: z
+      .array(z.object({ nome: texto(), nivel: z.literal(NIVEIS) }))
+      .min(1, 'liste ao menos uma ferramenta'),
+  });
+
+/**
+ * A Familiaridade na tela vai do maior nível para o menor, porque a ordem repete o que a cor
+ * diz. Dentro de um nível, vale a ordem em que Giordanna escreveu: quem acrescenta uma
+ * ferramenta no fim da lista não precisa achar o lugar dela.
+ */
+export function ordenarFamiliaridade<T extends { nivel: Nivel }>(itens: readonly T[]): T[] {
+  return [...itens].sort((a, b) => a.nivel - b.nivel);
+}
 
 type DepoimentoOrdenavel = { id: string };
 

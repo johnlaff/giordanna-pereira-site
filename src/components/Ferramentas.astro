@@ -2,9 +2,13 @@
 /**
  * Familiaridade: os softwares que Giordanna domina, do maior nível para o menor. O nível é
  * dito pela cor do bloco — escuro, névoa, branco —, e a ordem da lista repete a mesma
- * informação para quem não vê cor nenhuma.
+ * informação para quem não vê cor nenhuma. A lista vem do CMS; a ordem, de `ordenarFamiliaridade`.
  */
 import { familiaridade } from '../config';
+import { ordenarFamiliaridade } from '../content.schema';
+import { lerDaHome } from '../home';
+
+const itens = ordenarFamiliaridade((await lerDaHome('familiaridade')).itens);
 ---
 
 <section class="shell tools">
@@ -13,7 +17,7 @@ import { familiaridade } from '../config';
     <span class="sec-rule" aria-hidden="true"></span>
   </div>
   <ul class="tools-grid rv" aria-label={familiaridade.rotulo}>
-    {familiaridade.itens.map((item) => (
+    {itens.map((item) => (
       <li class:list={['tool', `t${item.nivel}`]}>{item.nome}</li>
     ))}
   </ul>
