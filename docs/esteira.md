@@ -48,8 +48,8 @@ O Worker `giordanna-pereira-site` está ligado ao repositório pelo Workers Buil
 ### O que é configuração da zona, e não do repositório
 
 A CSP, os headers de segurança e o teste de rede estão no repositório e no CI (ADR 0005). Três
-peças moram no painel da Cloudflare, na zona do domínio, e por isso só existem depois do #16:
-no `workers.dev` não há zona do João.
+peças moram no painel da Cloudflare, na zona `giordannapereira.arq.br` (no `workers.dev` não há
+zona, e por isso nenhuma delas vale lá).
 
 - **Always Use HTTPS** (SSL/TLS → Edge Certificates): é o que redireciona `http://` para
   `https://`. O Observatory do CI não mede esse redirecionamento (ADR 0013); sem ele, a nota do
@@ -65,6 +65,27 @@ no `workers.dev` não há zona do João.
   proxied a Cloudflare injeta o beacon sozinha, e ele reporta para `/cdn-cgi/rum` na própria
   origem, que a CSP já admite. Verificação: abrir duas ou três páginas e ver as visitas no painel.
 
+### Domínio e e-mail
+
+`giordannapereira.arq.br` está no registro.br com a Giordanna titular e o João como contato
+administrativo e técnico (ADR 0006); os servidores DNS são os da zona do João na Cloudflare, com
+DNSSEC da Cloudflare (o registro DS fica no registro.br, na tela de DNS do domínio). O site é um
+Custom Domain do Worker (Settings → Domains & Routes), e o `www` desvia para o domínio por uma
+Redirect Rule da zona.
+
+| Registro                    | Tipo  | Para quê                                                        |
+| --------------------------- | ----- | --------------------------------------------------------------- |
+| MX e SPF do domínio         | —     | Email Routing: `contato@` entrega no Gmail dela (criados por ele) |
+| `resend._domainkey`         | TXT   | DKIM do Resend: assina o que sai pelo formulário e pelo Gmail     |
+| `send` e `rsend`            | CNAME | Return-Path e SPF do Resend (Somente DNS, nunca com proxy)        |
+| `_dmarc`                    | TXT   | `v=DMARC1; p=quarantine`; passa a `p=reject` depois de semanas limpas |
+
+O Resend (região São Paulo, sem rastreamento de cliques) envia duas coisas: as Mensagens do
+formulário, assinadas por `site@`, e as respostas da Giordanna, que o Gmail dela manda como
+`contato@` pelo SMTP do Resend (`smtp.resend.com`, porta 465, usuário `resend`, senha uma chave
+de API só de envio). O e-mail exibido no site é o `contato@` (`src/config.ts`); o Gmail dela não
+aparece em nenhuma página, e `tests/e2e/paginas.spec.ts` falha se aparecer.
+
 ### O login do CMS
 
 O Sveltia em `/admin` entra pelo GitHub, e o login passa pelo próprio Worker do site (ADR 0014).
@@ -73,7 +94,7 @@ está configurado. O que só o João faz, uma vez:
 
 1. **Criar o OAuth App** (GitHub → Settings → Developer settings → OAuth Apps → New OAuth App,
    na conta dona do repositório). Nome: `Site da Giordanna`. Homepage URL: a origem onde o CMS
-   abre, hoje `https://giordanna-pereira-site.joaoaraxaiba.workers.dev`. Authorization callback
+   abre, `https://giordannapereira.arq.br`. Authorization callback
    URL: a mesma origem com `/api/admin/retorno`. Device Flow desligado. Depois de criar, gerar
    um client secret.
 2. **Cadastrar as variáveis** no Worker (Settings → Variables and Secrets), as duas do tipo
@@ -88,8 +109,8 @@ está configurado. O que só o João faz, uma vez:
    Projeto com uma foto da galeria do celular e salvar. O commit aparece em `main`, o CI roda e
    o Workers Builds publica; o Projeto aparece em `/projetos` em alguns minutos.
 
-No lançamento (#16), o OAuth App troca a Homepage e o callback para o domínio. O login funciona
-só na origem cadastrada nele: nas URLs de preview o CMS abre, mas não entra.
+O login funciona só na origem cadastrada no OAuth App: no `workers.dev` e nas URLs de preview o
+CMS abre, mas não entra.
 
 Segredos e variáveis do Worker (Resend, Turnstile, autenticador do Sveltia) ficam em Settings → Variables and Secrets do Worker, nunca no repositório nem no workflow; a lista do formulário de contato, com a chave de site do Turnstile que entra como variável de build, está no ADR 0011. O CI roda sem nenhuma delas: o formulário falha fechado num Worker e roda com dublês noutro. Rollback: Deployments → versão anterior → Rollback.
 
