@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
+import { pathToFileURL } from 'node:url';
 import { caminhoDoCartao, cartoesDoSite } from '../../src/compartilhamento/cartoes.ts';
+import { lerProjetos } from '../../src/compartilhamento/integracao.ts';
 import {
   dadosDaPessoa,
   dadosDoProjeto,
@@ -151,4 +156,38 @@ test('o validador reprova propriedade que o schema.org não tem e URL relativa',
 
 test('o JSON-LD vai para a página sem abrir brecha para fechar o script', () => {
   assert.equal(jsonLd({ name: '</script><b>' }), '{"name":"\\u003c/script>\\u003cb>"}');
+});
+
+test('a imagem que o CMS grava a partir da raiz do projeto chega ao Cartão como as relativas', () => {
+  // O Astro aceita as duas formas no `image()`: relativa ao arquivo do Projeto e a partir da raiz
+  // do projeto, que é como o CMS grava uma foto escolhida entre as que já estão no site.
+  const raiz = pathToFileURL(`${mkdtempSync(join(tmpdir(), 'cartoes-'))}/`);
+  const pasta = new URL('src/content/projetos/', raiz);
+  mkdirSync(pasta, { recursive: true });
+  writeFileSync(
+    new URL('casa.yml', pasta),
+    [
+      'titulo: Casa',
+      'tipo: Residencial',
+      'capa: /src/assets/casa-capa.webp',
+      'descricao: Uma casa.',
+      'ferramentas: [Revit]',
+      'local: Uberlândia · MG',
+      "ano: '2026'",
+      'area: 48 m²',
+      'equipe: Giordanna Pereira',
+      'ordem: 10',
+      'galeria:',
+      '  - /src/assets/casa-render.webp',
+      '  - ../../assets/casa-prancha.webp',
+    ].join('\n'),
+  );
+  const [casa] = lerProjetos(raiz);
+  assert.deepEqual(
+    { capa: casa?.data.capa, galeria: casa?.data.galeria },
+    {
+      capa: 'src/assets/casa-capa.webp',
+      galeria: ['src/assets/casa-render.webp', 'src/assets/casa-prancha.webp'],
+    },
+  );
 });

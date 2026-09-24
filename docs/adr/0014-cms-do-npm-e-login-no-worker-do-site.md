@@ -55,3 +55,9 @@ preview. O token pedido é `public_repo`, porque o repositório é público.
 - Em `localhost`, o Sveltia oferece "Trabalhar com Repositório Local", que edita os arquivos
   da máquina sem login. A suíte de e2e usa esse caminho para cadastrar um Projeto de verdade
   pelo CMS e conferir o arquivo e a foto que ele grava.
+- O CMS grava as fotos de um Projeto a partir da raiz do repositório (`/src/assets/foto.webp`),
+  e não relativas ao arquivo como os Projetos anteriores (`../../assets/foto.webp`). O Sveltia
+  trata uma foto que já está no site como da pasta global, cujo caminho só pode começar com
+  `/`, e o primeiro Projeto cadastrado pelo celular saiu assim. O `image()` do Astro aceita as
+  duas formas, e o leitor dos Cartões de compartilhamento também. Os bancos de imagens do
+  Sveltia ficam desligados: o portfólio só mostra foto das obras dela.
