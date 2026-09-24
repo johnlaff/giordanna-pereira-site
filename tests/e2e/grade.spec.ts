@@ -143,4 +143,29 @@ test.describe('tela de toque', () => {
         await expect(penumbra).toHaveCSS('background-color', 'rgba(35, 45, 56, 0.5)');
     }
   });
+
+  test('a marca sobre a Capa aparece montada, com os quatro pontos no lugar', async ({ page }) => {
+    await page.goto('/projetos');
+    const marca = page.locator('.grade .card:has(img) .marca').first();
+    // No toque o estado revelado é o normal: os pontos que, com cursor, vêm dos cantos ao
+    // passar o mouse já precisam estar no centro, dentro da caixa da marca.
+    const pontos = marca.locator('i');
+    await expect(pontos).toHaveCount(4);
+    for (const ponto of await pontos.all())
+      await expect(ponto).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
+    // Caixa e pontos medidos no mesmo quadro: a página ainda pode estar se movendo na entrada.
+    const foraDaCaixa = await marca.evaluate((el) => {
+      const caixa = el.getBoundingClientRect();
+      return [...el.children].filter((ponto) => {
+        const r = ponto.getBoundingClientRect();
+        return (
+          r.left < caixa.left - 0.5 ||
+          r.top < caixa.top - 0.5 ||
+          r.right > caixa.right + 0.5 ||
+          r.bottom > caixa.bottom + 0.5
+        );
+      }).length;
+    });
+    expect(foraDaCaixa).toBe(0);
+  });
 });

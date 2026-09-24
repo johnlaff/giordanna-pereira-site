@@ -234,7 +234,8 @@ const capa = capaDe(projeto);
     .penumbra {
       background: rgba(35, 45, 56, 0.5);
     }
-    .marca i {
+    /* `.card` na frente, como no hover: sem ele, os `:nth-child` mantêm os pontos nos cantos. */
+    .card .marca i {
       opacity: 0.92;
       transform: translate(0, 0);
     }
