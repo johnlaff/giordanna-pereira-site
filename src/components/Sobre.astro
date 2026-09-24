@@ -1,6 +1,7 @@
 ---
 /**
- * Sobre: o retrato, a apresentação e a grade de credenciais, na faixa escura da home.
+ * Sobre: o retrato, a apresentação e a grade de Credenciais, na faixa escura da home. A
+ * apresentação e as Credenciais são o que Giordanna edita no CMS.
  *
  * A moldura do retrato é um pseudo-elemento deslocado que vive atrás da foto (`z-index: -1`).
  * Sem um contexto de empilhamento próprio ela cairia atrás do fundo da seção e sumiria — daí
@@ -9,7 +10,11 @@
 import { Picture } from 'astro:assets';
 import retrato from '../assets/retrato-cv.webp';
 import { sobre } from '../config';
+import { lerDaHome } from '../home';
 import { qualidadeDeImagem } from '../imagens';
+import { prenderUltimaPalavra } from '../tipografia';
+
+const { paragrafos, credenciais } = await lerDaHome('sobre');
 ---
 
 <section class="about" id="sobre">
@@ -32,15 +37,15 @@ import { qualidadeDeImagem } from '../imagens';
         <h2>
           {sobre.titulo} <em>{sobre.enfase}</em>
         </h2>
-        {sobre.paragrafos.map((paragrafo) => (
-          <p>{paragrafo}</p>
+        {paragrafos.map((paragrafo) => (
+          <p>{prenderUltimaPalavra(paragrafo)}</p>
         ))}
         <dl class="cred">
-          {sobre.credenciais.map((credencial) => (
+          {credenciais.map((credencial) => (
             <div>
               <dt>{credencial.rotulo}</dt>
               <dd>
-                {credencial.texto.map((linha, i) => (
+                {credencial.linhas.map((linha, i) => (
                   <Fragment>
                     {i > 0 && <br />}
                     {linha}

@@ -59,11 +59,11 @@ Software usado em um Projeto (ex.: Archicad, Enscape), listado na página do Pro
 _Avoid_: tool, programa, skill
 
 **Familiaridade**:
-O bloco "Ferramentas" da home: o conjunto de softwares que Giordanna domina, em três níveis, do maior para o menor. É independente das Ferramentas de cada Projeto (inclui, por exemplo, Pacote Office e AutoCAD, que nenhum Projeto lista).
+O bloco "Ferramentas" da home: o conjunto de softwares que Giordanna domina, em três níveis, do maior para o menor. Giordanna a edita no CMS. É independente das Ferramentas de cada Projeto (inclui, por exemplo, Pacote Office e AutoCAD, que nenhum Projeto lista).
 _Avoid_: skills, competências, nível
 
 **Credencial**:
-Uma linha da grade de dados objetivos do bloco Sobre, na home: um rótulo curto (Formação, Atuação, Projetos, Serviços) e o que ele reúne. Vive na configuração tipada, não no CMS.
+Uma linha da grade de dados objetivos do bloco Sobre, na home: um rótulo curto (Formação, Atuação, Projetos, Serviços) e as linhas que ele reúne. Giordanna a edita no CMS.
 _Avoid_: qualificação, dado, item
 
 **CTA**:
@@ -89,7 +89,7 @@ O estado de um Projeto sem imagens ou de um Depoimento sem texto: cadastrado, vi
 _Avoid_: placeholder, mock, rascunho
 
 **Contato**:
-Um canal público para falar com Giordanna (WhatsApp, LinkedIn, Behance, e-mail), exibido na página de contato e no rodapé. Contatos, hero, Sobre e CTA são mantidos por João, não pelo CMS.
+Um canal público para falar com Giordanna (WhatsApp, LinkedIn, Behance, e-mail), exibido na página de contato e no rodapé. Contatos, hero e CTA são mantidos por João, não pelo CMS; do Sobre e da Familiaridade, só a moldura (título, retrato).
 _Avoid_: social, rede, link
 
 **Mensagem**:
@@ -147,3 +147,23 @@ só a vez de aparecer no carrossel —, e a sequência é a do nome do arquivo, 
 numérico em `src/content/depoimentos/`. Um Depoimento criado pelo CMS nasce com a data como
 prefixo (`20260923-ana`), e por isso entra depois dos que já existem, na ordem em que foram
 criados.
+
+## Campos da home no CMS
+
+A coleção "Página inicial" do CMS tem dois arquivos em `src/content/home/`, um por bloco que
+muda com a carreira de Giordanna. Hero, CTA e Contatos ficam em `src/config.ts`, fora do CMS,
+por decisão (HANDOFF §12).
+
+| Bloco         | Arquivo             | Identificador         | Rótulo no CMS |
+| ------------- | ------------------- | --------------------- | ------------- |
+| Sobre         | `sobre.yml`         | `paragrafos`          | Parágrafos    |
+| Sobre         | `sobre.yml`         | `credenciais`         | Credenciais   |
+| Credencial    | `sobre.yml`         | `rotulo`, `linhas`    | Rótulo, Linhas |
+| Familiaridade | `familiaridade.yml` | `itens`               | Ferramentas   |
+| Familiaridade | `familiaridade.yml` | `nome`, `nivel`       | Nome, Nível   |
+
+Todos os campos são obrigatórios e nenhuma lista pode ficar vazia. `nivel` é 1, 2 ou 3 (1 é o de
+maior familiaridade, o bloco escuro). O site mostra a Familiaridade do maior nível para o menor
+e, dentro de um nível, na ordem do arquivo, então uma ferramenta nova pode entrar no fim da lista.
+A última palavra de cada parágrafo do Sobre é presa à anterior pelo site, para não cair sozinha
+na última linha.

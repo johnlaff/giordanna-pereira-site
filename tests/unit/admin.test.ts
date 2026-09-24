@@ -4,8 +4,11 @@ import { test } from 'node:test';
 import { z } from 'astro/zod';
 import { configuracaoDoCms } from '../../src/admin/configuracao.ts';
 import {
+  NIVEIS,
   esquemaDeDepoimento,
+  esquemaDeFamiliaridade,
   esquemaDeProjeto,
+  esquemaDeSobre,
   ordenarDepoimentos,
 } from '../../src/content.schema.ts';
 
@@ -16,7 +19,30 @@ import {
  */
 const configuracao = configuracaoDoCms('https://giordannapereira.arq.br');
 
-type Campo = { name: string; required?: boolean; pattern?: [string | RegExp, string] };
+type Campo = {
+  name: string;
+  required?: boolean;
+  pattern?: [string | RegExp, string];
+  min?: number;
+  field?: Campo;
+  fields?: Campo[];
+  options?: { value: unknown }[];
+};
+
+type Arquivo = { name: string; file: string; fields: Campo[] };
+
+/** Os arquivos da coleção da home: um por bloco que Giordanna edita. */
+const arquivosDaHome = (): Arquivo[] => {
+  const home = configuracao.collections?.find((c) => 'name' in c && c.name === 'home');
+  assert.ok(home && 'files' in home, 'a coleção da home não está no CMS');
+  return home.files as Arquivo[];
+};
+
+const camposDoArquivo = (nome: string): Campo[] => {
+  const arquivo = arquivosDaHome().find((a) => a.name === nome);
+  assert.ok(arquivo, `o arquivo ${nome} não está no CMS`);
+  return arquivo.fields;
+};
 
 const camposDa = (colecao: string): Campo[] => {
   const encontrada = configuracao.collections?.find((c) => 'name' in c && c.name === colecao);
@@ -30,33 +56,99 @@ const obrigatorioNoCms = (campo: Campo) => campo.required !== false;
 /** No schema, o campo é opcional quando a entrada pode vir sem ele. */
 const obrigatorioNoSchema = (campo: z.ZodType) => !campo.safeParse(undefined).success;
 
-const conferirParidade = (colecao: string, forma: Record<string, z.ZodType>) => {
-  const campos = camposDa(colecao);
+const conferirParidade = (onde: string, campos: Campo[], forma: Record<string, z.ZodType>) => {
   assert.deepEqual(
     campos.map(({ name }) => name).toSorted(),
     Object.keys(forma).toSorted(),
-    `os campos de ${colecao} no CMS e no schema divergem`,
+    `os campos de ${onde} no CMS e no schema divergem`,
   );
   for (const campo of campos)
     assert.equal(
       obrigatorioNoCms(campo),
       obrigatorioNoSchema(forma[campo.name]!),
-      `${colecao}.${campo.name}: obrigatório no CMS e no schema não batem`,
+      `${onde}.${campo.name}: obrigatório no CMS e no schema não batem`,
     );
 };
 
 test('os campos do Projeto no CMS são os do schema, obrigatórios nos mesmos lugares', () => {
-  conferirParidade('projetos', esquemaDeProjeto(() => z.string()).shape);
+  conferirParidade('projetos', camposDa('projetos'), esquemaDeProjeto(() => z.string()).shape);
 });
 
 test('os campos do Depoimento no CMS são os do schema, e só o texto é opcional', () => {
-  conferirParidade('depoimentos', esquemaDeDepoimento().shape);
+  conferirParidade('depoimentos', camposDa('depoimentos'), esquemaDeDepoimento().shape);
   assert.deepEqual(
     camposDa('depoimentos')
       .filter((campo) => !obrigatorioNoCms(campo))
       .map(({ name }) => name),
     ['texto'],
   );
+});
+
+test('a home no CMS tem só o Sobre e a Familiaridade, nos arquivos que o site lê', () => {
+  // Hero, CTA e Contatos ficam na configuração tipada, por decisão (HANDOFF §12).
+  assert.deepEqual(
+    arquivosDaHome().map(({ name, file }) => [name, file]),
+    [
+      ['sobre', 'src/content/home/sobre.yml'],
+      ['familiaridade', 'src/content/home/familiaridade.yml'],
+    ],
+  );
+  const colecoes = configuracao.collections?.map((c) => ('name' in c ? c.name : ''));
+  assert.deepEqual(colecoes, ['projetos', 'depoimentos', 'home']);
+});
+
+/** A lista do CMS espelha o `z.array(...).min(n)` do schema: nenhuma pode ser salva vazia. */
+const conferirLista = (campo: Campo | undefined, minimo: number) => {
+  assert.ok(campo, 'campo de lista ausente');
+  assert.equal(campo.min, minimo, `${campo.name}: mínimo diferente do schema`);
+};
+
+test('os campos do Sobre no CMS são os do schema, todos obrigatórios', () => {
+  const campos = camposDoArquivo('sobre');
+  conferirParidade('sobre', campos, esquemaDeSobre().shape);
+  conferirLista(
+    campos.find((c) => c.name === 'paragrafos'),
+    1,
+  );
+  const credenciais = campos.find((c) => c.name === 'credenciais');
+  conferirLista(credenciais, 1);
+  const internos = credenciais!.fields!;
+  conferirParidade('sobre.credenciais', internos, esquemaDeSobre().shape.credenciais.element.shape);
+  conferirLista(
+    internos.find((c) => c.name === 'linhas'),
+    1,
+  );
+});
+
+test('os campos da Familiaridade no CMS são os do schema, e o nível só oferece 1, 2 e 3', () => {
+  const campos = camposDoArquivo('familiaridade');
+  conferirParidade('familiaridade', campos, esquemaDeFamiliaridade().shape);
+  const itens = campos.find((c) => c.name === 'itens');
+  conferirLista(itens, 1);
+  conferirParidade(
+    'familiaridade.itens',
+    itens!.fields!,
+    esquemaDeFamiliaridade().shape.itens.element.shape,
+  );
+  const nivel = itens!.fields!.find((c) => c.name === 'nivel');
+  assert.deepEqual(
+    nivel?.options?.map(({ value }) => value),
+    [...NIVEIS],
+  );
+});
+
+test('o formulário da home barra HTML', () => {
+  const barra = (campo: Campo | undefined) => {
+    assert.ok(campo?.pattern, `${campo?.name} sem padrão`);
+    assert.equal(new RegExp(campo.pattern[0]).test('<b>UFU</b>'), false, campo.name);
+  };
+  const sobre = camposDoArquivo('sobre');
+  barra(sobre.find((c) => c.name === 'paragrafos')?.field);
+  const credencial = sobre.find((c) => c.name === 'credenciais')!.fields!;
+  barra(credencial.find((c) => c.name === 'rotulo'));
+  barra(credencial.find((c) => c.name === 'linhas')?.field);
+  const item = camposDoArquivo('familiaridade').find((c) => c.name === 'itens')!.fields!;
+  barra(item.find((c) => c.name === 'nome'));
 });
 
 /** O que o formulário do CMS faz com um valor: aceita, ou barra com a mensagem do padrão. */

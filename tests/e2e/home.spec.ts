@@ -1,10 +1,23 @@
 import { expect, test, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { parse } from 'yaml';
 import { contatos, cta, familiaridade, hero, sobre } from '../../src/config.ts';
+import {
+  esquemaDeFamiliaridade,
+  esquemaDeSobre,
+  ordenarFamiliaridade,
+} from '../../src/content.schema.ts';
 import { corDoPixel, lerPng, luminancia } from './pixels.ts';
 
 // A home é a página que o Preview aprovado define em maior detalhe. O que esta suíte guarda
 // são os acertos que já custaram bug lá: a variante que o hero baixa em cada tela, o escuro
 // atrás do cabeçalho transparente e o movimento que precisa sumir com `prefers-reduced-motion`.
+
+/** O que Giordanna escreveu no CMS para os dois blocos da home, como o build o lê. */
+const lerDaHome = (nome: string): unknown =>
+  parse(readFileSync(`src/content/home/${nome}.yml`, 'utf8'));
+const conteudoDoSobre = esquemaDeSobre().parse(lerDaHome('sobre'));
+const conteudoDaFamiliaridade = esquemaDeFamiliaridade().parse(lerDaHome('familiaridade'));
 
 /** A variante que o navegador de fato escolheu, com a largura anunciada no `srcset`. */
 const varianteDoHero = async (page: Page) => {
@@ -103,18 +116,23 @@ test('sem prefers-reduced-motion o hero tem o Ken Burns', async ({ page }) => {
   expect(animacao.largura).toBeCloseTo(animacao.tela * 1.06, 0);
 });
 
-test('Sobre traz a apresentação e as quatro credenciais', async ({ page }) => {
+test('Sobre traz a apresentação e as Credenciais do CMS', async ({ page }) => {
   await page.goto('/');
   const secao = page.locator('.about');
   await expect(secao.getByRole('heading', { level: 2 })).toHaveText(
     `${sobre.titulo} ${sobre.enfase}`,
   );
-  await expect(secao.locator('p')).toHaveCount(sobre.paragrafos.length);
-  for (const [i, paragrafo] of sobre.paragrafos.entries())
+  const { paragrafos, credenciais } = conteudoDoSobre;
+  await expect(secao.locator('p')).toHaveCount(paragrafos.length);
+  for (const [i, paragrafo] of paragrafos.entries())
     await expect(secao.locator('p').nth(i)).toHaveText(paragrafo);
 
-  const rotulos = secao.locator('.cred dt');
-  await expect(rotulos).toHaveText(sobre.credenciais.map(({ rotulo }) => rotulo));
+  await expect(secao.locator('.cred dt')).toHaveText(credenciais.map(({ rotulo }) => rotulo));
+  // Cada linha da Credencial é uma linha no site: o `innerText` as separa por quebra.
+  const linhas = await secao
+    .locator('.cred dd')
+    .evaluateAll((dds) => dds.map((dd) => (dd as HTMLElement).innerText.split('\n')));
+  expect(linhas).toEqual(credenciais.map((credencial) => credencial.linhas));
   await expect(secao.locator('img')).toHaveAttribute('alt', sobre.retratoAlt);
 });
 
@@ -143,15 +161,17 @@ test('a moldura do retrato fica atrás da foto e continua visível', async ({ pa
   expect(Math.max(...faixa.map(({ r }) => r))).toBeGreaterThan(85);
 });
 
-test('Familiaridade lista as ferramentas da maior para a menor', async ({ page }) => {
+test('Familiaridade lista as ferramentas do CMS da maior para a menor', async ({ page }) => {
   await page.goto('/');
   const ferramentas = page.locator('.tools-grid .tool');
-  await expect(ferramentas).toHaveText(familiaridade.itens.map(({ nome }) => nome));
+  const itens = ordenarFamiliaridade(conteudoDaFamiliaridade.itens);
+  await expect(ferramentas).toHaveText(itens.map(({ nome }) => nome));
+  await expect(page.locator('.tools-grid')).toHaveAttribute('aria-label', familiaridade.rotulo);
 
   const niveis = await ferramentas.evaluateAll((itens) =>
     itens.map((item) => Number(item.className.match(/\bt(\d)\b/)?.[1])),
   );
-  expect(niveis).toEqual(familiaridade.itens.map(({ nivel }) => nivel));
+  expect(niveis).toEqual(itens.map(({ nivel }) => nivel));
   expect([...niveis]).toEqual([...niveis].sort((a, b) => a - b));
 });
 
