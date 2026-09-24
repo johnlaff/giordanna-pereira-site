@@ -35,6 +35,15 @@ test('rodapé lista os quatro Contatos e o e-mail da configuração', async ({ p
   );
 });
 
+// #16: o e-mail público é o do domínio. O Gmail dela segue recebendo, pelo Email Routing, mas
+// não aparece em nenhuma página — nem no texto, nem num `mailto:`, nem no JSON-LD.
+for (const rota of rotas) {
+  test(`nenhum endereço do Gmail no HTML de ${rota}`, async ({ request }) => {
+    const html = await (await request.get(rota)).text();
+    expect(html).not.toContain('gmail.com');
+  });
+}
+
 // Herdado do Preview: o cabeçalho não pode dançar de uma página para a outra. Na home ele é
 // transparente sobre o hero e nas demais é sólido desde o servidor, e nem isso pode movê-lo.
 const medirCabecalho = (page: Page) =>
