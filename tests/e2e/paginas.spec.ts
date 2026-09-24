@@ -44,6 +44,54 @@ for (const rota of rotas) {
   });
 }
 
+// O favicon (também a logo do CMS) é a marca do cabeçalho: as mesmas quatro peças, no mesmo
+// lugar, com a mesma opacidade. Compara as duas ponto a ponto, pela forma que o navegador acerta
+// num clique (que respeita o `border-radius` e a geometria do SVG), numa grade de 52 × 52. Só a
+// borda das peças pode divergir, pelo arredondamento de cada um (cerca de 1,5% dos pontos); o
+// favicon antigo, com as peças coladas e a última torta, errava 22%.
+test('o favicon desenha a mesma marca do cabeçalho', async ({ page, request }) => {
+  const favicon = await (await request.get('/favicon.svg')).text();
+  await page.goto('/projetos');
+  const { cabecalho, icone } = await page.evaluate((svg) => {
+    const fixo = (el: HTMLElement, topo: number) =>
+      Object.assign(el.style, {
+        position: 'fixed',
+        top: `${topo}px`,
+        left: '0',
+        zIndex: '2147483647',
+      });
+    const copia = document.querySelector<HTMLElement>('.hdr .mark')!.cloneNode(true) as HTMLElement;
+    const moldura = document.createElement('div');
+    moldura.append(copia);
+    fixo(moldura, 0);
+    // Fora da `.brand`, que é flex, a `.mark` volta a ser um span em linha, sem tamanho.
+    Object.assign(moldura.style, { display: 'flex', zoom: '10' });
+    const caixaDoSvg = document.createElement('div');
+    caixaDoSvg.innerHTML = svg;
+    fixo(caixaDoSvg, 280);
+    caixaDoSvg.querySelector('svg')!.setAttribute('width', '360');
+    document.body.append(moldura, caixaDoSvg);
+
+    const amostrar = (area: Element, pecas: Element[]) => {
+      const r = area.getBoundingClientRect();
+      const n = 52;
+      return Array.from({ length: n * n }, (_, k) => {
+        const x = r.left + ((k % n) + 0.5) * (r.width / n);
+        const y = r.top + (Math.floor(k / n) + 0.5) * (r.height / n);
+        const alvo = document.elementFromPoint(x, y);
+        return alvo && pecas.includes(alvo) ? getComputedStyle(alvo).opacity : '-';
+      });
+    };
+    const marcaDoIcone = caixaDoSvg.querySelector('#marca')!;
+    return {
+      cabecalho: amostrar(copia, [...copia.children]),
+      icone: amostrar(marcaDoIcone, [...marcaDoIcone.children]),
+    };
+  }, favicon);
+  const diferentes = cabecalho.filter((valor, k) => valor !== icone[k]).length;
+  expect(diferentes / cabecalho.length).toBeLessThan(0.03);
+});
+
 // Herdado do Preview: o cabeçalho não pode dançar de uma página para a outra. Na home ele é
 // transparente sobre o hero e nas demais é sólido desde o servidor, e nem isso pode movê-lo.
 const medirCabecalho = (page: Page) =>
