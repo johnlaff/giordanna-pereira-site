@@ -38,9 +38,9 @@ export const tituloDaPagina = (titulo?: string): string =>
 
 /**
  * E-mail exibido no site. Constante única: Contatos, rodapé e a alternativa do formulário leem daqui.
- * Passa a `contato@giordannapereira.arq.br` no lançamento (#16).
+ * É o do domínio: o Email Routing da Cloudflare entrega no Gmail dela, que não aparece no site.
  */
-export const emailExibido = 'giordannapb.arq@gmail.com';
+export const emailExibido = 'contato@giordannapereira.arq.br';
 
 export type TipoContato = 'whatsapp' | 'linkedin' | 'behance' | 'email';
 
@@ -187,7 +187,7 @@ export const cta = {
 /**
  * A página de contato: o cabeçalho, os dois blocos e tudo o que o formulário escreve na tela.
  * O e-mail da alternativa, mostrado quando o envio falha, é o `emailExibido` acima, e não uma
- * cópia: no lançamento (#16) ele troca num lugar só. Os assuntos do formulário moram em
+ * cópia: se ele mudar, muda num lugar só. Os assuntos do formulário moram em
  * `src/contato/mensagem.ts`, porque o Worker também os confere.
  *
  * Os espaços inquebráveis seguem o Preview: "papel" e "úteis" não caem sozinhos na última linha.

@@ -82,8 +82,8 @@ csp.insertDirective("manifest-src 'self' blob:");
       const { CMS } = window as unknown as {
         CMS: { init: (opcoes: { config: CmsConfig }) => void };
       };
-      // O login volta para a origem em que o CMS está aberto: o workers.dev hoje, o domínio
-      // depois do lançamento, sem mudar nada aqui.
+      // O login volta para a origem em que o CMS está aberto, que é a cadastrada no OAuth App
+      // (o domínio, desde o #16).
       CMS.init({ config: configuracaoDoCms(location.origin) });
     </script>
   </body>
