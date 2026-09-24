@@ -28,8 +28,15 @@ export function lerProjetos(raiz: URL) {
   return ordenarProjetos(
     globSync('**/*.yml', { cwd: fileURLToPath(pasta) }).map((arquivo) => {
       const origem = new URL(arquivo, pasta);
+      // O caminho vem relativo ao arquivo ou, como o CMS grava uma foto que já estava no site, a
+      // partir da raiz do projeto (`/src/assets/...`): o `image()` do Astro aceita os dois.
       const imagem = () =>
-        z.string().transform((caminho) => new URL(caminho, origem).href.slice(raiz.href.length));
+        z.string().transform((caminho) => {
+          const url = caminho.startsWith('/')
+            ? new URL(`.${caminho}`, raiz)
+            : new URL(caminho, origem);
+          return url.href.slice(raiz.href.length);
+        });
       const data = esquemaDeProjeto(imagem).parse(parse(readFileSync(origem, 'utf8')));
       return { id: arquivo.replace(/\.yml$/, ''), data };
     }),

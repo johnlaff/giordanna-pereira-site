@@ -47,13 +47,13 @@ type Arquivo = { caminho: string; base64: string };
  * pasta que o navegador pede vira uma pasta do armazenamento privado da página (OPFS), com o
  * conteúdo das collections: o CMS lê e grava nela como leria e gravaria no clone do repositório.
  */
-const abrirRepositorioLocal = async (page: Page) => {
-  const arquivos: Arquivo[] = ['src/content/projetos', 'src/content/depoimentos'].flatMap((pasta) =>
-    readdirSync(pasta).map((nome) => ({
-      caminho: `${pasta}/${nome}`,
-      base64: readFileSync(`${pasta}/${nome}`).toString('base64'),
-    })),
-  );
+const abrirRepositorioLocal = async (page: Page, imagens: string[] = []) => {
+  const arquivos: Arquivo[] = [
+    ...['src/content/projetos', 'src/content/depoimentos'].flatMap((pasta) =>
+      readdirSync(pasta).map((nome) => `${pasta}/${nome}`),
+    ),
+    ...imagens,
+  ].map((caminho) => ({ caminho, base64: readFileSync(caminho).toString('base64') }));
   await page.addInitScript(() => {
     Object.assign(window, {
       showDirectoryPicker: async () =>
@@ -238,14 +238,14 @@ test.describe('cadastrar pelo CMS', () => {
 
     const yml = await lerDoRepositorio(page, 'src/content/projetos/casa-do-teste.yml');
     expect(yml).toBeDefined();
-    const projeto = esquemaDeProjeto(() => z.string().startsWith('../../assets/')).parse(
+    const projeto = esquemaDeProjeto(() => z.string().startsWith('/src/assets/')).parse(
       parse(Buffer.from(yml!, 'base64').toString('utf8')),
     );
     expect(projeto).toMatchObject({
       titulo: 'Casa do Teste',
       area: '120,5 m²',
       ordem: 110,
-      galeria: ['../../assets/foto-do-celular.webp'],
+      galeria: ['/src/assets/foto-do-celular.webp'],
     });
 
     const webp = await lerDoRepositorio(page, 'src/assets/foto-do-celular.webp');
@@ -255,5 +255,67 @@ test.describe('cadastrar pelo CMS', () => {
     expect(format).toBe('webp');
     expect(Math.max(width, height)).toBeLessThanOrEqual(2560);
     expect(bytes.length).toBeLessThanOrEqual(2 * 1024 * 1024);
+  });
+
+  // A Capa de um Projeto costuma ser uma foto que já está no site. Escolhida no CMS, ela entra no
+  // Projeto com o mesmo caminho de uma foto enviada, e o Cartão de compartilhamento a encontra.
+  test('um Projeto com fotos que já estão no site guarda o caminho de uma foto enviada', async ({
+    page,
+  }) => {
+    test.slow();
+    await prepararCms(page);
+    await abrirRepositorioLocal(page, [
+      'src/assets/aparecer-r02.webp',
+      'src/assets/aparecer-r05.webp',
+    ]);
+    await page.getByRole('treeitem', { name: 'Projetos' }).click();
+    await page.getByRole('button', { name: 'Criar Nova Entrada' }).click();
+
+    const campo = (rotulo: string) => page.getByLabel(rotulo, { exact: true });
+    const preencher = (rotulo: string, valor: string) =>
+      expect(async () => {
+        await campo(rotulo).fill(valor);
+        await expect(campo(rotulo)).toHaveValue(valor, { timeout: 1_000 });
+      }).toPass();
+    await preencher('Título', 'Casa Escolhida');
+    await preencher('Tipo', 'Residencial');
+    await preencher('Descrição', 'Uma casa com fotos que já estavam no site.');
+    await page.getByRole('button', { name: /Adicionar.*Ferramenta/ }).click();
+    await preencher('Ferramenta', 'Revit');
+    await preencher('Local', 'Uberlândia · MG');
+    await preencher('Ano', '2026');
+    await preencher('Área', '48 m²');
+    await preencher('Equipe', 'Giordanna Pereira');
+    await preencher('Ordem', '120');
+
+    const escolher = async (grupo: RegExp, foto: string) => {
+      await page
+        .getByRole('group', { name: grupo })
+        .getByRole('button', { name: 'Procurar' })
+        .click();
+      const dialogo = page.getByRole('dialog', { name: 'Selecionar Imagem' });
+      // Só as fotos do próprio site: um banco de imagens traria foto de outra pessoa ao portfólio.
+      await expect(dialogo.getByText('Fotos de Banco de Imagens')).toHaveCount(0);
+      // A lista de fotos ainda se arruma logo depois de aberta, e um toque cedo pode se perder.
+      const inserir = dialogo.getByRole('button', { name: 'Inserir' });
+      await expect(async () => {
+        await dialogo.getByRole('option', { name: foto }).click();
+        await expect(inserir).toBeEnabled({ timeout: 1_000 });
+      }).toPass();
+      await inserir.click();
+      await expect(dialogo).toBeHidden();
+    };
+    await escolher(/Capa/, 'aparecer-r02.webp');
+    await escolher(/Galeria/, 'aparecer-r05.webp');
+
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+    await expect(page.getByText('Entrada salva.')).toBeVisible({ timeout: 30_000 });
+
+    const yml = await lerDoRepositorio(page, 'src/content/projetos/casa-escolhida.yml');
+    expect(yml).toBeDefined();
+    expect(parse(Buffer.from(yml!, 'base64').toString('utf8'))).toMatchObject({
+      capa: '/src/assets/aparecer-r02.webp',
+      galeria: ['/src/assets/aparecer-r05.webp'],
+    });
   });
 });

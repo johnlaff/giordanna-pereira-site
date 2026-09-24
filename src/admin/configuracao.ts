@@ -58,8 +58,10 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
       deleteMedia: 'conteudo: remove "{{path}}"',
     },
   },
-  // As imagens do site moram todas em `src/assets/`. O caminho que o Projeto grava é outro,
-  // relativo ao arquivo dele, e é definido na coleção.
+  // As imagens do site moram todas em `src/assets/`, e o Projeto grava o caminho a partir da raiz
+  // do repositório (`/src/assets/foto.webp`), que o `image()` do Astro resolve como o relativo dos
+  // Projetos antigos. É a única forma que vale para toda foto: a que já estava no site o CMS
+  // trata como da pasta global, e o caminho global dele só pode começar com `/`.
   media_folder: '/src/assets',
   media_libraries: {
     all: {
@@ -72,6 +74,8 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
       max_file_size: TETO_DA_FOTO,
       slugify_filename: true,
     },
+    // Os bancos de imagens trariam ao portfólio foto que não é da obra dela.
+    stock_assets: false,
   },
   // Nome de arquivo sem acento nem espaço: o do Projeto vira a URL da página dele.
   slug: { encoding: 'ascii', clean_accents: true, sanitize_replacement: '-' },
@@ -95,10 +99,6 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
         fields: ['ordem', 'titulo'],
         default: { field: 'ordem', direction: 'ascending' },
       },
-      // As fotos vão para `src/assets/`, e o Projeto guarda o caminho relativo ao arquivo
-      // dele, que é o que o `image()` das collections resolve.
-      media_folder: '/src/assets',
-      public_folder: '../../assets',
       fields: [
         { name: 'titulo', label: 'Título', widget: 'string', pattern: semHtml },
         {
