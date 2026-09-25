@@ -2,9 +2,11 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { test } from 'node:test';
 
-// ADR 0004: o repositório guarda WebP de no máximo 2560 px; os originais em alta ficam no
-// Drive. Um arquivo acima de 2 MB é sinal de que um original entrou no lugar do derivado.
+// ADR 0004 e 0015: o repositório guarda WebP de no máximo 7680 px, o bastante para ler o texto
+// de uma prancha A0; os originais em alta ficam no Drive. Um arquivo acima de 2 MB é sinal de
+// que um original entrou no lugar do derivado.
 const TETO_EM_BYTES = 2 * 1024 * 1024;
+const TETO_EM_PIXELS = 7680;
 
 test('nenhuma imagem de src/assets passa de 2 MB', () => {
   const arquivos = readdirSync('src/assets');
@@ -12,6 +14,14 @@ test('nenhuma imagem de src/assets passa de 2 MB', () => {
   for (const arquivo of arquivos) {
     const { size } = statSync(`src/assets/${arquivo}`);
     assert.ok(size <= TETO_EM_BYTES, `${arquivo} tem ${(size / 1024 / 1024).toFixed(2)} MB`);
+  }
+});
+
+test('nenhuma imagem de src/assets passa de 7680 px no lado maior', async () => {
+  const { default: sharp } = await import('sharp');
+  for (const arquivo of readdirSync('src/assets')) {
+    const { width, height } = await sharp(`src/assets/${arquivo}`).metadata();
+    assert.ok(Math.max(width, height) <= TETO_EM_PIXELS, `${arquivo} tem ${width} × ${height}`);
   }
 });
 

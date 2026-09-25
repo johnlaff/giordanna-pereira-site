@@ -74,11 +74,12 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
   media_folder: '/src/assets',
   media_libraries: {
     all: {
-      // Toda foto sobe como WebP q90 de no máximo 2560 px, convertida no navegador antes do
-      // commit (ADR 0004). O teto é conferido depois da conversão: a foto de 12 MB do celular
+      // Toda foto sobe como WebP q90 de no máximo 7680 px, convertida no navegador antes do
+      // commit (ADR 0004 e 0015): é o que uma prancha A0 precisa para o texto dela se ler no
+      // zoom. O site nunca serve mais que 2560 px de uma foto até alguém ampliá-la. O teto é conferido depois da conversão: a foto de 12 MB do celular
       // passa, porque vira WebP bem menor; a que continuar acima de 2 MB é recusada.
       transformations: {
-        raster_image: { format: 'webp', quality: 90, width: 2560, height: 2560 },
+        raster_image: { format: 'webp', quality: 90, width: 7680, height: 7680 },
       },
       max_file_size: TETO_DA_FOTO,
       slugify_filename: true,

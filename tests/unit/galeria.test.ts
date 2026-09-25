@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { mock, test } from 'node:test';
 import {
   CORTE_MAXIMO,
   DENSIDADE_SEM_RETINA,
@@ -8,6 +8,16 @@ import {
   linhasDaGaleria,
   porFaixa,
 } from '../../src/components/galeria.linhas.ts';
+import {
+  cliqueNoZoom,
+  degrausDoZoom,
+  fatorDaRoda,
+  porcentagem,
+  proximoDegrau,
+  proximoQuadro,
+  REPOUSO_DA_RODA,
+  zoomSuave,
+} from '../../src/components/galeria.zoom.ts';
 
 // A Galeria monta linhas justificadas: cada linha ocupa a largura toda, todas as imagens de
 // uma linha têm a mesma altura e a proporção de cada imagem é preservada — salvo o corte
@@ -160,4 +170,106 @@ test('uma Galeria sem imagens não tem linha alguma', () => {
 
 test('uma Galeria medida antes de ter largura não tem linha alguma', () => {
   assert.deepEqual(linhasDaGaleria([RENDER], medidas(0)), []);
+});
+
+// O zoom pela roda: o mesmo passo por dente no Chrome (pixels) e no Firefox (linhas), e uma
+// escala que persegue o alvo quadro a quadro até chegar — sem passar dele nem parar antes.
+test('um dente da roda amplia uns 15% no Chrome e no Firefox', () => {
+  const chrome = fatorDaRoda({ deltaY: -100, deltaMode: 0 });
+  const firefox = fatorDaRoda({ deltaY: -3, deltaMode: 1 });
+  assert.ok(chrome > 1.1 && chrome < 1.2, `Chrome: ${chrome}`);
+  assert.ok(firefox > 1.1 && firefox < 1.2, `Firefox: ${firefox}`);
+  assert.ok(fatorDaRoda({ deltaY: 100, deltaMode: 0 }) < 1);
+});
+
+test('a escala chega ao alvo em poucos quadros, sempre do mesmo lado dele', () => {
+  for (const [inicio, alvo] of [
+    [0.2, 1],
+    [1, 0.2],
+  ] as const) {
+    let zoom: number = inicio;
+    let quadros = 0;
+    for (let chegou = false; !chegou; quadros++) {
+      const anterior = zoom;
+      ({ zoom, chegou } = proximoQuadro(zoom, alvo));
+      assert.ok(
+        inicio < alvo ? zoom >= anterior && zoom <= alvo : zoom <= anterior && zoom >= alvo,
+      );
+    }
+    assert.equal(zoom, alvo);
+    // Uns 400 ms a 60 quadros por segundo: suave, mas sem arrastar.
+    assert.ok(quadros <= 30, `${quadros} quadros`);
+  }
+});
+
+test('os degraus do zoom vão do ajuste ao teto, em múltiplos legíveis', () => {
+  assert.deepEqual(degrausDoZoom(0.25, 1), [0.25, 0.375, 0.5, 0.75, 1]);
+  // Um teto fora dos múltiplos entra como último degrau, sem um degrau colado nele.
+  assert.deepEqual(degrausDoZoom(0.2, 0.61), [0.2, 0.30000000000000004, 0.4, 0.61]);
+  // Uma imagem menor que a tela não amplia: o ajuste é o teto.
+  assert.deepEqual(degrausDoZoom(1, 1), [1]);
+});
+
+test('+ e − andam um degrau e param nas pontas', () => {
+  const degraus = degrausDoZoom(0.25, 1);
+  assert.equal(proximoDegrau(0.25, degraus, 1), 0.375);
+  assert.equal(proximoDegrau(0.6, degraus, 1), 0.75);
+  assert.equal(proximoDegrau(0.6, degraus, -1), 0.5);
+  assert.equal(proximoDegrau(1, degraus, 1), undefined);
+  assert.equal(proximoDegrau(0.25, degraus, -1), undefined);
+});
+
+test('o clique amplia em dois tempos até o teto e depois volta ao ajuste', () => {
+  const niveis = { initial: 0.25, secondary: 0.6, max: 1 };
+  assert.equal(cliqueNoZoom(0.25, niveis), 0.6);
+  assert.equal(cliqueNoZoom(0.6, niveis), 1);
+  assert.equal(cliqueNoZoom(0.8, niveis), 1);
+  assert.equal(cliqueNoZoom(1, niveis), 0.25);
+  assert.equal(porcentagem(0.6, 0.25), '240%');
+});
+
+test('girando devagar, a imagem só ganha o tamanho novo quando a roda para', () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  const quadros: (() => void)[] = [];
+  globalThis.requestAnimationFrame = (quadro) => quadros.push(() => quadro(0));
+  const redimensionamentos: number[] = [];
+  const slide = {
+    currZoomLevel: 0.2,
+    zoomLevels: { min: 0.2, max: 1 },
+    pan: { x: 0, y: 0 },
+    isZoomable: () => true,
+    setZoomLevel(zoom: number) {
+      slide.currZoomLevel = zoom;
+    },
+    calculateZoomToPanOffset: () => 0,
+    applyCurrentZoomPan: () => {},
+    zoomTo(zoom: number) {
+      slide.currZoomLevel = zoom;
+      redimensionamentos.push(zoom);
+    },
+  };
+  const roda = zoomSuave(
+    () => slide,
+    () => false,
+  );
+  const dente = () =>
+    roda({ deltaY: -3, deltaMode: 1, clientX: 0, clientY: 0 } as unknown as WheelEvent);
+  try {
+    // Quatro dentes espaçados: a escala alcança o alvo entre um e outro.
+    for (let i = 0; i < 4; i++) {
+      dente();
+      while (quadros.length > 0) quadros.shift()!();
+      mock.timers.tick(REPOUSO_DA_RODA / 2);
+    }
+    assert.deepEqual(redimensionamentos, []);
+    mock.timers.tick(REPOUSO_DA_RODA);
+    assert.equal(redimensionamentos.length, 1);
+    assert.ok(
+      Math.abs(
+        redimensionamentos[0]! / (0.2 * fatorDaRoda({ deltaY: -3, deltaMode: 1 }) ** 4) - 1,
+      ) < 1e-9,
+    );
+  } finally {
+    mock.timers.reset();
+  }
 });

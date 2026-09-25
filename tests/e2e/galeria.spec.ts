@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { projetos } from './projetos.ts';
 
 // A Galeria aberta em detalhe, no Projeto que serviu de tracer bullet: linhas justificadas,
@@ -441,7 +441,7 @@ test.describe('em tela de toque', () => {
     await abrirLightbox(page, 0);
     const imagem = imagemDoLightbox(page);
     const tela = page.viewportSize()!;
-    await page.locator('.pswp__button--zoom').click();
+    await imagem.dblclick();
     await expect
       .poll(async () => (await imagem.boundingBox())?.height ?? 0)
       .toBeGreaterThan(tela.height * 0.8);
@@ -455,10 +455,11 @@ test.describe('em tela de toque', () => {
 test.describe('com mouse', () => {
   test.skip(({ isMobile }) => isMobile === true, 'gestos de mouse não existem no celular');
 
-  test('o clique amplia a imagem e o seguinte devolve ao ajuste', async ({ page }) => {
+  test('o clique amplia a imagem até o teto e, dali, devolve ao ajuste', async ({ page }) => {
     await page.goto(rota);
     await abrirLightbox(page, 0);
     const imagem = imagemDoLightbox(page);
+    const mais = page.locator('.lb-zoom__mais');
     const ajustada = (await imagem.boundingBox())?.width ?? 0;
     expect(ajustada).toBeGreaterThan(0);
 
@@ -467,10 +468,48 @@ test.describe('com mouse', () => {
       .poll(async () => (await imagem.boundingBox())?.width ?? 0)
       .toBeGreaterThan(ajustada * 1.5);
 
+    // Em dois cliques, no máximo, o zoom chega ao teto, onde o + se apaga.
+    if (await mais.isEnabled()) await imagem.click();
+    await expect(mais).toBeDisabled();
+
     await imagem.click();
     await expect
       .poll(async () => Math.round((await imagem.boundingBox())?.width ?? 0))
       .toBe(Math.round(ajustada));
+  });
+
+  test('+ e − andam pelos degraus, e a porcentagem devolve a imagem inteira', async ({ page }) => {
+    await page.goto(rota);
+    await abrirLightbox(page, 0);
+    const imagem = imagemDoLightbox(page);
+    const [menos, nivel, mais] = ['menos', 'nivel', 'mais'].map((parte) =>
+      page.locator(`.lb-zoom__${parte}`),
+    ) as [Locator, Locator, Locator];
+    const ajustada = (await imagem.boundingBox())!.width;
+    await expect(nivel).toHaveText('100%');
+    await expect(menos).toBeDisabled();
+
+    // O primeiro degrau é 150%, ou o teto, quando a imagem não chega a tanto.
+    await mais.click();
+    await expect(nivel).not.toHaveText('100%');
+    const degrau = parseInt((await nivel.textContent()) ?? '', 10) / 100;
+    expect(degrau).toBeLessThanOrEqual(1.5);
+    // A porcentagem é arredondada: a largura bate com ela a menos de 1% do ajuste.
+    await expect
+      .poll(async () => Math.abs(((await imagem.boundingBox())?.width ?? 0) - ajustada * degrau))
+      .toBeLessThan(ajustada * 0.01);
+    await menos.click();
+    await expect(nivel).toHaveText('100%');
+
+    // O teclado faz o mesmo: + amplia um degrau, 0 volta à imagem inteira.
+    await page.keyboard.press('+');
+    await expect(nivel).not.toHaveText('100%');
+    await page.keyboard.press('0');
+    await expect(nivel).toHaveText('100%');
+
+    await mais.click();
+    await nivel.click();
+    await expect(nivel).toHaveText('100%');
   });
 
   test('a roda do mouse amplia a imagem', async ({ page }) => {
@@ -543,5 +582,90 @@ test.describe('em tela QHD', () => {
     await expect
       .poll(() => imagem.evaluate((img: HTMLImageElement) => img.currentSrc))
       .toContain(maior.url);
+  });
+});
+
+// A prancha em alta (ADR 0015): a página fica nas variantes de até 2560 px; a prancha inteira,
+// sem perda e em 5120 px, onde o texto se lê, começa a baixar quando ela abre em tela cheia.
+test.describe('a prancha em alta', () => {
+  const miniCasa = projetos.find(({ slug }) => slug === 'mini-casa');
+  if (miniCasa === undefined) throw new Error('a Mini Casa saiu da collection');
+  // A segunda imagem da Mini Casa é a planta, em 7680 px no repositório.
+  const PLANTA = 1;
+  const INTEIRA = 5120;
+
+  test('a página não pede mais que 2560 px de nenhuma imagem', async ({ page }) => {
+    await page.goto(miniCasa.rota);
+    const srcsets = await page
+      .locator('.gal source, .gal img')
+      .evaluateAll((fontes) => fontes.map((f) => f.getAttribute('srcset') ?? ''));
+    for (const srcset of srcsets)
+      expect(Math.max(...variantes(srcset).map(({ largura }) => largura))).toBeLessThanOrEqual(
+        2560,
+      );
+  });
+
+  test('só a prancha aberta em tela cheia pede a imagem inteira, antes do zoom', async ({
+    page,
+  }) => {
+    const pedidas: string[] = [];
+    page.on('request', (pedido) => pedidas.push(pedido.url()));
+    await page.goto(miniCasa.rota);
+    // O render que abre a Galeria não tem imagem inteira: é menor que as variantes.
+    await abrirLightbox(page, 0);
+    expect(variantes(await srcsetDoLightbox(page)).at(-1)!.largura).toBeLessThanOrEqual(2560);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.pswp')).toHaveCount(0);
+    const inteiras = await page
+      .locator('.gal .item[data-inteira]')
+      .evaluateAll((itens) => itens.map((item) => (item as HTMLElement).dataset.inteira!));
+    expect(inteiras.length).toBeGreaterThan(0);
+    expect(pedidas.filter((url) => inteiras.some((inteira) => url.endsWith(inteira)))).toEqual([]);
+
+    await abrirLightbox(page, PLANTA);
+    const inteira = variantes(await srcsetDoLightbox(page)).at(-1)!;
+    expect(inteira.largura).toBe(INTEIRA);
+    await expect.poll(() => pedidas.some((url) => url.endsWith(inteira.url))).toBe(true);
+  });
+
+  test('o + leva a prancha ao tamanho da imagem inteira', async ({ page }) => {
+    await page.goto(miniCasa.rota);
+    await abrirLightbox(page, PLANTA);
+    const imagem = imagemDoLightbox(page);
+    const mais = page.locator('.lb-zoom__mais');
+    while (await mais.isEnabled()) await mais.click();
+    await expect
+      .poll(async () => Math.round((await imagem.boundingBox())?.width ?? 0))
+      .toBe(INTEIRA);
+  });
+
+  test('a roda amplia a prancha até o tamanho da imagem inteira', async ({ page, isMobile }) => {
+    test.skip(isMobile === true, 'a roda do mouse não existe no celular');
+    await page.goto(miniCasa.rota);
+    await abrirLightbox(page, PLANTA);
+    const imagem = imagemDoLightbox(page);
+    const inteira = variantes(await srcsetDoLightbox(page)).at(-1)!;
+
+    // A roda amplia até o teto, que é o tamanho real da prancha.
+    await imagem.hover();
+    for (let i = 0; i < 40; i++) await page.mouse.wheel(0, -400);
+    await expect
+      .poll(async () => Math.round((await imagem.boundingBox())?.width ?? 0))
+      .toBe(INTEIRA);
+    await expect
+      .poll(() => imagem.evaluate((img: HTMLImageElement) => img.currentSrc))
+      .toContain(inteira.url);
+  });
+
+  test('a prancha inteira chega sem perda', async ({ page }) => {
+    await page.goto(miniCasa.rota);
+    await abrirLightbox(page, PLANTA);
+    const inteira = variantes(await srcsetDoLightbox(page)).at(-1)!;
+    const resposta = await page.request.get(inteira.url);
+    expect(resposta.ok()).toBe(true);
+    expect(resposta.headers()['content-type']).toBe('image/webp');
+    const bytes = await resposta.body();
+    // Um WebP sem perda começa o bloco de imagem por VP8L; o com perda, por "VP8 ".
+    expect(bytes.subarray(12, 16).toString('ascii')).toBe('VP8L');
   });
 });
