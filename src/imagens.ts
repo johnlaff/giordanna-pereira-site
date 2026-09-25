@@ -78,6 +78,14 @@ export const larguraMaximaDasVariantes = 2560;
  */
 export const qualidadeSemPerda = 100;
 
+/**
+ * A largura da imagem inteira que o zoom carrega, quando o arquivo passa das variantes. Em 5120
+ * px, o texto de 8 pt de uma prancha A0 tem uns 12 px de altura e se lê; em 7680 px o zoom
+ * travava no desktop (2026-09-25): 42 milhões de pixels para redesenhar a cada passo, contra 18
+ * milhões aqui. O arquivo do repositório continua podendo ter até 7680 px.
+ */
+export const larguraDaInteira = 5120;
+
 /** As larguras do sharp do Astro (`LIMITED_RESOLUTIONS`), até o teto acima. */
 const LARGURAS = [640, 750, 828, 1080, 1280, 1668, 2048, 2560];
 

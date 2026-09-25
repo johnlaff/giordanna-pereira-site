@@ -19,6 +19,7 @@ import type { ImageMetadata } from 'astro';
 import { Picture, getImage } from 'astro:assets';
 import 'photoswipe/style.css';
 import {
+  larguraDaInteira,
   larguraMaximaDasVariantes,
   largurasDasVariantes,
   qualidadeDeImagem,
@@ -55,13 +56,23 @@ const METADE = porFaixa([
   ['', 'calc(100vw - 48px)'],
 ]);
 
-/** A imagem inteira, sem perda, de quem é maior que as variantes: é o que o zoom profundo carrega. */
+/**
+ * A imagem inteira, sem perda, de quem é maior que as variantes: é o que o zoom profundo carrega,
+ * em até `larguraDaInteira`. Ela define também o tamanho da imagem no lightbox, que é o teto do zoom.
+ */
 const inteiras = await Promise.all(
-  imagens.map(async (imagem) =>
-    imagem.width > larguraMaximaDasVariantes
-      ? (await getImage({ src: imagem, format: 'webp', quality: qualidadeSemPerda })).src
-      : undefined,
-  ),
+  imagens.map(async (imagem) => {
+    if (imagem.width <= larguraMaximaDasVariantes)
+      return { src: undefined, largura: imagem.width, altura: imagem.height };
+    const largura = Math.min(imagem.width, larguraDaInteira);
+    const { src } = await getImage({
+      src: imagem,
+      format: 'webp',
+      quality: qualidadeSemPerda,
+      width: largura,
+    });
+    return { src, largura, altura: Math.round((imagem.height * largura) / imagem.width) };
+  }),
 );
 
 const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].height;
@@ -86,9 +97,9 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
         type="button"
         class:list={['item', { abertura: i === 0 && abreEmFaixa }]}
         data-proporcao={(imagem.width / imagem.height).toFixed(4)}
-        data-inteira={inteiras[i]}
-        data-largura={imagem.width}
-        data-altura={imagem.height}
+        data-inteira={inteiras[i]!.src}
+        data-largura={inteiras[i]!.largura}
+        data-altura={inteiras[i]!.altura}
         aria-label={`Abrir imagem ${i + 1} de ${imagens.length} em tela cheia`}
       >
         <Picture
@@ -237,8 +248,24 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
         alt: img.alt,
         msrc: img.currentSrc || img.src,
         thumbCropped: elemento.dataset.cortada === 'true',
+        inteira,
       };
     });
+
+    // A prancha inteira começa a baixar assim que ela entra em cena, e não quando o zoom a pede:
+    // são 0,3 a 0,9 MB, e esperar por eles no meio do gesto mostrava a variante esticada, borrada,
+    // até o arquivo chegar. Quem abre uma prancha em tela cheia quase sempre vai ampliá-la.
+    const aquecidas = new Set<string>();
+    const aquecer = () => {
+      const inteira = lightbox.pswp?.currSlide?.data.inteira;
+      if (typeof inteira !== 'string' || aquecidas.has(inteira)) return;
+      aquecidas.add(inteira);
+      const imagem = new Image();
+      imagem.src = inteira;
+      imagem.decode().catch(() => {});
+    };
+    lightbox.on('change', aquecer);
+    lightbox.on('openingAnimationEnd', aquecer);
 
     // A imagem em tela cheia segue a mesma regra das miniaturas: sem retina, pede uma vez e
     // meia o tamanho exibido, e é onde isso mais rende — é a tela de examinar o render.

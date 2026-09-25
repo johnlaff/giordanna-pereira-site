@@ -546,14 +546,14 @@ test.describe('em tela QHD', () => {
   });
 });
 
-// A prancha em alta (ADR 0015): a página e a tela cheia ficam nas variantes de até 2560 px, e só
-// o zoom pede a prancha inteira, sem perda, até o tamanho real dela — onde o texto se lê.
+// A prancha em alta (ADR 0015): a página fica nas variantes de até 2560 px; a prancha inteira,
+// sem perda e em 5120 px, onde o texto se lê, começa a baixar quando ela abre em tela cheia.
 test.describe('a prancha em alta', () => {
   const miniCasa = projetos.find(({ slug }) => slug === 'mini-casa');
   if (miniCasa === undefined) throw new Error('a Mini Casa saiu da collection');
-  // A segunda imagem da Mini Casa é a planta, em 7680 px.
+  // A segunda imagem da Mini Casa é a planta, em 7680 px no repositório.
   const PLANTA = 1;
-  const INTEIRA = 7680;
+  const INTEIRA = 5120;
 
   test('a página não pede mais que 2560 px de nenhuma imagem', async ({ page }) => {
     await page.goto(miniCasa.rota);
@@ -566,19 +566,35 @@ test.describe('a prancha em alta', () => {
       );
   });
 
-  test('a tela cheia só pede a prancha inteira quando o zoom passa da maior variante', async ({
+  test('só a prancha aberta em tela cheia pede a imagem inteira, antes do zoom', async ({
     page,
-    isMobile,
   }) => {
-    test.skip(isMobile === true, 'a roda do mouse não existe no celular');
     const pedidas: string[] = [];
     page.on('request', (pedido) => pedidas.push(pedido.url()));
+    await page.goto(miniCasa.rota);
+    // O render que abre a Galeria não tem imagem inteira: é menor que as variantes.
+    await abrirLightbox(page, 0);
+    expect(variantes(await srcsetDoLightbox(page)).at(-1)!.largura).toBeLessThanOrEqual(2560);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('.pswp')).toHaveCount(0);
+    const inteiras = await page
+      .locator('.gal .item[data-inteira]')
+      .evaluateAll((itens) => itens.map((item) => (item as HTMLElement).dataset.inteira!));
+    expect(inteiras.length).toBeGreaterThan(0);
+    expect(pedidas.filter((url) => inteiras.some((inteira) => url.endsWith(inteira)))).toEqual([]);
+
+    await abrirLightbox(page, PLANTA);
+    const inteira = variantes(await srcsetDoLightbox(page)).at(-1)!;
+    expect(inteira.largura).toBe(INTEIRA);
+    await expect.poll(() => pedidas.some((url) => url.endsWith(inteira.url))).toBe(true);
+  });
+
+  test('a roda amplia a prancha até o tamanho da imagem inteira', async ({ page, isMobile }) => {
+    test.skip(isMobile === true, 'a roda do mouse não existe no celular');
     await page.goto(miniCasa.rota);
     await abrirLightbox(page, PLANTA);
     const imagem = imagemDoLightbox(page);
     const inteira = variantes(await srcsetDoLightbox(page)).at(-1)!;
-    expect(inteira.largura).toBe(INTEIRA);
-    expect(pedidas.some((url) => url.endsWith(inteira.url))).toBe(false);
 
     // A roda amplia até o teto, que é o tamanho real da prancha.
     await imagem.hover();
@@ -591,9 +607,7 @@ test.describe('a prancha em alta', () => {
       .toContain(inteira.url);
   });
 
-  test('a prancha inteira chega sem perda, do tamanho do arquivo do repositório', async ({
-    page,
-  }) => {
+  test('a prancha inteira chega sem perda', async ({ page }) => {
     await page.goto(miniCasa.rota);
     await abrirLightbox(page, PLANTA);
     const inteira = variantes(await srcsetDoLightbox(page)).at(-1)!;
