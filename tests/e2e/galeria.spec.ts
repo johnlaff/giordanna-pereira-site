@@ -545,3 +545,63 @@ test.describe('em tela QHD', () => {
       .toContain(maior.url);
   });
 });
+
+// A prancha em alta (ADR 0015): a página e a tela cheia ficam nas variantes de até 2560 px, e só
+// o zoom pede a prancha inteira, sem perda, até o tamanho real dela — onde o texto se lê.
+test.describe('a prancha em alta', () => {
+  const miniCasa = projetos.find(({ slug }) => slug === 'mini-casa');
+  if (miniCasa === undefined) throw new Error('a Mini Casa saiu da collection');
+  // A segunda imagem da Mini Casa é a planta, em 7680 px.
+  const PLANTA = 1;
+  const INTEIRA = 7680;
+
+  test('a página não pede mais que 2560 px de nenhuma imagem', async ({ page }) => {
+    await page.goto(miniCasa.rota);
+    const srcsets = await page
+      .locator('.gal source, .gal img')
+      .evaluateAll((fontes) => fontes.map((f) => f.getAttribute('srcset') ?? ''));
+    for (const srcset of srcsets)
+      expect(Math.max(...variantes(srcset).map(({ largura }) => largura))).toBeLessThanOrEqual(
+        2560,
+      );
+  });
+
+  test('a tela cheia só pede a prancha inteira quando o zoom passa da maior variante', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile === true, 'a roda do mouse não existe no celular');
+    const pedidas: string[] = [];
+    page.on('request', (pedido) => pedidas.push(pedido.url()));
+    await page.goto(miniCasa.rota);
+    await abrirLightbox(page, PLANTA);
+    const imagem = imagemDoLightbox(page);
+    const inteira = variantes(await srcsetDoLightbox(page)).at(-1)!;
+    expect(inteira.largura).toBe(INTEIRA);
+    expect(pedidas.some((url) => url.endsWith(inteira.url))).toBe(false);
+
+    // A roda amplia até o teto, que é o tamanho real da prancha.
+    await imagem.hover();
+    for (let i = 0; i < 40; i++) await page.mouse.wheel(0, -400);
+    await expect
+      .poll(async () => Math.round((await imagem.boundingBox())?.width ?? 0))
+      .toBe(INTEIRA);
+    await expect
+      .poll(() => imagem.evaluate((img: HTMLImageElement) => img.currentSrc))
+      .toContain(inteira.url);
+  });
+
+  test('a prancha inteira chega sem perda, do tamanho do arquivo do repositório', async ({
+    page,
+  }) => {
+    await page.goto(miniCasa.rota);
+    await abrirLightbox(page, PLANTA);
+    const inteira = variantes(await srcsetDoLightbox(page)).at(-1)!;
+    const resposta = await page.request.get(inteira.url);
+    expect(resposta.ok()).toBe(true);
+    expect(resposta.headers()['content-type']).toBe('image/webp');
+    const bytes = await resposta.body();
+    // Um WebP sem perda começa o bloco de imagem por VP8L; o com perda, por "VP8 ".
+    expect(bytes.subarray(12, 16).toString('ascii')).toBe('VP8L');
+  });
+});

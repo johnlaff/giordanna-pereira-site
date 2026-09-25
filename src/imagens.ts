@@ -61,3 +61,32 @@ export const servicoDeImagem = {
   entrypoint: './src/servico-de-imagem.ts',
   config: { avif: { effort: esforcoDoAvif } },
 };
+
+/**
+ * A maior variante que o build grava de uma imagem, e o limite das miniaturas e do lightbox até
+ * o zoom pedir mais. Acima disso, quem entra é a imagem inteira, em WebP sem perda (ADR 0015):
+ * uma prancha em 7680 px pesa menos de 1 MB assim, e o texto dela só se lê de perto. Ela não
+ * vira variante AVIF porque gravá-la levaria 20 s por prancha e borraria as letras.
+ */
+export const larguraMaximaDasVariantes = 2560;
+
+/**
+ * A qualidade que o serviço de `src/servico-de-imagem.ts` entende como "sem perda": é nela que a
+ * imagem maior que as variantes sai para o zoom, em WebP. Numa prancha, o sem perda pesa menos
+ * que o WebP q90 — 0,34 MB contra 0,59 MB na planta da Mini Casa em 7680 px —, porque o desenho
+ * é quase todo branco e traço.
+ */
+export const qualidadeSemPerda = 100;
+
+/** As larguras do sharp do Astro (`LIMITED_RESOLUTIONS`), até o teto acima. */
+const LARGURAS = [640, 750, 828, 1080, 1280, 1668, 2048, 2560];
+
+/**
+ * As variantes de uma imagem: as larguras padrão abaixo da dela, e ela mesma no teto. É o mesmo
+ * conjunto que o Astro gera sozinho para uma imagem de até 2560 px; acima disso, ele gravaria
+ * também uma variante do tamanho do original.
+ */
+export const largurasDasVariantes = (largura: number) => {
+  const teto = Math.min(largura, larguraMaximaDasVariantes);
+  return [...LARGURAS.filter((l) => l < teto), teto];
+};

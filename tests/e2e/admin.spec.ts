@@ -253,7 +253,7 @@ test.describe('cadastrar pelo CMS', () => {
     const bytes = Buffer.from(webp!, 'base64');
     const { format, width, height } = await sharp(bytes).metadata();
     expect(format).toBe('webp');
-    expect(Math.max(width, height)).toBeLessThanOrEqual(2560);
+    expect(Math.max(width, height)).toBeLessThanOrEqual(7680);
     expect(bytes.length).toBeLessThanOrEqual(2 * 1024 * 1024);
   });
 

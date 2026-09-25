@@ -1,5 +1,7 @@
 # Imagens do site vivem no repositório como WebP ≤ 2560 px; os originais ficam no Drive
 
+> O teto passou a 7680 px no ADR 0015, para o texto das pranchas se ler no zoom.
+
 Os originais dos renders e pranchas são arquivos grandes (PSD, PNG e PDF de dezenas de MB) que pertencem à Giordanna e ficam no Google Drive dela. O repositório guarda, em `src/assets/`, um redimensionamento determinístico de cada imagem para no máximo 2560 px em WebP q90, sem retoque, e `docs/content/origem-imagens.json` mapeia cada chave ao original. O Astro gera AVIF e WebP com `srcset`/`sizes` no build a partir desses arquivos; uploads pelo CMS passam pela mesma transformação (WebP q90, 2560 px) antes do commit.
 
 ## Considered Options

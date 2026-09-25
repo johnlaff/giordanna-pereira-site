@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { test } from 'node:test';
 import astroConfig from '../../astro.config.ts';
-import { qualidadeDeImagem, servicoDeImagem } from '../../src/imagens.ts';
+import {
+  largurasDasVariantes,
+  qualidadeDeImagem,
+  qualidadeSemPerda,
+  servicoDeImagem,
+} from '../../src/imagens.ts';
 import servicoSharp from '../../src/servico-de-imagem.ts';
 
 /**
@@ -22,10 +27,13 @@ const menorImagem = readdirSync('src/assets')
   .map((arquivo) => [`src/assets/${arquivo}`, statSync(`src/assets/${arquivo}`).size] as const)
   .sort(([, a], [, b]) => a - b)[0]![0];
 
-const bytesDoAvif = async (avif: { effort: number } | undefined) => {
+const transformar = async (
+  opcoes: { format: string; quality: number },
+  avif?: { effort: number },
+) => {
   const { data } = await servicoSharp.transform(
     readFileSync(menorImagem),
-    { src: menorImagem, width: 320, format: 'avif', quality: qualidadeDeImagem },
+    { src: menorImagem, width: 320, ...opcoes },
     // O resto da configuração de imagem não entra na compressão; só `service.config` entra.
     {
       endpoint: { route: '/_image' },
@@ -40,8 +48,11 @@ const bytesDoAvif = async (avif: { effort: number } | undefined) => {
     },
     { warn: () => {}, info: () => {}, error: () => {} },
   );
-  return data.length;
+  return data;
 };
+
+const bytesDoAvif = async (avif: { effort: number } | undefined) =>
+  (await transformar({ format: 'avif', quality: qualidadeDeImagem }, avif)).length;
 
 test('o esforço configurado chega ao compressor de AVIF', async () => {
   // A comparação é contra o padrão do sharp, e não contra outro esforço qualquer, porque a
@@ -64,4 +75,31 @@ test('o entrypoint do serviço não é o do próprio Astro', () => {
   // serviço pelo dele e leva junto a configuração — o esforço voltaria ao padrão sem aviso.
   assert.notEqual(servicoDeImagem.entrypoint, 'astro/assets/services/sharp');
   assert.ok(statSync(servicoDeImagem.entrypoint.replace(/^\.\//, '')).isFile());
+});
+
+// A lista explícita tem de repetir o que o Astro gerava sozinho até 2560 px: uma variante a mais
+// ou a menos muda o nome dos arquivos e joga fora o cache de imagens do CI inteiro.
+test('até 2560 px, as variantes são as que o Astro já gerava', () => {
+  assert.deepEqual(largurasDasVariantes(2560), [640, 750, 828, 1080, 1280, 1668, 2048, 2560]);
+  assert.deepEqual(largurasDasVariantes(2106), [640, 750, 828, 1080, 1280, 1668, 2048, 2106]);
+  assert.deepEqual(largurasDasVariantes(700), [640, 700]);
+});
+
+test('uma prancha em alta não ganha variante acima de 2560 px', () => {
+  assert.equal(Math.max(...largurasDasVariantes(7680)), 2560);
+});
+
+// A prancha em alta vai ao zoom pixel a pixel: um WebP com perda borraria justamente as letras.
+test('o WebP na qualidade sem perda sai idêntico, pixel a pixel, ao que entrou', async () => {
+  const { default: sharp } = await import('sharp');
+  const webp = await transformar({ format: 'webp', quality: qualidadeSemPerda });
+  const esperado = await sharp(readFileSync(menorImagem)).resize({ width: 320 }).raw().toBuffer();
+  assert.deepEqual(await sharp(webp).raw().toBuffer(), esperado);
+});
+
+test('um WebP abaixo da qualidade sem perda continua com perda', async () => {
+  const { default: sharp } = await import('sharp');
+  const webp = await transformar({ format: 'webp', quality: qualidadeDeImagem });
+  const esperado = await sharp(readFileSync(menorImagem)).resize({ width: 320 }).raw().toBuffer();
+  assert.notDeepEqual(await sharp(webp).raw().toBuffer(), esperado);
 });
