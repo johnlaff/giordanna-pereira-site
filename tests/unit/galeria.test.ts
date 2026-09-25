@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { test } from 'node:test';
+import { mock, test } from 'node:test';
 import {
   CORTE_MAXIMO,
   DENSIDADE_SEM_RETINA,
@@ -15,6 +15,8 @@ import {
   porcentagem,
   proximoDegrau,
   proximoQuadro,
+  REPOUSO_DA_RODA,
+  zoomSuave,
 } from '../../src/components/galeria.zoom.ts';
 
 // A Galeria monta linhas justificadas: cada linha ocupa a largura toda, todas as imagens de
@@ -224,4 +226,50 @@ test('o clique amplia em dois tempos até o teto e depois volta ao ajuste', () =
   assert.equal(cliqueNoZoom(0.8, niveis), 1);
   assert.equal(cliqueNoZoom(1, niveis), 0.25);
   assert.equal(porcentagem(0.6, 0.25), '240%');
+});
+
+test('girando devagar, a imagem só ganha o tamanho novo quando a roda para', () => {
+  mock.timers.enable({ apis: ['setTimeout'] });
+  const quadros: (() => void)[] = [];
+  globalThis.requestAnimationFrame = (quadro) => quadros.push(() => quadro(0));
+  const redimensionamentos: number[] = [];
+  const slide = {
+    currZoomLevel: 0.2,
+    zoomLevels: { min: 0.2, max: 1 },
+    pan: { x: 0, y: 0 },
+    isZoomable: () => true,
+    setZoomLevel(zoom: number) {
+      slide.currZoomLevel = zoom;
+    },
+    calculateZoomToPanOffset: () => 0,
+    applyCurrentZoomPan: () => {},
+    zoomTo(zoom: number) {
+      slide.currZoomLevel = zoom;
+      redimensionamentos.push(zoom);
+    },
+  };
+  const roda = zoomSuave(
+    () => slide,
+    () => false,
+  );
+  const dente = () =>
+    roda({ deltaY: -3, deltaMode: 1, clientX: 0, clientY: 0 } as unknown as WheelEvent);
+  try {
+    // Quatro dentes espaçados: a escala alcança o alvo entre um e outro.
+    for (let i = 0; i < 4; i++) {
+      dente();
+      while (quadros.length > 0) quadros.shift()!();
+      mock.timers.tick(REPOUSO_DA_RODA / 2);
+    }
+    assert.deepEqual(redimensionamentos, []);
+    mock.timers.tick(REPOUSO_DA_RODA);
+    assert.equal(redimensionamentos.length, 1);
+    assert.ok(
+      Math.abs(
+        redimensionamentos[0]! / (0.2 * fatorDaRoda({ deltaY: -3, deltaMode: 1 }) ** 4) - 1,
+      ) < 1e-9,
+    );
+  } finally {
+    mock.timers.reset();
+  }
 });

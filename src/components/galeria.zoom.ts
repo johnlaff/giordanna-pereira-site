@@ -4,7 +4,7 @@
  * milhões de pixels por evento, e o zoom anda aos trancos. A pinça do celular não sofre disso:
  * durante o gesto ela só escala a imagem por `transform` e redimensiona uma vez, no fim. Aqui a
  * roda passa a fazer o mesmo: ela move um alvo, a escala persegue o alvo quadro a quadro, e a
- * imagem só ganha o tamanho novo quando a escala chega lá.
+ * imagem só ganha o tamanho novo quando a roda para.
  *
  * A aritmética fica fora do componente para ser verificável sem navegador.
  */
@@ -14,6 +14,14 @@ export const PASSO_POR_QUADRO = 0.25;
 
 /** Abaixo desta distância (logarítmica) do alvo, a escala chega de vez. */
 const CHEGOU = 0.002;
+
+/**
+ * Quanto tempo sem a roda, depois de a escala chegar, até a imagem ganhar o tamanho novo. Chegar
+ * não basta: girando devagar, a escala alcança o alvo entre um dente e outro, e cada chegada
+ * redimensionava a imagem. O Firefox decodifica a imagem no tamanho em que ela aparece, e uma
+ * prancha de 5120 px redecodificada trava uns quatro quadros (medido no vídeo do João).
+ */
+export const REPOUSO_DA_RODA = 250;
 
 /**
  * O fator que um evento da roda aplica ao zoom, o mesmo do PhotoSwipe: o Firefox conta a roda
@@ -51,6 +59,22 @@ export const zoomSuave = (slideAtual: () => Slide | undefined, semMovimento: () 
   let alvo = 0;
   let ponto = { x: 0, y: 0 };
   let animando: Slide | undefined;
+  let repouso: ReturnType<typeof setTimeout> | undefined;
+
+  const aplicar = (slide: Slide, zoom: number) => {
+    const antes = slide.currZoomLevel;
+    slide.setZoomLevel(zoom);
+    slide.pan.x = slide.calculateZoomToPanOffset('x', ponto, antes);
+    slide.pan.y = slide.calculateZoomToPanOffset('y', ponto, antes);
+    slide.applyCurrentZoomPan();
+  };
+
+  /** A roda parou: só agora a imagem ganha o tamanho novo, e o navegador escolhe a variante. */
+  const assentar = (slide: Slide) => {
+    repouso = undefined;
+    if (slide !== slideAtual() || animando !== undefined) return;
+    slide.zoomTo(slide.currZoomLevel, ponto, 0);
+  };
 
   const quadro = () => {
     const slide = slideAtual();
@@ -58,18 +82,13 @@ export const zoomSuave = (slideAtual: () => Slide | undefined, semMovimento: () 
       animando = undefined;
       return;
     }
-    const antes = slide.currZoomLevel;
-    const { zoom, chegou } = proximoQuadro(antes, alvo);
+    const { zoom, chegou } = proximoQuadro(slide.currZoomLevel, alvo);
+    aplicar(slide, zoom);
     if (chegou) {
       animando = undefined;
-      // Só agora a imagem ganha o tamanho novo — e o navegador escolhe a variante que ele pede.
-      slide.zoomTo(zoom, ponto, 0);
+      repouso = setTimeout(() => assentar(slide), REPOUSO_DA_RODA);
       return;
     }
-    slide.setZoomLevel(zoom);
-    slide.pan.x = slide.calculateZoomToPanOffset('x', ponto, antes);
-    slide.pan.y = slide.calculateZoomToPanOffset('y', ponto, antes);
-    slide.applyCurrentZoomPan();
     requestAnimationFrame(quadro);
   };
 
@@ -77,6 +96,8 @@ export const zoomSuave = (slideAtual: () => Slide | undefined, semMovimento: () 
   return (evento: WheelEvent) => {
     const slide = slideAtual();
     if (slide === undefined || !slide.isZoomable()) return false;
+    clearTimeout(repouso);
+    repouso = undefined;
     if (animando !== slide) alvo = slide.currZoomLevel;
     const { min, max } = slide.zoomLevels;
     alvo = Math.min(max, Math.max(min, alvo * fatorDaRoda(evento)));
