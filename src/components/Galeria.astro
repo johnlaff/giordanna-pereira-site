@@ -127,7 +127,13 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
 <script>
   import PhotoSwipeLightbox from 'photoswipe/lightbox';
   import { DENSIDADE_SEM_RETINA, TELA_ESTREITA, linhasDaGaleria } from './galeria.linhas';
-  import { zoomSuave } from './galeria.zoom';
+  import {
+    cliqueNoZoom,
+    degrausDoZoom,
+    porcentagem,
+    proximoDegrau,
+    zoomSuave,
+  } from './galeria.zoom';
 
   const galeria = document.querySelector<HTMLElement>('.gal');
   if (galeria !== null) {
@@ -189,8 +195,12 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
       // além dele, o que cresce é o artefato do arquivo, não a informação.
       secondaryZoomLevel: (zoom) => Math.min(Math.max(zoom.fill, zoom.fit * 2.5), 1),
       maxZoomLevel: 1,
-      imageClickAction: 'zoom',
+      // O clique amplia em dois tempos até o teto e volta (`cliqueNoZoom`); o duplo toque do
+      // celular, onde a pinça é o gesto de ampliar, só alterna entre o ajuste e o zoom de leitura.
+      imageClickAction: (ponto) => ampliarPeloClique(ponto),
       doubleTapAction: 'zoom',
+      // O botão de zoom do PhotoSwipe dá lugar ao grupo − 100% + (`zoom-controles`, abaixo).
+      zoom: false,
       tapAction: 'toggle-controls',
       // Em tela estreita a imagem vai de borda a borda: os 20 px laterais custam 12% da
       // largura justamente onde ela é escassa, e a folga de cima e de baixo já separa a
@@ -207,7 +217,6 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
       // A legenda já diz a posição; o contador do PhotoSwipe ficaria repetido.
       counter: false,
       closeTitle: 'Fechar',
-      zoomTitle: 'Ampliar',
       arrowPrevTitle: 'Imagem anterior',
       arrowNextTitle: 'Próxima imagem',
       errorMsg: 'Não foi possível carregar esta imagem.',
@@ -220,6 +229,53 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
     };
     ajustarMovimento();
     semMovimento.addEventListener('change', ajustarMovimento);
+
+    /* ===== zoom ===== */
+    // Clique, botões e teclado levam a um nível com a animação do PhotoSwipe, que escala por
+    // `transform` e redimensiona a imagem uma vez só, no fim — sem movimento, direto.
+    const irPara = (zoom: number, ponto?: { x: number; y: number }) => {
+      const pswp = lightbox.pswp;
+      const slide = pswp?.currSlide;
+      if (pswp === undefined || slide === undefined || !slide.isZoomable()) return;
+      slide.zoomTo(
+        zoom,
+        ponto ?? pswp.getViewportCenterPoint(),
+        semMovimento.matches ? 0 : pswp.options.zoomAnimationDuration,
+      );
+    };
+    const ampliarPeloClique = (ponto: { x: number; y: number }) => {
+      const slide = lightbox.pswp?.currSlide;
+      if (slide !== undefined) irPara(cliqueNoZoom(slide.currZoomLevel, slide.zoomLevels), ponto);
+    };
+    const umDegrau = (direcao: 1 | -1) => {
+      const slide = lightbox.pswp?.currSlide;
+      if (slide === undefined) return;
+      const { initial, max } = slide.zoomLevels;
+      const destino = proximoDegrau(slide.currZoomLevel, degrausDoZoom(initial, max), direcao);
+      if (destino !== undefined) irPara(destino);
+    };
+    const ajustar = () => {
+      const slide = lightbox.pswp?.currSlide;
+      if (slide !== undefined) irPara(slide.zoomLevels.initial);
+    };
+
+    // O teclado faz o que os botões fazem: + e − andam um degrau, 0 ajusta à tela e Z repete o
+    // clique. O Z do PhotoSwipe só alternaria entre o ajuste e o zoom de leitura.
+    lightbox.on('keydown', (evento) => {
+      const { key, ctrlKey, metaKey, altKey } = evento.originalEvent;
+      if (ctrlKey || metaKey || altKey) return;
+      const acao = {
+        '+': () => umDegrau(1),
+        '=': () => umDegrau(1),
+        '-': () => umDegrau(-1),
+        '0': ajustar,
+        z: () => ampliarPeloClique(lightbox.pswp!.getViewportCenterPoint()),
+        Z: () => ampliarPeloClique(lightbox.pswp!.getViewportCenterPoint()),
+      }[key];
+      if (acao === undefined) return;
+      evento.preventDefault();
+      acao();
+    });
 
     // A roda amplia aos poucos, como a pinça, em vez de redimensionar a imagem a cada evento.
     const rodaSuave = zoomSuave(
@@ -282,6 +338,50 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
     lightbox.addFilter('srcsetSizesWidth', (largura) => largura * densidade());
 
     lightbox.on('uiRegister', () => {
+      // O zoom à vista: − e + andam pelos degraus, e a porcentagem entre eles diz quanto ainda
+      // dá para ampliar — e, clicada, devolve a imagem inteira à tela. Sem ele, quem não sabe
+      // da roda ou da pinça para no primeiro clique achando que aquele é o zoom todo.
+      lightbox.pswp?.ui?.registerElement({
+        name: 'zoom-controles',
+        className: 'lb-zoom',
+        appendTo: 'bar',
+        order: 15,
+        onInit: (grupo, pswp) => {
+          grupo.setAttribute('role', 'group');
+          grupo.setAttribute('aria-label', 'Zoom');
+          const botao = (classe: string, rotulo: string, acao: () => void) => {
+            const elemento = document.createElement('button');
+            elemento.type = 'button';
+            elemento.className = classe;
+            elemento.setAttribute('aria-label', rotulo);
+            elemento.title = rotulo;
+            elemento.addEventListener('click', acao);
+            grupo.append(elemento);
+            return elemento;
+          };
+          const menos = botao('lb-zoom__menos', 'Reduzir (tecla −)', () => umDegrau(-1));
+          const nivel = botao('lb-zoom__nivel', 'Ajustar à tela (tecla 0)', ajustar);
+          const mais = botao('lb-zoom__mais', 'Ampliar (tecla +)', () => umDegrau(1));
+          const atualizar = () => {
+            const slide = pswp.currSlide;
+            const ampliavel = slide !== undefined && slide.isZoomable();
+            grupo.hidden = !ampliavel;
+            if (!ampliavel) return;
+            const { currZoomLevel: atual, zoomLevels } = slide;
+            const texto = porcentagem(atual, zoomLevels.initial);
+            if (nivel.textContent !== texto) nivel.textContent = texto;
+            menos.disabled = atual <= zoomLevels.initial * 1.01;
+            mais.disabled = atual >= zoomLevels.max * 0.99;
+            nivel.disabled = menos.disabled;
+            // O cursor diz o que o clique vai fazer: ampliar até o teto, e dali voltar.
+            pswp.element?.classList.toggle('lb-no-teto', mais.disabled);
+          };
+          pswp.on('zoomPanUpdate', atualizar);
+          pswp.on('change', atualizar);
+          pswp.on('resolutionChanged', atualizar);
+          atualizar();
+        },
+      });
       lightbox.pswp?.ui?.registerElement({
         name: 'legenda',
         className: 'lb-legenda',
@@ -427,7 +527,6 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
   }
   /* Os controles são círculos discretos sobre a imagem, do mesmo tamanho nos quatro cantos. */
   .pswp__button--close,
-  .pswp__button--zoom,
   .pswp__button--arrow {
     display: flex;
     align-items: center;
@@ -438,8 +537,7 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
     background: rgba(0, 0, 0, 0.45);
     border: 1px solid rgba(255, 255, 255, 0.22);
   }
-  .pswp__button--close,
-  .pswp__button--zoom {
+  .pswp__button--close {
     margin: 14px 14px 0 0;
   }
   .pswp__button--arrow {
@@ -455,7 +553,6 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
     right: 16px;
   }
   .pswp__button--close:hover,
-  .pswp__button--zoom:hover,
   .pswp__button--arrow:hover {
     background: rgba(0, 0, 0, 0.7);
   }
@@ -491,9 +588,84 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
     left: 13px;
     filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
   }
-  .pswp__button:focus-visible {
+  .pswp__button:focus-visible,
+  .lb-zoom button:focus-visible {
     outline: 2px solid var(--lb-frente);
     outline-offset: 2px;
+  }
+  /* O zoom à vista: uma cápsula na mesma pele dos botões redondos, ao lado do fechar. Os sinais
+     são traços do mesmo 1,6 px do chevron das setas, e a porcentagem usa a voz da legenda. */
+  .lb-zoom {
+    display: flex;
+    align-items: stretch;
+    height: 52px;
+    margin: 14px 10px 0 0;
+    border-radius: 26px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: var(--lb-frente);
+  }
+  .lb-zoom[hidden] {
+    display: none;
+  }
+  .lb-zoom button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    padding: 0;
+    border: 0;
+    border-radius: 26px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    transition:
+      background 0.3s,
+      opacity 0.3s;
+  }
+  .lb-zoom button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  .lb-zoom button:disabled {
+    cursor: default;
+    opacity: 0.38;
+  }
+  .lb-zoom__menos::before,
+  .lb-zoom__mais::before,
+  .lb-zoom__mais::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 14px;
+    height: 1.6px;
+    margin: -0.8px 0 0 -7px;
+    background: currentColor;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.6));
+  }
+  .lb-zoom__mais::after {
+    transform: rotate(90deg);
+  }
+  .lb-zoom__nivel {
+    min-width: 58px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
+  }
+  .lb-zoom__nivel:disabled {
+    opacity: 0.75;
+  }
+  /* O cursor diz o que o clique fará: ampliar, até o teto; no teto, voltar à imagem inteira. */
+  .pswp__img {
+    cursor: zoom-in;
+  }
+  .pswp.lb-no-teto .pswp__img {
+    cursor: zoom-out;
+  }
+  .pswp--zoomed-in .pswp__img:active {
+    cursor: grabbing;
   }
   .pswp__top-bar {
     height: 80px;
@@ -531,8 +703,7 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
   }
   @media (max-width: 640px) {
     /* Alvo de toque de 44 px, com o ícone proporcionalmente menor dentro dele. */
-    .pswp__button--close,
-    .pswp__button--zoom {
+    .pswp__button--close {
       width: 44px;
       height: 44px;
       margin: 10px 10px 0 0;
@@ -543,10 +714,21 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
       top: 10px;
       left: 10px;
     }
+    .lb-zoom {
+      height: 44px;
+      margin: 10px 8px 0 0;
+    }
+    .lb-zoom button {
+      min-width: 44px;
+    }
+    .lb-zoom__nivel {
+      min-width: 52px;
+    }
   }
   @media (prefers-reduced-motion: reduce) {
     .pswp--ui-visible .lb-legenda,
-    .pswp__button--arrow {
+    .pswp__button--arrow,
+    .lb-zoom button {
       transition: none;
     }
     .pswp__button--arrow--prev:hover,

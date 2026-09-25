@@ -87,7 +87,7 @@ test('o lightbox abre, navega e amplia sem violação de CSP', async ({ page }) 
   await page.locator('.gal .item').first().click();
   await expect(page.locator('.pswp')).toBeVisible();
   await page.keyboard.press('ArrowRight');
-  await page.locator('.pswp__button--zoom').click();
+  await page.locator('.lb-zoom__mais').click();
   await page.keyboard.press('Escape');
   await expect(page.locator('.pswp')).toBeHidden();
   expect(await violacoes()).toEqual([]);

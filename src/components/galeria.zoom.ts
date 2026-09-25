@@ -91,3 +91,36 @@ export const zoomSuave = (slideAtual: () => Slide | undefined, semMovimento: () 
     return true;
   };
 };
+
+/**
+ * Os níveis de zoom de uma imagem, do ajuste à tela até o teto. Os botões + e − andam por eles,
+ * em múltiplos do ajuste que se leem na porcentagem (150%, 200%, 300%…), como num leitor de PDF;
+ * o teto entra sempre, para o + chegar ao máximo mesmo quando ele não cai num múltiplo redondo.
+ */
+const MULTIPLOS = [1, 1.5, 2, 3, 4, 6, 8, 12, 16];
+
+export const degrausDoZoom = (ajuste: number, teto: number) => {
+  const degraus = MULTIPLOS.map((m) => ajuste * m).filter((z) => z < teto * 0.97);
+  return [...degraus, Math.max(teto, ajuste)];
+};
+
+/** O degrau seguinte na direção pedida, ou `undefined` quando já está na ponta. */
+export const proximoDegrau = (atual: number, degraus: readonly number[], direcao: 1 | -1) =>
+  direcao === 1 ? degraus.find((z) => z > atual * 1.01) : degraus.findLast((z) => z < atual * 0.99);
+
+/**
+ * O que o clique na imagem faz: amplia em dois tempos — primeiro ao zoom de leitura, depois ao
+ * teto — e, no teto, volta ao ajuste. Quem não tem roda nem pinça chega ao máximo só clicando.
+ */
+export const cliqueNoZoom = (
+  atual: number,
+  { initial, secondary, max }: { initial: number; secondary: number; max: number },
+) => {
+  if (atual >= max * 0.99) return initial;
+  if (atual < secondary * 0.99) return secondary;
+  return max;
+};
+
+/** A porcentagem mostrada entre os botões: 100% é a imagem inteira na tela. */
+export const porcentagem = (atual: number, ajuste: number) =>
+  `${Math.round((atual / ajuste) * 100)}%`;

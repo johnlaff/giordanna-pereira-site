@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { projetos } from './projetos.ts';
 
 // A Galeria aberta em detalhe, no Projeto que serviu de tracer bullet: linhas justificadas,
@@ -441,7 +441,7 @@ test.describe('em tela de toque', () => {
     await abrirLightbox(page, 0);
     const imagem = imagemDoLightbox(page);
     const tela = page.viewportSize()!;
-    await page.locator('.pswp__button--zoom').click();
+    await imagem.dblclick();
     await expect
       .poll(async () => (await imagem.boundingBox())?.height ?? 0)
       .toBeGreaterThan(tela.height * 0.8);
@@ -455,10 +455,11 @@ test.describe('em tela de toque', () => {
 test.describe('com mouse', () => {
   test.skip(({ isMobile }) => isMobile === true, 'gestos de mouse não existem no celular');
 
-  test('o clique amplia a imagem e o seguinte devolve ao ajuste', async ({ page }) => {
+  test('o clique amplia a imagem até o teto e, dali, devolve ao ajuste', async ({ page }) => {
     await page.goto(rota);
     await abrirLightbox(page, 0);
     const imagem = imagemDoLightbox(page);
+    const mais = page.locator('.lb-zoom__mais');
     const ajustada = (await imagem.boundingBox())?.width ?? 0;
     expect(ajustada).toBeGreaterThan(0);
 
@@ -467,10 +468,48 @@ test.describe('com mouse', () => {
       .poll(async () => (await imagem.boundingBox())?.width ?? 0)
       .toBeGreaterThan(ajustada * 1.5);
 
+    // Em dois cliques, no máximo, o zoom chega ao teto, onde o + se apaga.
+    if (await mais.isEnabled()) await imagem.click();
+    await expect(mais).toBeDisabled();
+
     await imagem.click();
     await expect
       .poll(async () => Math.round((await imagem.boundingBox())?.width ?? 0))
       .toBe(Math.round(ajustada));
+  });
+
+  test('+ e − andam pelos degraus, e a porcentagem devolve a imagem inteira', async ({ page }) => {
+    await page.goto(rota);
+    await abrirLightbox(page, 0);
+    const imagem = imagemDoLightbox(page);
+    const [menos, nivel, mais] = ['menos', 'nivel', 'mais'].map((parte) =>
+      page.locator(`.lb-zoom__${parte}`),
+    ) as [Locator, Locator, Locator];
+    const ajustada = (await imagem.boundingBox())!.width;
+    await expect(nivel).toHaveText('100%');
+    await expect(menos).toBeDisabled();
+
+    // O primeiro degrau é 150%, ou o teto, quando a imagem não chega a tanto.
+    await mais.click();
+    await expect(nivel).not.toHaveText('100%');
+    const degrau = parseInt((await nivel.textContent()) ?? '', 10) / 100;
+    expect(degrau).toBeLessThanOrEqual(1.5);
+    // A porcentagem é arredondada: a largura bate com ela a menos de 1% do ajuste.
+    await expect
+      .poll(async () => Math.abs(((await imagem.boundingBox())?.width ?? 0) - ajustada * degrau))
+      .toBeLessThan(ajustada * 0.01);
+    await menos.click();
+    await expect(nivel).toHaveText('100%');
+
+    // O teclado faz o mesmo: + amplia um degrau, 0 volta à imagem inteira.
+    await page.keyboard.press('+');
+    await expect(nivel).not.toHaveText('100%');
+    await page.keyboard.press('0');
+    await expect(nivel).toHaveText('100%');
+
+    await mais.click();
+    await nivel.click();
+    await expect(nivel).toHaveText('100%');
   });
 
   test('a roda do mouse amplia a imagem', async ({ page }) => {
@@ -587,6 +626,17 @@ test.describe('a prancha em alta', () => {
     const inteira = variantes(await srcsetDoLightbox(page)).at(-1)!;
     expect(inteira.largura).toBe(INTEIRA);
     await expect.poll(() => pedidas.some((url) => url.endsWith(inteira.url))).toBe(true);
+  });
+
+  test('o + leva a prancha ao tamanho da imagem inteira', async ({ page }) => {
+    await page.goto(miniCasa.rota);
+    await abrirLightbox(page, PLANTA);
+    const imagem = imagemDoLightbox(page);
+    const mais = page.locator('.lb-zoom__mais');
+    while (await mais.isEnabled()) await mais.click();
+    await expect
+      .poll(async () => Math.round((await imagem.boundingBox())?.width ?? 0))
+      .toBe(INTEIRA);
   });
 
   test('a roda amplia a prancha até o tamanho da imagem inteira', async ({ page, isMobile }) => {

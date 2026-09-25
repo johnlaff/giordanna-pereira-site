@@ -8,7 +8,14 @@ import {
   linhasDaGaleria,
   porFaixa,
 } from '../../src/components/galeria.linhas.ts';
-import { fatorDaRoda, proximoQuadro } from '../../src/components/galeria.zoom.ts';
+import {
+  cliqueNoZoom,
+  degrausDoZoom,
+  fatorDaRoda,
+  porcentagem,
+  proximoDegrau,
+  proximoQuadro,
+} from '../../src/components/galeria.zoom.ts';
 
 // A Galeria monta linhas justificadas: cada linha ocupa a largura toda, todas as imagens de
 // uma linha têm a mesma altura e a proporção de cada imagem é preservada — salvo o corte
@@ -191,4 +198,30 @@ test('a escala chega ao alvo em poucos quadros, sempre do mesmo lado dele', () =
     // Uns 400 ms a 60 quadros por segundo: suave, mas sem arrastar.
     assert.ok(quadros <= 30, `${quadros} quadros`);
   }
+});
+
+test('os degraus do zoom vão do ajuste ao teto, em múltiplos legíveis', () => {
+  assert.deepEqual(degrausDoZoom(0.25, 1), [0.25, 0.375, 0.5, 0.75, 1]);
+  // Um teto fora dos múltiplos entra como último degrau, sem um degrau colado nele.
+  assert.deepEqual(degrausDoZoom(0.2, 0.61), [0.2, 0.30000000000000004, 0.4, 0.61]);
+  // Uma imagem menor que a tela não amplia: o ajuste é o teto.
+  assert.deepEqual(degrausDoZoom(1, 1), [1]);
+});
+
+test('+ e − andam um degrau e param nas pontas', () => {
+  const degraus = degrausDoZoom(0.25, 1);
+  assert.equal(proximoDegrau(0.25, degraus, 1), 0.375);
+  assert.equal(proximoDegrau(0.6, degraus, 1), 0.75);
+  assert.equal(proximoDegrau(0.6, degraus, -1), 0.5);
+  assert.equal(proximoDegrau(1, degraus, 1), undefined);
+  assert.equal(proximoDegrau(0.25, degraus, -1), undefined);
+});
+
+test('o clique amplia em dois tempos até o teto e depois volta ao ajuste', () => {
+  const niveis = { initial: 0.25, secondary: 0.6, max: 1 };
+  assert.equal(cliqueNoZoom(0.25, niveis), 0.6);
+  assert.equal(cliqueNoZoom(0.6, niveis), 1);
+  assert.equal(cliqueNoZoom(0.8, niveis), 1);
+  assert.equal(cliqueNoZoom(1, niveis), 0.25);
+  assert.equal(porcentagem(0.6, 0.25), '240%');
 });
