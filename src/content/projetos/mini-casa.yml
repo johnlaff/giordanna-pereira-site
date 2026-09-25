@@ -1,10 +1,7 @@
 titulo: Mini Casa
 tipo: Residencial
 capa: ../../assets/loft-render.webp
-descricao: >-
-  Residência compacta com mezanino, desenvolvida integralmente em Revit — implantação, cortes,
-  detalhes de guarda-corpo e painel ripado — como exercício de domínio da plataforma BIM da
-  Autodesk.
+descricao: Residência compacta com mezanino, desenvolvida integralmente em Revit — implantação, cortes, detalhes de guarda-corpo e painel ripado — como exercício de domínio da plataforma BIM da Autodesk.
 ferramentas:
   - Revit
 local: Uberlândia · MG
@@ -14,4 +11,7 @@ equipe: Cursos Construir (projeto) · Giordanna Pereira (documentação)
 ordem: 70
 galeria:
   - ../../assets/loft-render.webp
-  - ../../assets/loft-prancha.webp
+  - /src/assets/cc_minicasa_2026-1.webp
+  - /src/assets/cc_minicasa_2026-2.webp
+  - /src/assets/cc_minicasa_2026-3.webp
+  - /src/assets/cc_minicasa_2026-4.webp
