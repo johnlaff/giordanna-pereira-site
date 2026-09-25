@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { esquemaDeDepoimento, ordenarDepoimentos } from '../../src/content.schema.ts';
+import { emParagrafos, prenderUltimaPalavra } from '../../src/tipografia.ts';
 
 // O contrato do Depoimento em números e casos-limite, sem navegador. O que a página faz com
 // ele — o card Em breve, a ordem no carrossel — é conferido no Playwright.
@@ -69,4 +70,23 @@ test('ordenar não mexe na lista recebida', () => {
     original.map(({ id }) => id),
     ['02-mariana', '01-valquiria'],
   );
+});
+
+// O campo de texto do CMS é uma caixa de várias linhas: cada quebra de linha que Giordanna
+// digita é um parágrafo novo no card.
+test('cada linha do texto vira um parágrafo, com a última palavra presa', () => {
+  assert.deepEqual(emParagrafos('Primeiro parágrafo.\nSegundo parágrafo.'), [
+    prenderUltimaPalavra('Primeiro parágrafo.'),
+    prenderUltimaPalavra('Segundo parágrafo.'),
+  ]);
+});
+
+test('linhas em branco e espaços nas pontas não viram parágrafo vazio', () => {
+  assert.deepEqual(emParagrafos('  Um.  \n\n\r\n   \nDois.\n'), ['Um.', 'Dois.']);
+});
+
+test('um texto de uma linha só é um parágrafo', () => {
+  assert.deepEqual(emParagrafos('Excelente profissional.'), [
+    prenderUltimaPalavra('Excelente profissional.'),
+  ]);
 });

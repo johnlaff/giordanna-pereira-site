@@ -141,7 +141,8 @@ Identificadores sem acento nem cedilha; acentos só no rótulo que Giordanna vê
 | Papel   | `papel`       | Papel         |
 | Texto   | `texto`       | Texto         |
 
-`texto` é o único campo opcional: sem ele, o Depoimento aparece no estado Em breve. O
+`texto` é o único campo opcional: sem ele, o Depoimento aparece no estado Em breve. Cada
+linha do `texto` é um parágrafo no card (`emParagrafos`, em `src/tipografia.ts`). O
 Depoimento não tem Ordem própria como o Projeto — a posição dele não vira URL nem navegação,
 só a vez de aparecer no carrossel —, e a sequência é a do nome do arquivo, daí o prefixo
 numérico em `src/content/depoimentos/`. Um Depoimento criado pelo CMS nasce com a data como

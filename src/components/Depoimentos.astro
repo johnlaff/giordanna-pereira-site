@@ -17,6 +17,7 @@
 import { getCollection } from 'astro:content';
 import { depoimentos as secao } from '../config';
 import { ordenarDepoimentos } from '../content.schema';
+import { emParagrafos } from '../tipografia';
 import Icone from './Icone.astro';
 
 const lista = ordenarDepoimentos(await getCollection('depoimentos'));
@@ -47,7 +48,13 @@ const EM_BREVE = 'Depoimento em\u00a0breve.';
             aria-roledescription="depoimento"
             aria-label={`${i + 1} de ${lista.length}`}
           >
-            <p>{data.texto ?? EM_BREVE}</p>
+            <blockquote>
+              {data.texto === undefined ? (
+                <p>{EM_BREVE}</p>
+              ) : (
+                emParagrafos(data.texto).map((paragrafo) => <p>{paragrafo}</p>)
+              )}
+            </blockquote>
             <figcaption>
               <b>{data.nome}</b>
               <span>{data.papel}</span>
@@ -145,11 +152,18 @@ const EM_BREVE = 'Depoimento em\u00a0breve.';
     display: block;
     margin-bottom: 12px;
   }
+  /* O texto ocupa a altura que sobra e empurra a legenda para o pé do card. Cada linha que
+     Giordanna digita no CMS é um parágrafo, com um respiro entre eles. */
+  .qcard blockquote {
+    flex: 1;
+    margin-bottom: 16px;
+  }
   .qcard p {
     font-size: 15px;
     color: var(--ink-soft);
-    margin-bottom: 16px;
-    flex: 1;
+  }
+  .qcard p + p {
+    margin-top: 0.75em;
   }
   .qcard.soon p {
     font-style: italic;
