@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { depoimentos as secao } from '../../src/config.ts';
+import { emParagrafos } from '../../src/tipografia.ts';
 import { depoimentos } from './depoimentos.ts';
 
 // O carrossel de Depoimentos, herdado do Preview: giro infinito por cópias nas duas pontas,
@@ -78,6 +79,25 @@ test('o carrossel mostra os Depoimentos da collection, na ordem do conteúdo', a
   await expect(cards.locator('figcaption span')).toHaveText(depoimentos.map(({ papel }) => papel));
 });
 
+// O texto vem de uma caixa de várias linhas no CMS: cada linha que Giordanna digita é um
+// parágrafo no card, com espaço entre eles, e não um bloco corrido.
+test('cada linha do texto de um Depoimento é um parágrafo no card', async ({ page }) => {
+  await abrirOsDepoimentos(page);
+  const cards = page.locator('.qcard:not(.clone)');
+  for (const [i, { nome, texto }] of depoimentos.entries()) {
+    if (texto === undefined) continue;
+    const paragrafos = cards.nth(i).locator('p');
+    await expect(paragrafos, nome).toHaveText(emParagrafos(texto));
+  }
+  const varios = depoimentos.findIndex(({ texto }) => emParagrafos(texto ?? '').length > 1);
+  test.skip(varios === -1, 'nenhum Depoimento tem mais de um parágrafo');
+  const [primeiro, segundo] = await cards
+    .nth(varios)
+    .locator('p')
+    .evaluateAll((ps) => ps.slice(0, 2).map((p) => p.getBoundingClientRect()));
+  expect(segundo!.top - primeiro!.bottom).toBeGreaterThanOrEqual(8);
+});
+
 test('um Depoimento sem texto aparece como Em breve', async ({ page }) => {
   test.skip(aguardandoTexto.length === 0, 'nenhum Depoimento está aguardando texto');
   await abrirOsDepoimentos(page);
@@ -87,7 +107,6 @@ test('um Depoimento sem texto aparece como Em breve', async ({ page }) => {
     const paragrafo = card.locator('p');
     if (depoimento.texto !== undefined) {
       await expect(card, depoimento.nome).not.toHaveClass(/\bsoon\b/);
-      await expect(paragrafo).toHaveText(depoimento.texto);
       continue;
     }
     await expect(card, depoimento.nome).toHaveClass(/\bsoon\b/);
@@ -323,7 +342,7 @@ test.describe('com o mouse', () => {
   test('o texto do card é selecionável e não arrasta o carrossel', async ({ page }) => {
     await abrirOsDepoimentos(page);
     const comTexto = depoimentos.findIndex(({ texto }) => texto !== undefined);
-    const paragrafo = page.locator('.qcard:not(.clone)').nth(comTexto).locator('p');
+    const paragrafo = page.locator('.qcard:not(.clone)').nth(comTexto).locator('p').first();
     const caixa = await paragrafo.boundingBox();
     if (caixa === null) throw new Error('o card com texto não está na página');
     // O gesto começa e termina dentro do parágrafo: o card com texto pode ser o primeiro da faixa,

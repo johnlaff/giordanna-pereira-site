@@ -214,7 +214,7 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
           label: 'Texto',
           widget: 'text',
           required: false,
-          hint: 'Sem texto, o depoimento aparece como Em breve.',
+          hint: 'Cada linha vira um parágrafo no site. Sem texto, o depoimento aparece como Em breve.',
           pattern: semHtml,
         },
       ],
