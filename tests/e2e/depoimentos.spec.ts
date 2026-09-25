@@ -326,7 +326,9 @@ test.describe('com o mouse', () => {
     const paragrafo = page.locator('.qcard:not(.clone)').nth(comTexto).locator('p');
     const caixa = await paragrafo.boundingBox();
     if (caixa === null) throw new Error('o card com texto não está na página');
-    const origem = { x: caixa.x + 40, y: caixa.y + 20 };
+    // O gesto começa e termina dentro do parágrafo: o card com texto pode ser o primeiro da faixa,
+    // colado na borda esquerda da tela, e um arraste que sai da janela não seleciona nada.
+    const origem = { x: caixa.x + caixa.width - 40, y: caixa.y + 20 };
 
     const cursor = await page.evaluate(
       ({ x, y }) => getComputedStyle(document.elementFromPoint(x, y)!).cursor,
@@ -335,7 +337,7 @@ test.describe('com o mouse', () => {
     expect(['auto', 'text', 'default']).toContain(cursor);
 
     const antes = await rolagem(page);
-    await arrastar(page, origem, -300);
+    await arrastar(page, origem, -(caixa.width - 80));
     expect(await rolagem(page)).toBe(antes);
     expect(await page.evaluate(() => getSelection()?.toString().length ?? 0)).toBeGreaterThan(0);
     await expect(trilho(page)).not.toHaveClass(/\bdrag\b/);
