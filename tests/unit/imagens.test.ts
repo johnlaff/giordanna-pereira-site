@@ -103,3 +103,24 @@ test('um WebP abaixo da qualidade sem perda continua com perda', async () => {
   const esperado = await sharp(readFileSync(menorImagem)).resize({ width: 320 }).raw().toBuffer();
   assert.notDeepEqual(await sharp(webp).raw().toBuffer(), esperado);
 });
+
+// O CMS grava WebP com perda: recomprimi-lo sem perda dobraria o peso sem ganhar um pixel.
+test('um WebP pedido sem perda no tamanho dele sai como está, byte a byte', async () => {
+  const { default: sharp } = await import('sharp');
+  const entrada = readFileSync(menorImagem);
+  const { width } = await sharp(entrada).metadata();
+  const { data } = await servicoSharp.transform(
+    entrada,
+    { src: menorImagem, width, format: 'webp', quality: qualidadeSemPerda },
+    {
+      endpoint: { route: '/_image' },
+      service: { entrypoint: servicoDeImagem.entrypoint, config: {} },
+      dangerouslyProcessSVG: false,
+      domains: [],
+      remotePatterns: [],
+      responsiveStyles: false,
+    },
+    { warn: () => {}, info: () => {}, error: () => {} },
+  );
+  assert.ok(Buffer.from(data).equals(entrada));
+});
