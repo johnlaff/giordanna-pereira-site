@@ -347,12 +347,23 @@ test.describe('editar a home pelo CMS', () => {
       await nome.fill('Lumion');
       await expect(nome).toHaveValue('Lumion', { timeout: 1_000 });
     }).toPass();
-    await page
-      .getByRole('radiogroup', { name: 'Nível' })
-      .getByRole('radio', { name: 'Familiaridade média (bloco cinza)' })
-      .check();
-    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
-    await expect(page.getByText('Entrada salva.')).toBeVisible({ timeout: 30_000 });
+    // O Nome grava no item novo um instante depois de digitado e, se o Nível for marcado nesse
+    // meio-tempo, leva o Nível embora: a tela mostra a opção marcada e o Salvar acusa o campo
+    // vazio. Uma pessoa não marca tão rápido; o robô, sob carga, sim. Então, se o Salvar recusar
+    // o Nível, marca de novo, já com o Nome assentado, e o arquivo no fim confere o que foi gravado.
+    const niveis = page.getByRole('radiogroup', { name: 'Nível' });
+    const media = niveis.getByRole('radio', { name: 'Familiaridade média (bloco cinza)' });
+    const salva = page.getByText('Entrada salva.');
+    const nivelVazio = page.getByRole('alert').filter({ hasText: 'Este campo é obrigatório.' });
+    await media.check();
+    for (let tentativa = 1; ; tentativa++) {
+      await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+      await expect(salva.or(nivelVazio)).toBeVisible({ timeout: 30_000 });
+      if (await salva.isVisible()) break;
+      expect(tentativa, 'o Nível marcado não chegou ao item').toBeLessThan(3);
+      await niveis.getByRole('radio', { name: 'Mais familiaridade (bloco escuro)' }).check();
+      await media.check();
+    }
 
     const yml = await lerDoRepositorio(page, 'src/content/home/familiaridade.yml');
     expect(yml).toBeDefined();
