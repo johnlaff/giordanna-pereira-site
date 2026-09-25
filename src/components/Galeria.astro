@@ -127,6 +127,7 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
 <script>
   import PhotoSwipeLightbox from 'photoswipe/lightbox';
   import { DENSIDADE_SEM_RETINA, TELA_ESTREITA, linhasDaGaleria } from './galeria.linhas';
+  import { zoomSuave } from './galeria.zoom';
 
   const galeria = document.querySelector<HTMLElement>('.gal');
   if (galeria !== null) {
@@ -183,9 +184,9 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
       wheelToZoom: true,
       initialZoomLevel: 'fit',
       // Ampliar enche a tela, e quando isso rende pouco — um retrato numa tela em pé — vai
-      // pelo menos a duas vezes e meia o ajuste. O teto é o tamanho real do arquivo em
-      // `src/assets/` — numa prancha em 7680 px, cinco vezes a tela do notebook, o bastante
-      // para ler a cota —: além dele, o que cresce é o artefato do arquivo, não a informação.
+      // pelo menos a duas vezes e meia o ajuste. O teto é o tamanho da imagem — numa prancha,
+      // a inteira de 5120 px, quatro vezes a tela do notebook, o bastante para ler a cota —:
+      // além dele, o que cresce é o artefato do arquivo, não a informação.
       secondaryZoomLevel: (zoom) => Math.min(Math.max(zoom.fill, zoom.fit * 2.5), 1),
       maxZoomLevel: 1,
       imageClickAction: 'zoom',
@@ -219,6 +220,15 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
     };
     ajustarMovimento();
     semMovimento.addEventListener('change', ajustarMovimento);
+
+    // A roda amplia aos poucos, como a pinça, em vez de redimensionar a imagem a cada evento.
+    const rodaSuave = zoomSuave(
+      () => lightbox.pswp?.currSlide,
+      () => semMovimento.matches,
+    );
+    lightbox.on('wheel', (evento) => {
+      if (rodaSuave(evento.originalEvent)) evento.preventDefault();
+    });
 
     // Em tela cheia vale a maior variante que a tela justifica, no formato que o navegador
     // já escolheu para a miniatura: o `srcset` do lightbox é o mesmo do `<picture>` da página.

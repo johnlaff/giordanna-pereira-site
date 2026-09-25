@@ -8,6 +8,7 @@ import {
   linhasDaGaleria,
   porFaixa,
 } from '../../src/components/galeria.linhas.ts';
+import { fatorDaRoda, proximoQuadro } from '../../src/components/galeria.zoom.ts';
 
 // A Galeria monta linhas justificadas: cada linha ocupa a largura toda, todas as imagens de
 // uma linha têm a mesma altura e a proporção de cada imagem é preservada — salvo o corte
@@ -160,4 +161,34 @@ test('uma Galeria sem imagens não tem linha alguma', () => {
 
 test('uma Galeria medida antes de ter largura não tem linha alguma', () => {
   assert.deepEqual(linhasDaGaleria([RENDER], medidas(0)), []);
+});
+
+// O zoom pela roda: o mesmo passo por dente no Chrome (pixels) e no Firefox (linhas), e uma
+// escala que persegue o alvo quadro a quadro até chegar — sem passar dele nem parar antes.
+test('um dente da roda amplia uns 15% no Chrome e no Firefox', () => {
+  const chrome = fatorDaRoda({ deltaY: -100, deltaMode: 0 });
+  const firefox = fatorDaRoda({ deltaY: -3, deltaMode: 1 });
+  assert.ok(chrome > 1.1 && chrome < 1.2, `Chrome: ${chrome}`);
+  assert.ok(firefox > 1.1 && firefox < 1.2, `Firefox: ${firefox}`);
+  assert.ok(fatorDaRoda({ deltaY: 100, deltaMode: 0 }) < 1);
+});
+
+test('a escala chega ao alvo em poucos quadros, sempre do mesmo lado dele', () => {
+  for (const [inicio, alvo] of [
+    [0.2, 1],
+    [1, 0.2],
+  ] as const) {
+    let zoom: number = inicio;
+    let quadros = 0;
+    for (let chegou = false; !chegou; quadros++) {
+      const anterior = zoom;
+      ({ zoom, chegou } = proximoQuadro(zoom, alvo));
+      assert.ok(
+        inicio < alvo ? zoom >= anterior && zoom <= alvo : zoom <= anterior && zoom >= alvo,
+      );
+    }
+    assert.equal(zoom, alvo);
+    // Uns 400 ms a 60 quadros por segundo: suave, mas sem arrastar.
+    assert.ok(quadros <= 30, `${quadros} quadros`);
+  }
 });

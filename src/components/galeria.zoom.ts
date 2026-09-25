@@ -1,0 +1,93 @@
+/**
+ * O zoom pela roda do mouse, suave. O PhotoSwipe aplica cada evento da roda de uma vez, e a
+ * cada um redimensiona a imagem de verdade — numa prancha de 5120 px, é o navegador redesenhando
+ * milhões de pixels por evento, e o zoom anda aos trancos. A pinça do celular não sofre disso:
+ * durante o gesto ela só escala a imagem por `transform` e redimensiona uma vez, no fim. Aqui a
+ * roda passa a fazer o mesmo: ela move um alvo, a escala persegue o alvo quadro a quadro, e a
+ * imagem só ganha o tamanho novo quando a escala chega lá.
+ *
+ * A aritmética fica fora do componente para ser verificável sem navegador.
+ */
+
+/** Quanto do caminho até o alvo a escala anda a cada quadro, na escala logarítmica. */
+export const PASSO_POR_QUADRO = 0.25;
+
+/** Abaixo desta distância (logarítmica) do alvo, a escala chega de vez. */
+const CHEGOU = 0.002;
+
+/**
+ * O fator que um evento da roda aplica ao zoom, o mesmo do PhotoSwipe: o Firefox conta a roda
+ * em linhas (`deltaMode` 1), o Chrome em pixels, e os dois dão uns 15% por dente da roda.
+ */
+export const fatorDaRoda = ({ deltaY, deltaMode }: Pick<WheelEvent, 'deltaY' | 'deltaMode'>) => {
+  const escala = deltaMode === 1 ? 0.05 : deltaMode === 0 ? 0.002 : 1;
+  return 2 ** (-deltaY * escala);
+};
+
+/** O próximo quadro da escala a caminho do alvo, e se ela chegou. */
+export const proximoQuadro = (atual: number, alvo: number) => {
+  const distancia = Math.log(alvo / atual);
+  if (Math.abs(distancia) < CHEGOU) return { zoom: alvo, chegou: true };
+  return { zoom: atual * Math.exp(distancia * PASSO_POR_QUADRO), chegou: false };
+};
+
+/** O mínimo que o zoom suave precisa de um slide do PhotoSwipe. */
+interface Slide {
+  currZoomLevel: number;
+  zoomLevels: { min: number; max: number };
+  pan: { x: number; y: number };
+  isZoomable(): boolean;
+  setZoomLevel(zoom: number): void;
+  calculateZoomToPanOffset(eixo: 'x' | 'y', ponto: { x: number; y: number }, antes: number): number;
+  applyCurrentZoomPan(): void;
+  zoomTo(zoom: number, ponto: { x: number; y: number }, duracao?: number): void;
+}
+
+/**
+ * Liga o zoom suave a um lightbox. `slideAtual` devolve o slide em cena; `semMovimento` diz se
+ * quem visita prefere menos movimento, e aí o zoom vai direto ao alvo, sem quadros no caminho.
+ */
+export const zoomSuave = (slideAtual: () => Slide | undefined, semMovimento: () => boolean) => {
+  let alvo = 0;
+  let ponto = { x: 0, y: 0 };
+  let animando: Slide | undefined;
+
+  const quadro = () => {
+    const slide = slideAtual();
+    if (slide === undefined || slide !== animando) {
+      animando = undefined;
+      return;
+    }
+    const antes = slide.currZoomLevel;
+    const { zoom, chegou } = proximoQuadro(antes, alvo);
+    if (chegou) {
+      animando = undefined;
+      // Só agora a imagem ganha o tamanho novo — e o navegador escolhe a variante que ele pede.
+      slide.zoomTo(zoom, ponto, 0);
+      return;
+    }
+    slide.setZoomLevel(zoom);
+    slide.pan.x = slide.calculateZoomToPanOffset('x', ponto, antes);
+    slide.pan.y = slide.calculateZoomToPanOffset('y', ponto, antes);
+    slide.applyCurrentZoomPan();
+    requestAnimationFrame(quadro);
+  };
+
+  /** Recebe um evento da roda; devolve `false` quando ele não é zoom e fica com o PhotoSwipe. */
+  return (evento: WheelEvent) => {
+    const slide = slideAtual();
+    if (slide === undefined || !slide.isZoomable()) return false;
+    if (animando !== slide) alvo = slide.currZoomLevel;
+    const { min, max } = slide.zoomLevels;
+    alvo = Math.min(max, Math.max(min, alvo * fatorDaRoda(evento)));
+    ponto = { x: evento.clientX, y: evento.clientY };
+    if (semMovimento()) {
+      animando = undefined;
+      slide.zoomTo(alvo, ponto, 0);
+    } else if (animando !== slide) {
+      animando = slide;
+      requestAnimationFrame(quadro);
+    }
+    return true;
+  };
+};
