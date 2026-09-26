@@ -8,8 +8,15 @@ import { MINIMO_DA_MENSAGEM } from './contato/mensagem.ts';
 
 export const site = {
   nome: 'Giordanna Pereira Arquitetura',
+  /**
+   * O título da home, que é o que o buscador mostra quando procuram por ela: o nome e a
+   * profissão, nas palavras de quem busca ("Giordanna arquiteta"). A cidade fica de fora de
+   * propósito: ela atende em pessoa em Uberlândia, mas também remoto, no Brasil todo, e a
+   * cidade está na descrição, no Sobre e nos dados estruturados, onde o buscador a lê.
+   */
+  titulo: 'Giordanna Pereira · Arquiteta e Urbanista',
   descricao:
-    'Giordanna Pereira — arquiteta e urbanista em Uberlândia, MG. Arquitetura, habitação, interiores e documentação executiva.',
+    'Giordanna Pereira, arquiteta e urbanista em Uberlândia, MG, com projetos para todo o Brasil: residenciais, comerciais, interiores e documentação executiva em BIM.',
   url: 'https://giordannapereira.arq.br',
 } as const;
 
@@ -28,14 +35,34 @@ export const pessoa = {
   profissao: 'Arquiteta e urbanista',
   cidade: 'Uberlândia',
   estado: 'MG',
+  /**
+   * As cidades onde ela atende em pessoa, as mesmas da credencial "Atuação" do Sobre, que diz
+   * também do trabalho remoto para o Brasil todo.
+   */
+  cidadesDeAtuacao: ['Uberlândia', 'Araxá'],
+  /** Onde ela estudou, como a credencial "Formação" do Sobre. */
+  formacao: ['Universidade Federal de Uberlândia', 'CEFET-MG'],
+  /** Os assuntos do trabalho dela, como o buscador os lê. */
+  areas: [
+    'Arquitetura',
+    'Urbanismo',
+    'Projeto residencial',
+    'Projeto comercial',
+    'Design de interiores',
+    'Documentação executiva',
+    'BIM',
+    'Habitação de interesse social',
+  ],
+  /** Perfis dela fora do site que não são canal de Contato, e por isso não estão em `contatos`. */
+  outrosPerfis: ['https://www.instagram.com/giordannapb'],
 } as const;
 
 /**
- * Como o site nomeia uma página: o nome dela e o do site, e só o do site na home. Fica aqui
+ * Como o site nomeia uma página: o nome dela e o do site, e o título próprio na home. Fica aqui
  * porque não é só o título da aba — é o mesmo par que viaja no que se compartilha.
  */
 export const tituloDaPagina = (titulo?: string): string =>
-  titulo ? `${titulo} — ${site.nome}` : site.nome;
+  titulo ? `${titulo} — ${site.nome}` : site.titulo;
 
 /**
  * E-mail exibido no site. Constante única: Contatos, rodapé e a alternativa do formulário leem daqui.

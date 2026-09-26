@@ -1,6 +1,7 @@
 /**
  * Os dados estruturados (JSON-LD, vocabulário do schema.org) que o buscador lê nas páginas:
- * Giordanna como `Person` na home e cada Projeto como `CreativeWork` na sua página.
+ * Giordanna como `Person` e o site como `WebSite` na home, e cada Projeto como `CreativeWork`
+ * na sua página.
  *
  * As URLs saem de `site`, a forma canônica (ADR 0007), como no sitemap e no Compartilhe. A
  * imagem de um Projeto é o seu Cartão de compartilhamento: é a única imagem com endereço fixo
@@ -12,9 +13,12 @@ import { rotaDoProjeto } from '../rotas.ts';
 import { caminhoDoCartao } from './cartoes.ts';
 
 /** Os perfis de Giordanna fora do site. O WhatsApp é um canal, não um perfil. */
-const perfis = contatos
-  .filter(({ tipo }) => tipo === 'linkedin' || tipo === 'behance')
-  .map(({ href }) => href);
+const perfis = [
+  ...contatos
+    .filter(({ tipo }) => tipo === 'linkedin' || tipo === 'behance')
+    .map(({ href }) => href),
+  ...pessoa.outrosPerfis,
+];
 
 const giordanna = (site: URL) => ({
   '@type': 'Person' as const,
@@ -27,6 +31,7 @@ export const dadosDaPessoa = (site: URL) => ({
   ...giordanna(site),
   jobTitle: pessoa.profissao,
   description: dadosDoSite.descricao,
+  identifier: marca.cau,
   email: emailExibido,
   address: {
     '@type': 'PostalAddress' as const,
@@ -34,7 +39,26 @@ export const dadosDaPessoa = (site: URL) => ({
     addressRegion: pessoa.estado,
     addressCountry: 'BR',
   },
+  workLocation: pessoa.cidadesDeAtuacao.map((cidade) => ({
+    '@type': 'Place' as const,
+    name: `${cidade}, ${pessoa.estado}`,
+  })),
+  alumniOf: pessoa.formacao.map((name) => ({ '@type': 'EducationalOrganization' as const, name })),
+  knowsAbout: pessoa.areas,
   sameAs: perfis,
+});
+
+/**
+ * O site como `WebSite`: é daqui que o Google tira o nome que mostra acima do endereço nos
+ * resultados, em vez do domínio.
+ */
+export const dadosDoWebSite = (site: URL) => ({
+  '@context': 'https://schema.org' as const,
+  '@type': 'WebSite' as const,
+  name: dadosDoSite.nome,
+  alternateName: marca.nome,
+  url: new URL('/', site).href,
+  inLanguage: 'pt-BR',
 });
 
 /** O que o CreativeWork lê de um Projeto: um recorte dos campos da collection. */

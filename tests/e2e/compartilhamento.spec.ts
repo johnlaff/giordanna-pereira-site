@@ -21,6 +21,18 @@ const meta = (html: string, chave: string): string | undefined => {
   return conteudo?.replaceAll('&amp;', '&').replaceAll('&#39;', "'").replaceAll('&quot;', '"');
 };
 
+/** O `href` de todo `<link rel="canonical">` da página. */
+const canonicais = (html: string): string[] =>
+  [...html.matchAll(/<link\b[^>]*rel="canonical"[^>]*>/g)].map(
+    ([tag]) => /href="([^"]*)"/.exec(tag)?.[1] ?? '',
+  );
+
+const canonical = (html: string): string | undefined => {
+  const lista = canonicais(html);
+  expect(lista.length, 'a página tem mais de um canonical').toBeLessThanOrEqual(1);
+  return lista[0];
+};
+
 const jsonLds = (html: string): unknown[] =>
   [...html.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)].map(([, j]) =>
     JSON.parse(j ?? ''),
@@ -61,6 +73,8 @@ for (const rota of PUBLICAS) {
     const url = new URL(meta(html, 'og:url') ?? '');
     expect(url.origin).toBe('https://giordannapereira.arq.br');
     expect(url.pathname).toBe(rota);
+    // E o buscador segue o canonical, que diz o mesmo endereço.
+    expect(canonical(html)).toBe(url.href);
 
     const imagem = new URL(meta(html, 'og:image') ?? '');
     expect(imagem.origin).toBe('https://giordannapereira.arq.br');
@@ -72,6 +86,26 @@ for (const rota of PUBLICAS) {
     expect(cartao.status(), `${imagem.pathname} não existe`).toBe(200);
     expect(cartao.headers()['content-type']).toBe('image/jpeg');
     expect(medidasDoJpeg(await cartao.body())).toEqual({ largura: 1200, altura: 630 });
+  });
+}
+
+// O mesmo Worker responde no domínio, no workers.dev e nas URLs de preview (subdomínios do
+// workers.dev). Só o domínio pode entrar no índice do buscador; os outros pedem para ficar fora.
+const HOSTS_DO_WORKERS_DEV = [
+  'giordanna-pereira-site.joaoaraxaiba.workers.dev',
+  '1a2b3c4d-giordanna-pereira-site.joaoaraxaiba.workers.dev',
+];
+
+for (const rota of PUBLICAS) {
+  test(`${rota} fica fora do índice no workers.dev e dentro dele no domínio`, async ({
+    request,
+  }) => {
+    const noDominio = await request.get(rota, { headers: { Host: 'giordannapereira.arq.br' } });
+    expect(noDominio.headers()['x-robots-tag']).toBeUndefined();
+    for (const host of HOSTS_DO_WORKERS_DEV) {
+      const resposta = await request.get(rota, { headers: { Host: host } });
+      expect(resposta.headers()['x-robots-tag'], host).toBe('noindex');
+    }
   });
 }
 
@@ -90,6 +124,7 @@ test('a página que não existe também leva o Cartão do site', async ({ reques
   expect((await request.get(imagem.pathname)).status()).toBe(200);
   // Não há endereço canônico a anunciar para uma página que não existe.
   expect(meta(html, 'og:url')).toBeUndefined();
+  expect(canonicais(html)).toEqual([]);
 });
 
 test('as JPGs de Projeto do handoff saíram da pasta pública', async ({ request }) => {
@@ -117,11 +152,17 @@ for (const projeto of projetos.filter((p) => !temCapa(p))) {
   });
 }
 
-test('a home descreve Giordanna em JSON-LD válido', async ({ request }) => {
-  const [pessoa, ...outros] = jsonLds(await pagina(request, '/'));
+test('a home descreve Giordanna e o site em JSON-LD válido', async ({ request }) => {
+  const [pessoa, website, ...outros] = jsonLds(await pagina(request, '/'));
   expect(outros).toEqual([]);
   expect(errosDeJsonLd(pessoa)).toEqual([]);
   expect(pessoa).toMatchObject({ '@type': 'Person', name: 'Giordanna Pereira' });
+  expect(errosDeJsonLd(website)).toEqual([]);
+  expect(website).toMatchObject({
+    '@type': 'WebSite',
+    name: 'Giordanna Pereira Arquitetura',
+    url: 'https://giordannapereira.arq.br/',
+  });
 });
 
 for (const { rota, dados } of projetos) {

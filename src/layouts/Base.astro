@@ -20,8 +20,11 @@ interface Props {
    * e o que escolhe o Cartão de compartilhamento. Sem ela (a 404), vale o Cartão da home.
    */
   rota?: string | undefined;
-  /** Os dados estruturados da página, em JSON-LD (`compartilhamento/dados-estruturados.ts`). */
-  dadosEstruturados?: object | undefined;
+  /**
+   * Os dados estruturados da página, em JSON-LD (`compartilhamento/dados-estruturados.ts`): um
+   * documento, ou vários, cada um no seu `<script>`.
+   */
+  dadosEstruturados?: object | readonly object[] | undefined;
 }
 
 const {
@@ -35,6 +38,7 @@ const {
 const tituloCompleto = tituloDaPagina(titulo);
 if (Astro.site === undefined) throw new Error('sem `site` em astro.config.ts, o OG não tem URL');
 const cartao = new URL(caminhoDoCartao(rota ?? '/'), Astro.site).href;
+const documentos = dadosEstruturados === undefined ? [] : [dadosEstruturados].flat();
 ---
 
 <!doctype html>
@@ -44,6 +48,11 @@ const cartao = new URL(caminhoDoCartao(rota ?? '/'), Astro.site).href;
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>{tituloCompleto}</title>
     <meta name="description" content={descricao} />
+    {/*
+      O endereço canônico, no domínio: o mesmo conteúdo responde também no workers.dev e,
+      sem esta tag, o buscador pode escolher aquele endereço para mostrar.
+    */}
+    {rota !== undefined && <link rel="canonical" href={new URL(rota, Astro.site).href} />}
     {/* O que o WhatsApp, o LinkedIn e os demais mostram de um link colado numa conversa. */}
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="pt_BR" />
@@ -57,9 +66,9 @@ const cartao = new URL(caminhoDoCartao(rota ?? '/'), Astro.site).href;
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content={tituloCompleto} />
     <meta name="twitter:card" content="summary_large_image" />
-    {dadosEstruturados !== undefined && (
-      <script is:inline type="application/ld+json" set:html={jsonLd(dadosEstruturados)}></script>
-    )}
+    {documentos.map((dados) => (
+      <script is:inline type="application/ld+json" set:html={jsonLd(dados)}></script>
+    ))}
     <meta name="theme-color" content="#232D38" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
