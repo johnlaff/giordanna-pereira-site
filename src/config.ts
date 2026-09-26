@@ -9,10 +9,12 @@ import { MINIMO_DA_MENSAGEM } from './contato/mensagem.ts';
 export const site = {
   nome: 'Giordanna Pereira Arquitetura',
   /**
-   * O título da home, que é o que o buscador mostra quando procuram por ela: o nome, a
-   * profissão e a cidade, nas palavras de quem busca ("arquiteta Uberlândia").
+   * O título da home, que é o que o buscador mostra quando procuram por ela: o nome e a
+   * profissão, nas palavras de quem busca ("Giordanna arquiteta"). A cidade fica de fora de
+   * propósito: ela atende em pessoa em Uberlândia, mas também remoto, no Brasil todo, e a
+   * cidade está na descrição, no Sobre e nos dados estruturados, onde o buscador a lê.
    */
-  titulo: 'Giordanna Pereira · Arquiteta e Urbanista em Uberlândia, MG',
+  titulo: 'Giordanna Pereira · Arquiteta e Urbanista',
   descricao:
     'Giordanna Pereira, arquiteta e urbanista em Uberlândia, MG, com projetos para todo o Brasil: residenciais, comerciais, interiores e documentação executiva em BIM.',
   url: 'https://giordannapereira.arq.br',
