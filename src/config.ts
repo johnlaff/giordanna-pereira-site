@@ -14,7 +14,7 @@ export const site = {
    * propósito: ela atende em pessoa em Uberlândia, mas também remoto, no Brasil todo, e a
    * cidade está na descrição, no Sobre e nos dados estruturados, onde o buscador a lê.
    */
-  titulo: 'Giordanna Pereira · Arquiteta e Urbanista',
+  titulo: 'Giordanna Pereira | Arquiteta e Urbanista',
   descricao:
     'Giordanna Pereira, arquiteta e urbanista em Uberlândia, MG, com projetos para todo o Brasil: residenciais, comerciais, interiores e documentação executiva em BIM.',
   url: 'https://giordannapereira.arq.br',
