@@ -1,11 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { contatos, emailExibido, marca } from '../../src/config.ts';
+import { contatos, emailExibido, marca, site } from '../../src/config.ts';
 import { rotas } from './rotas.ts';
 
 test('home responde 200 com a marca no cabeçalho', async ({ page }) => {
   const resposta = await page.goto('/');
   expect(resposta?.status()).toBe(200);
-  await expect(page).toHaveTitle(/Giordanna Pereira Arquitetura/);
+  await expect(page).toHaveTitle(site.titulo);
   const brand = page.locator('header .brand');
   await expect(brand).toContainText(marca.nome);
   await expect(brand).toContainText(marca.cau);

@@ -8,3 +8,8 @@
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+# O Worker responde também no workers.dev (e nas URLs de preview, que são subdomínios dele). É o
+# mesmo site, e o buscador não deve indexá-lo: o endereço do site é o domínio (ADR 0007).
+https://:worker.:conta.workers.dev/*
+  X-Robots-Tag: noindex

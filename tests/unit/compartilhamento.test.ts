@@ -9,6 +9,7 @@ import { lerProjetos } from '../../src/compartilhamento/integracao.ts';
 import {
   dadosDaPessoa,
   dadosDoProjeto,
+  dadosDoWebSite,
   jsonLd,
 } from '../../src/compartilhamento/dados-estruturados.ts';
 import { errosDeJsonLd } from '../schema-org.ts';
@@ -109,8 +110,34 @@ test('a home descreve Giordanna como Person, com os perfis dela e a cidade', () 
   assert.deepEqual(pessoa.sameAs, [
     'https://www.linkedin.com/in/giordannapb',
     'https://behance.net/giordannaborges',
+    'https://www.instagram.com/giordannapb',
   ]);
   assert.equal(pessoa.address.addressLocality, 'Uberlândia');
+  assert.equal(pessoa.identifier, 'CAU nº A333733-2');
+});
+
+test('a Person diz onde ela atende, onde estudou e do que trabalha', () => {
+  const pessoa = dadosDaPessoa(site);
+  assert.deepEqual(
+    pessoa.workLocation.map(({ name }) => name),
+    ['Uberlândia, MG', 'Araxá, MG'],
+  );
+  assert.deepEqual(
+    pessoa.alumniOf.map(({ name }) => name),
+    ['Universidade Federal de Uberlândia', 'CEFET-MG'],
+  );
+  assert.ok(pessoa.knowsAbout.includes('Design de interiores'));
+  // A descrição é o que o buscador pode citar: a cidade e o alcance nacional, juntos.
+  assert.match(pessoa.description, /Uberlândia/);
+  assert.match(pessoa.description, /todo o Brasil/);
+});
+
+test('a home descreve o site como WebSite, com o nome que o Google mostra', () => {
+  const website = dadosDoWebSite(site);
+  assert.deepEqual(errosDeJsonLd(website), []);
+  assert.equal(website.name, 'Giordanna Pereira Arquitetura');
+  assert.equal(website.alternateName, 'Giordanna Pereira');
+  assert.equal(website.url, 'https://giordannapereira.arq.br/');
 });
 
 const campos = {

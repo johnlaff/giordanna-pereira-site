@@ -13,3 +13,4 @@ A escolha é sem barra porque é a forma que o site já usa em todos os links, d
 - O `wrangler dev` e o deploy leem o `dist/client/wrangler.json` que o adapter gera no build, não o `wrangler.jsonc` da raiz. Mudança em `html_handling` só vale depois de `pnpm build`.
 - Quem tiver um endereço antigo com barra continua chegando à página, pelo desvio na direção contrária.
 - `tests/e2e/urls.spec.ts` cobra a forma canônica de toda rota pública; uma rota nova entra na verificação pela lista de `tests/e2e/rotas.ts`.
+- Cada página pública declara essa forma, no domínio, num `<link rel="canonical">` do `Base.astro`. O mesmo Worker responde também no workers.dev e nas URLs de preview, e é o canonical que diz ao buscador qual endereço mostrar; as respostas estáticas nesses hosts levam ainda `X-Robots-Tag: noindex`, pela regra do `public/_headers`. `tests/e2e/compartilhamento.spec.ts` cobra os dois.

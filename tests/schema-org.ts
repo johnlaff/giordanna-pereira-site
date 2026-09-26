@@ -1,15 +1,17 @@
 /**
  * Um validador de JSON-LD contra o vocabulário do schema.org, restrito aos tipos que o site
  * publica. As propriedades de cada tipo e o que elas aceitam foram copiados das páginas do
- * próprio schema.org (https://schema.org/Person, /CreativeWork, /PostalAddress, /Place e
- * /Thing, de que todos herdam) — é a fonte independente contra a qual os dados do site são
- * conferidos, e não uma segunda leitura do código que os monta.
+ * próprio schema.org (https://schema.org/Person, /CreativeWork, /WebSite,
+ * /EducationalOrganization, /PostalAddress, /Place e /Thing, de que todos herdam) — é a fonte
+ * independente contra a qual os dados do site são conferidos, e não uma segunda leitura do
+ * código que os monta.
  *
  * Não é o vocabulário inteiro: uma propriedade válida no schema.org que o site ainda não usa
  * não está aqui, e usá-la pede acrescentá-la, com a fonte.
  */
 
-type Valor = 'texto' | 'url' | 'data' | 'PostalAddress' | 'Place' | 'Person';
+type Valor =
+  'texto' | 'url' | 'data' | 'PostalAddress' | 'Place' | 'Person' | 'EducationalOrganization';
 
 const coisa: Record<string, Valor> = {
   name: 'texto',
@@ -30,7 +32,11 @@ const vocabulario: Record<string, Record<string, Valor>> = {
     address: 'PostalAddress',
     homeLocation: 'Place',
     workLocation: 'Place',
+    alumniOf: 'EducationalOrganization',
+    knowsAbout: 'texto',
   },
+  WebSite: { ...coisa, inLanguage: 'texto' },
+  EducationalOrganization: { ...coisa, address: 'PostalAddress' },
   CreativeWork: {
     ...coisa,
     genre: 'texto',
