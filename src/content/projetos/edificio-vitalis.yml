@@ -1,10 +1,7 @@
 titulo: Edifício Vitalis
-tipo: Comercial · Bem-estar
+tipo: Comercial
 capa: ../../assets/vitalis-torre-sky.webp
-descricao: >-
-  Edifício comercial dedicado ao bem-estar físico e mental, inspirado na anatomia humana — cada
-  pavimento reflete uma função essencial à saúde. Vista para o Parque do Sabiá e conexão com a
-  malha cicloviária de Uberlândia.
+descricao: Edifício comercial dedicado ao bem-estar físico e mental, inspirado na anatomia humana — cada pavimento reflete uma função essencial à saúde. Vista para o Parque do Sabiá e conexão com a malha cicloviária de Uberlândia.
 ferramentas:
   - Archicad
   - Enscape
