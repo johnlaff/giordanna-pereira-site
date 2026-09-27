@@ -1,14 +1,19 @@
 titulo: Suíte Premium · InCanto Residence Club
 tipo: Comercial
 capa: /src/assets/captura-de-tela-2026-09-27-143419.webp
-descricao: .
+descricao: |-
+  A Suíte Premium do InCanto Residence Club foi pensada para famílias que valorizam amplitude, conforto e privacidade em cada momento da estadia.
+
+  Com uma planta generosa e inteligente, o espaço se organiza em três setores bem definidos: uma área social integrada, com sala, cozinha e lavabo, ideal para convivência e momentos de descanso; uma área íntima com suíte de casal; e um segundo setor reservado, com cama de solteiro e banheiro próprio. A varanda amplia ainda mais a experiência, oferecendo uma agradável visualização para o hotel e conectando o interior à atmosfera do empreendimento.
+
+  Materiais naturais, tons suaves e detalhes em azul criam uma ambientação sofisticada, leve e acolhedora, transformando a suíte em um verdadeiro refúgio para viver o InCanto com toda a família.
 ferramentas:
   - Archicad
   - V-ray
 local: Costa do Sauipe · BA
 ano: '2026'
 area: 120 m²
-equipe: Grupo Aviva (projeto) · Giordanna Pereira (documentação)
+equipe: Unyt (projeto) · VISTAÈ | Projetos & Arquitetura (gerenciamento) · Giordanna Pereira (documentação)
 ordem: 10
 galeria:
   - /src/assets/captura-de-tela-2026-09-27-143413.webp
