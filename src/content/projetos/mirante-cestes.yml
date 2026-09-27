@@ -11,9 +11,6 @@ area: 100 m²
 equipe: Whallst Guibson (supervisão) · Giordanna Pereira (elaboração)
 ordem: 100
 galeria:
-  - /src/assets/ep-_-estudo-preliminar-1.webp
-  - /src/assets/ep-_-estudo-preliminar-2.webp
-  - /src/assets/ep-_-estudo-preliminar-3.webp
   - /src/assets/01.webp
   - /src/assets/02.webp
   - /src/assets/03.webp
@@ -21,3 +18,6 @@ galeria:
   - /src/assets/05.webp
   - /src/assets/06.webp
   - /src/assets/07.webp
+  - /src/assets/ep-_-estudo-preliminar-1.webp
+  - /src/assets/ep-_-estudo-preliminar-2.webp
+  - /src/assets/ep-_-estudo-preliminar-3.webp
