@@ -118,7 +118,7 @@ Segredos e variáveis do Worker (Resend, Turnstile, autenticador do Sveltia) fic
 
 Dois rulesets, versionados em `.github/rulesets/` e aplicados pela API do GitHub. São dois porque o bypass é por ruleset e o ADR 0002 pede bypass para o papel write só nas regras de PR e checks:
 
-- `main: PR e checks`: exige pull request (zero aprovações, threads resolvidas, merge só por squash) e os cinco checks do CI. Bypass para o papel **write**, que neste repositório cobre apenas quem publica pelo CMS. Administradores não têm bypass: João segue branch → PR → squash sempre.
+- `main: PR e checks`: exige pull request (zero aprovações, threads resolvidas, merge só por squash) e os cinco checks do CI. Bypass para o papel **write**, pensado para quem publica pelo CMS. Na prática ele vale também para a conta de admin do João: a API responde `current_user_can_bypass: always` para ela (conferido em 2026-09-26), e as sessões do Claude Code na web agem com essa conta. Um merge direto por ela passa mesmo com o CI vermelho. Por convenção o Claude só liga o auto-merge, que espera o ruleset ser cumprido; é a única ferramenta de merge pré-aprovada em `.claude/settings.json`, e um merge direto continua pedindo a palavra do João.
 - `main: histórico`: bloqueia force push e exclusão da branch. Sem bypass para ninguém.
 
 Aplicar ou atualizar:
