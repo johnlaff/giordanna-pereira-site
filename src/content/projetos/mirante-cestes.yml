@@ -1,8 +1,7 @@
 titulo: Mirante CESTES
 tipo: Comercial
-descricao: >-
-  A CESTE — Consórcio Estreito Energia solicitou a criação de uma proposta arquitetônica para um
-  mirante de contemplação da Usina Hidrelétrica de Estreito.
+capa: /src/assets/07.webp
+descricao: A CESTE — Consórcio Estreito Energia — solicitou a criação de uma proposta arquitetônica para um mirante de contemplação da Usina Hidrelétrica de Estreito - MA. Foi desenvolvido um estudo preliminar para o mirante e as próximas etapas do processo construtivo ainda estão em andamento.
 ferramentas:
   - Archicad
   - Enscape
@@ -11,4 +10,14 @@ ano: '2026'
 area: 100 m²
 equipe: Whallst Guibson (supervisão) · Giordanna Pereira (elaboração)
 ordem: 100
-galeria: []
+galeria:
+  - /src/assets/ep-_-estudo-preliminar-1.webp
+  - /src/assets/ep-_-estudo-preliminar-2.webp
+  - /src/assets/ep-_-estudo-preliminar-3.webp
+  - /src/assets/01.webp
+  - /src/assets/02.webp
+  - /src/assets/03.webp
+  - /src/assets/04.webp
+  - /src/assets/05.webp
+  - /src/assets/06.webp
+  - /src/assets/07.webp
