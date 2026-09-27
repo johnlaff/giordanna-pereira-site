@@ -7,8 +7,8 @@ ferramentas:
   - V-ray
 local: Costa do Sauipe · BA
 ano: '2026'
-area: 10 m²
-equipe: bbb
+area: 120 m²
+equipe: Grupo Aviva (projeto) · Giordanna Pereira (documentação)
 ordem: 10
 galeria:
   - /src/assets/captura-de-tela-2026-09-27-143413.webp
@@ -33,3 +33,21 @@ galeria:
   - /src/assets/captura-de-tela-2026-09-27-143619.webp
   - /src/assets/captura-de-tela-2026-09-27-143626.webp
   - /src/assets/captura-de-tela-2026-09-27-143631.webp
+  - /src/assets/002-hl06-ap3qtp-aq-pe-002-pla-r01-1.webp
+  - /src/assets/004-hl06-ap3qtp-aq-pe-004-pag-r01-1.webp
+  - /src/assets/005-hl06-ap3qtp-aq-pe-005-pag-r01-1.webp
+  - /src/assets/006-hl06-ap3qtp-aq-pe-006-phd-r01-1.webp
+  - /src/assets/007-hl06-ap3qtp-aq-pe-007-pel-r01-1.webp
+  - /src/assets/002-hl06-ap3qtp-it-pe-002-pla-r01-1.webp
+  - /src/assets/005-hl06-ap3qtp-it-pe-005-vis-r01-1.webp
+  - /src/assets/006-hl06-ap3qtp-it-pe-006-vis-r01-1.webp
+  - /src/assets/007-hl06-ap3qtp-it-pe-007-vis-r01-1.webp
+  - /src/assets/008-hl06-ap3qtp-it-pe-008-vis-r01-1.webp
+  - /src/assets/009-hl06-ap3qtp-it-pe-009-vis-r01-1.webp
+  - /src/assets/010-hl06-ap3qtp-it-pe-010-vis-r01-1.webp
+  - /src/assets/011-hl06-ap3qtp-it-pe-011-vis-r01-1.webp
+  - /src/assets/012-hl06-ap3qtp-it-pe-012-vis-r01-1.webp
+  - /src/assets/013-hl06-ap3qtp-it-pe-013-vis-r01-1.webp
+  - /src/assets/014-hl06-ap3qtp-it-pe-014-vis-r01-1.webp
+  - /src/assets/015-hl06-ap3qtp-it-pe-015-vis-r01-1.webp
+  - /src/assets/016-hl06-ap3qtp-it-pe-016-vis-r01-1.webp
