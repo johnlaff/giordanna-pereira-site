@@ -5,7 +5,12 @@ import { join } from 'node:path';
 import sharp from 'sharp';
 import { parse } from 'yaml';
 import { z } from 'astro/zod';
-import { esquemaDeFamiliaridade, esquemaDeProjeto } from '../../src/content.schema.ts';
+import {
+  esquemaDeFamiliaridade,
+  esquemaDeProjeto,
+  ordenarProjetos,
+} from '../../src/content.schema.ts';
+import { projetos } from './projetos.ts';
 
 /**
  * O CMS em `/admin` (ADR 0002 e 0014), no seam de sempre: a página construída, servida pelo
@@ -213,7 +218,8 @@ test.describe('cadastrar pelo CMS', () => {
     await preencher('Local', 'Uberlândia · MG');
     await preencher('Ano', '2026');
     await preencher('Área', '120 metros');
-    await preencher('Ordem', '110');
+    // A Ordem não se digita: o CMS a dá ao salvar (ver "reordenar os Projetos pelo CMS").
+    await expect(campo('Ordem')).toHaveCount(0);
 
     // Sem Equipe e com a área fora do padrão, o CMS não salva e diz o que corrigir.
     await page.getByRole('button', { name: 'Salvar', exact: true }).click();
@@ -244,9 +250,10 @@ test.describe('cadastrar pelo CMS', () => {
     expect(projeto).toMatchObject({
       titulo: 'Casa do Teste',
       area: '120,5 m²',
-      ordem: 110,
       galeria: ['/src/assets/foto-do-celular.webp'],
     });
+    // O Projeto novo entra no fim da grade, depois de todos os que já estavam.
+    expect(projeto.ordem).toBeGreaterThan(projetos.at(-1)!.dados.ordem);
 
     const webp = await lerDoRepositorio(page, 'src/assets/foto-do-celular.webp');
     expect(webp).toBeDefined();
@@ -286,7 +293,6 @@ test.describe('cadastrar pelo CMS', () => {
     await preencher('Ano', '2026');
     await preencher('Área', '48 m²');
     await preencher('Equipe', 'Giordanna Pereira');
-    await preencher('Ordem', '120');
 
     const escolher = async (grupo: RegExp, foto: string) => {
       await page
@@ -316,6 +322,159 @@ test.describe('cadastrar pelo CMS', () => {
     expect(parse(Buffer.from(yml!, 'base64').toString('utf8'))).toMatchObject({
       capa: '/src/assets/aparecer-r02.webp',
       galeria: ['/src/assets/aparecer-r05.webp'],
+    });
+  });
+});
+
+test.describe('reordenar os Projetos pelo CMS', () => {
+  /** Um Projeto como o CMS o deixou na pasta, lido do YAML sem passar pelo schema. */
+  const lerProjeto = async (page: Page, slug: string) => {
+    const yml = await lerDoRepositorio(page, `src/content/projetos/${slug}.yml`);
+    expect(yml, slug).toBeDefined();
+    return parse(
+      Buffer.from(yml!, 'base64').toString('utf8'),
+    ) as (typeof projetos)[number]['dados'];
+  };
+
+  /** A linha de um Projeto na lista do CMS, pelo título. */
+  const linha = (page: Page, titulo: string) =>
+    page.getByRole('row').filter({ has: page.getByText(titulo, { exact: true }) });
+
+  /** Os Projetos na sequência em que a lista do CMS os mostra agora. */
+  const naLista = async (page: Page) => {
+    const celulas = await page
+      .getByRole('grid', { name: 'Entradas' })
+      .getByRole('row')
+      .evaluateAll((linhas) =>
+        linhas.map((l) =>
+          Array.from(l.querySelectorAll('[role="gridcell"]'), (c) => c.textContent?.trim()),
+        ),
+      );
+    expect(celulas).toHaveLength(projetos.length);
+    return celulas.map((textos) => {
+      const projeto = projetos.find(({ dados }) => textos.includes(dados.titulo));
+      expect(projeto, `a linha ${textos.join(' | ')} não é de um Projeto`).toBeDefined();
+      return projeto!;
+    });
+  };
+
+  /**
+   * Abre a lista no modo de reordenar e devolve a sequência que ela mostra: a da Ordem. Dois
+   * Projetos com a mesma Ordem, de antes do ADR 0016, o Sveltia lista na vez em que os carregou,
+   * que pode não ser a do nome do arquivo; ao concluir, a sequência da lista passa a ser a da grade.
+   */
+  const abrirReordenar = async (page: Page) => {
+    await prepararCms(page);
+    await abrirRepositorioLocal(page);
+    await page.getByRole('treeitem', { name: 'Projetos' }).click();
+    await page.getByRole('button', { name: 'Reordenar Entradas' }).click();
+    const lista = await naLista(page);
+    const ordens = lista.map(({ dados }) => dados.ordem);
+    expect(ordens).toEqual(ordens.toSorted((a, b) => a - b));
+    return lista;
+  };
+
+  /**
+   * Conclui a reordenação e confere o que chegou ao repositório: os Projetos na sequência que a
+   * lista mostrava, com a Ordem de 1 em diante, e nada mais mudado nos arquivos. A sequência
+   * passa por `ordenarProjetos`, o que o build chama, e a Ordem de 1 a n prova que não há empate.
+   */
+  const concluirEConferir = async (page: Page, esperada: typeof projetos) => {
+    await page.getByRole('button', { name: 'Concluir Reordenação de Entradas' }).click();
+    // Gravada a ordem, a lista sai do modo de reordenar.
+    await expect(page.getByRole('button', { name: 'Reordenar Entradas' })).toBeVisible({
+      timeout: 30_000,
+    });
+    const gravados = await Promise.all(
+      projetos.map(async ({ slug }) => ({ id: slug, data: await lerProjeto(page, slug) })),
+    );
+    const naGrade = ordenarProjetos(gravados);
+    expect(naGrade.map(({ id }) => id)).toEqual(esperada.map(({ slug }) => slug));
+    expect(naGrade.map(({ data }) => data.ordem)).toEqual(esperada.map((_, i) => i + 1));
+    // Reordenar reescreve cada arquivo: a Capa, o link da equipe e o resto chegam como estavam.
+    for (const { id, data } of gravados) {
+      const antes = projetos.find(({ slug }) => slug === id)!.dados;
+      expect({ ...data, ordem: undefined }, id).toEqual({ ...antes, ordem: undefined });
+    }
+  };
+
+  // As setas são o que funciona no celular, e também no computador: um toque desce o Projeto
+  // uma posição.
+  test('descer um Projeto pelas setas muda a Ordem de todos, sem repetir nenhuma', async ({
+    page,
+  }) => {
+    test.slow();
+    const [primeiro, segundo, ...resto] = await abrirReordenar(page);
+    await linha(page, primeiro!.dados.titulo)
+      .getByRole('button', { name: 'Mover para Baixo' })
+      .click();
+    await concluirEConferir(page, [segundo!, primeiro!, ...resto]);
+  });
+
+  // Com o mouse, o Projeto se arrasta direto para o lugar dele, como as fotos da Galeria.
+  test('arrastar um Projeto para o topo da lista o põe no início da grade', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'arrastar é só com o mouse: na tela de toque, o CMS mostra as setas');
+    test.slow();
+    const [primeiro, segundo, terceiro, ...resto] = await abrirReordenar(page);
+    // Solto na metade de cima da primeira linha, o terceiro passa à frente de todos.
+    await linha(page, terceiro!.dados.titulo).dragTo(linha(page, primeiro!.dados.titulo), {
+      targetPosition: { x: 40, y: 4 },
+    });
+    await concluirEConferir(page, [terceiro!, primeiro!, segundo!, ...resto]);
+  });
+
+  // O caminho mais comum dela: abrir um Projeto e mudar o texto. Sem campo no formulário, a
+  // Ordem ainda precisa chegar ao arquivo como estava, ou o build pararia por falta dela.
+  test('editar um Projeto mantém a Ordem dele', async ({ page }) => {
+    test.slow();
+    await prepararCms(page);
+    await abrirRepositorioLocal(page);
+    await page.getByRole('treeitem', { name: 'Projetos' }).click();
+    const [, segundo] = projetos;
+    await page.getByText(segundo!.dados.titulo, { exact: true }).click();
+
+    const descricao = page.getByLabel('Descrição', { exact: true });
+    await expect(async () => {
+      await descricao.fill('Um texto novo, escrito pelo CMS.');
+      await expect(descricao).toHaveValue('Um texto novo, escrito pelo CMS.', { timeout: 1_000 });
+    }).toPass();
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+    await expect(page.getByText('Entrada salva.')).toBeVisible({ timeout: 30_000 });
+
+    expect(await lerProjeto(page, segundo!.slug)).toMatchObject({
+      descricao: 'Um texto novo, escrito pelo CMS.',
+      ordem: segundo!.dados.ordem,
+    });
+  });
+
+  // Duplicar é o atalho para um Projeto parecido com outro. Com o campo antigo, a cópia levava a
+  // Ordem do original e empatava com ele; agora a cópia entra no fim da grade.
+  test('duplicar um Projeto põe a cópia no fim da grade, com Ordem própria', async ({ page }) => {
+    test.slow();
+    await prepararCms(page);
+    await abrirRepositorioLocal(page);
+    await page.getByRole('treeitem', { name: 'Projetos' }).click();
+    const [primeiro] = projetos;
+    await page.getByText(primeiro!.dados.titulo, { exact: true }).click();
+    await page.getByRole('button', { name: 'Mostrar Opções do Editor' }).click();
+    await page.getByRole('menuitem', { name: 'Duplicar Entrada' }).click();
+    await expect(page.getByText('Entrada duplicada como novo rascunho.')).toBeVisible();
+
+    const titulo = page.getByLabel('Título', { exact: true });
+    await expect(async () => {
+      await titulo.fill('Casa Duplicada');
+      await expect(titulo).toHaveValue('Casa Duplicada', { timeout: 1_000 });
+    }).toPass();
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+    await expect(page.getByText('Entrada salva.')).toBeVisible({ timeout: 30_000 });
+
+    const copia = await lerProjeto(page, 'casa-duplicada');
+    expect(copia.ordem).toBeGreaterThan(projetos.at(-1)!.dados.ordem);
+    expect(await lerProjeto(page, primeiro!.slug)).toMatchObject({
+      ordem: primeiro!.dados.ordem,
     });
   });
 });

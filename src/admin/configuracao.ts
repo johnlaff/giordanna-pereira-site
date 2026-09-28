@@ -5,9 +5,10 @@
  * fora do CMS, por decisão (HANDOFF §12).
  *
  * O formulário espelha o schema das collections (`src/content.schema.ts`): cada campo que o
- * build exige é obrigatório aqui, e as regras de forma — área, ano, nada de HTML — são as
- * mesmas, importadas de lá. É a primeira barreira, a que mostra o erro a Giordanna antes do
- * commit; o schema é a segunda, a que para o build se algo passar por fora do CMS (ADR 0002).
+ * build exige é obrigatório aqui, exceto a Ordem do Projeto, que o próprio CMS grava (ADR
+ * 0016), e as regras de forma — área, ano, nada de HTML — são as mesmas, importadas de lá. É a
+ * primeira barreira, a que mostra o erro a Giordanna antes do commit; o schema é a segunda, a
+ * que para o build se algo passar por fora do CMS (ADR 0002).
  * `tests/unit/admin.test.ts` confere que as duas não divergem.
  *
  * A configuração é um objeto, e não um `config.yml`, por dois motivos: o TypeScript a confere
@@ -97,18 +98,20 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
       name: 'projetos',
       label: 'Projetos',
       label_singular: 'Projeto',
-      description: 'As obras do portfólio. A Ordem define a posição de cada uma na grade.',
+      // No computador, a descrição cabe numa linha ao lado do título; no celular, não aparece, e o
+      // botão Reordenar fala por si.
+      description:
+        'Os projetos do portfólio, na ordem da grade. Para mudar a ordem, use **Reordenar**.',
       folder: 'src/content/projetos',
       format: 'yaml',
       extension: 'yml',
       identifier_field: 'titulo',
       slug: '{{slug}}',
       summary: '{{titulo}}',
-      // A lista aparece na Ordem do site, a mesma da grade.
-      sortable_fields: {
-        fields: ['ordem', 'titulo'],
-        default: { field: 'ordem', direction: 'ascending' },
-      },
+      // A Ordem muda arrastando a lista do CMS, e não num campo, para que duas nunca se repitam:
+      // o Sveltia numera todos os Projetos ao concluir, e um novo entra no fim (ADR 0016).
+      reorder: { key: 'ordem' },
+      sortable_fields: ['titulo'],
       fields: [
         { name: 'titulo', label: 'Título', widget: 'string', pattern: semHtml },
         {
@@ -165,13 +168,6 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
           required: false,
           hint: 'Opcional. Com link, o nome da equipe vira um link na página do projeto.',
           pattern: [/^https:\/\/[^\s<>]+$/, 'Use o endereço completo, começando com https://'],
-        },
-        {
-          name: 'ordem',
-          label: 'Ordem',
-          widget: 'number',
-          value_type: 'int',
-          hint: 'A posição na grade, de 10 em 10: 10 é o primeiro. Dois projetos com a mesma Ordem entram em ordem alfabética.',
         },
         {
           name: 'galeria',

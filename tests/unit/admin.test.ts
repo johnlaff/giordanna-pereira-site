@@ -71,7 +71,21 @@ const conferirParidade = (onde: string, campos: Campo[], forma: Record<string, z
 };
 
 test('os campos do Projeto no CMS são os do schema, obrigatórios nos mesmos lugares', () => {
-  conferirParidade('projetos', camposDa('projetos'), esquemaDeProjeto(() => z.string()).shape);
+  // A Ordem não é campo do formulário: quem a grava é o modo Reordenar (teste abaixo).
+  const doFormulario = esquemaDeProjeto(() => z.string()).omit({ ordem: true });
+  conferirParidade('projetos', camposDa('projetos'), doFormulario.shape);
+});
+
+test('a Ordem do Projeto muda arrastando a lista do CMS, e não num campo do formulário', () => {
+  const projetos = configuracao.collections?.find((c) => 'name' in c && c.name === 'projetos');
+  assert.ok(projetos && 'reorder' in projetos, 'a coleção de Projetos não se reordena no CMS');
+  // O Sveltia numera de 1 em diante, na ordem da lista, a chave que o schema lê como Ordem.
+  assert.deepEqual(projetos.reorder, { key: 'ordem' });
+  assert.equal(
+    camposDa('projetos').some(({ name }) => name === 'ordem'),
+    false,
+    'um campo Ordem no formulário barraria o Projeto novo antes de o CMS numerá-lo',
+  );
 });
 
 test('os campos do Depoimento no CMS são os do schema, e só o texto é opcional', () => {
