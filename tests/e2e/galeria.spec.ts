@@ -197,7 +197,8 @@ for (const { slug, rota: rotaDoProjeto } of projetos.filter(
   test(`${slug}: só a Abertura carrega de imediato, e com prioridade`, async ({ page }) => {
     await page.goto(rotaDoProjeto);
     const itens = page.locator('.gal .item');
-    const temAbertura = (await itens.first().getAttribute('class'))?.includes('abertura') === true;
+    // A Abertura é uma primeira imagem paisagem: largura maior que altura.
+    const temAbertura = Number(await itens.first().getAttribute('data-proporcao')) > 1;
     const primeira = itens.first().locator('img');
     await expect(primeira).toHaveAttribute('loading', temAbertura ? 'eager' : 'lazy');
     if (temAbertura) await expect(primeira).toHaveAttribute('fetchpriority', 'high');

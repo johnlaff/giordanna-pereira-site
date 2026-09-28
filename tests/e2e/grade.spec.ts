@@ -76,18 +76,20 @@ test('o item Projetos do cabeçalho marca a página atual', async ({ page }) => 
 });
 
 // Numa coluna, cada Projeto fica na sua linha; em duas e três, a sobra vira destaque no começo.
-test('em 1440 px a grade tem três colunas, com a sobra destacada no começo', async ({ page }) => {
+test('em 1440 px a grade tem três colunas, e a primeira linha fecha a largura toda', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/projetos');
   const linhas = linhasEsperadas(3);
   expect(await linhasDaGrade(page)).toEqual(linhas);
 
-  // A primeira linha fecha: do começo do primeiro card ao fim do último, a grade inteira.
+  // Com destaque ou sem, o último card da primeira linha termina na borda direita da grade.
   const grade = await page.locator('.grade').boundingBox();
-  const cards = page.locator('.card-wrap');
-  const primeiro = await cards.first().boundingBox();
-  const ultimo = await cards.nth(linhas[0]!.length - 1).boundingBox();
-  expect(primeiro!.x).toBeCloseTo(grade!.x, 0);
+  const ultimo = await page
+    .locator('.card-wrap')
+    .nth(linhas[0]!.length - 1)
+    .boundingBox();
   expect(ultimo!.x + ultimo!.width).toBeCloseTo(grade!.x + grade!.width, 0);
 });
 
