@@ -14,6 +14,7 @@ O arquivo continua com a chave `ordem`, e a grade, a navegação anterior/próxi
 ## Consequences
 
 - Reordenar reescreve todos os arquivos cuja Ordem mudou, num commit só: o primeiro uso troca as Ordens antigas (1, 5, 6, 7…) por 1, 2, 3… em todos os Projetos.
+- Enquanto sobrar uma Ordem repetida de antes, a lista do CMS pode mostrar esses dois Projetos na ordem inversa da grade, que desempata pelo nome do arquivo e o Sveltia não. O primeiro Reordenar concluído põe a grade na sequência da lista.
 - O Sveltia grava `ordem` no topo de cada arquivo que salva, antes dos campos do formulário. O schema não depende da ordem das chaves.
 - Arrastar é só com o mouse: na tela de toque o Sveltia mostra as setas, como faz com as fotos da Galeria. Um Projeto novo entra no fim, e trazê-lo ao topo pelo celular custa um toque por posição.
 - `tests/e2e/admin.spec.ts` reordena pelo "Trabalhar com Repositório Local", pelas setas e arrastando, e confere que o que chega ao repositório passa por `ordenarProjetos`, o mesmo que o build chama, sem nenhum outro campo mudado; e que criar, duplicar e editar um Projeto deixam a Ordem única.

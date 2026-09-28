@@ -340,11 +340,38 @@ test.describe('reordenar os Projetos pelo CMS', () => {
   const linha = (page: Page, titulo: string) =>
     page.getByRole('row').filter({ has: page.getByText(titulo, { exact: true }) });
 
+  /** Os Projetos na sequência em que a lista do CMS os mostra agora. */
+  const naLista = async (page: Page) => {
+    const celulas = await page
+      .getByRole('grid', { name: 'Entradas' })
+      .getByRole('row')
+      .evaluateAll((linhas) =>
+        linhas.map((l) =>
+          Array.from(l.querySelectorAll('[role="gridcell"]'), (c) => c.textContent?.trim()),
+        ),
+      );
+    expect(celulas).toHaveLength(projetos.length);
+    return celulas.map((textos) => {
+      const projeto = projetos.find(({ dados }) => textos.includes(dados.titulo));
+      expect(projeto, `a linha ${textos.join(' | ')} não é de um Projeto`).toBeDefined();
+      return projeto!;
+    });
+  };
+
+  /**
+   * Abre a lista no modo de reordenar e devolve a sequência que ela mostra: a da Ordem. Dois
+   * Projetos com a mesma Ordem, de antes do ADR 0016, o Sveltia lista na vez em que os carregou,
+   * que pode não ser a do nome do arquivo; ao concluir, a sequência da lista passa a ser a da grade.
+   */
   const abrirReordenar = async (page: Page) => {
     await prepararCms(page);
     await abrirRepositorioLocal(page);
     await page.getByRole('treeitem', { name: 'Projetos' }).click();
     await page.getByRole('button', { name: 'Reordenar Entradas' }).click();
+    const lista = await naLista(page);
+    const ordens = lista.map(({ dados }) => dados.ordem);
+    expect(ordens).toEqual(ordens.toSorted((a, b) => a - b));
+    return lista;
   };
 
   /**
@@ -377,8 +404,7 @@ test.describe('reordenar os Projetos pelo CMS', () => {
     page,
   }) => {
     test.slow();
-    await abrirReordenar(page);
-    const [primeiro, segundo, ...resto] = projetos;
+    const [primeiro, segundo, ...resto] = await abrirReordenar(page);
     await linha(page, primeiro!.dados.titulo)
       .getByRole('button', { name: 'Mover para Baixo' })
       .click();
@@ -392,8 +418,7 @@ test.describe('reordenar os Projetos pelo CMS', () => {
   }) => {
     test.skip(isMobile, 'arrastar é só com o mouse: na tela de toque, o CMS mostra as setas');
     test.slow();
-    await abrirReordenar(page);
-    const [primeiro, segundo, terceiro, ...resto] = projetos;
+    const [primeiro, segundo, terceiro, ...resto] = await abrirReordenar(page);
     // Solto na metade de cima da primeira linha, o terceiro passa à frente de todos.
     await linha(page, terceiro!.dados.titulo).dragTo(linha(page, primeiro!.dados.titulo), {
       targetPosition: { x: 40, y: 4 },
