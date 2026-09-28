@@ -123,14 +123,19 @@ export function ordenarFamiliaridade<T extends { nivel: Nivel }>(itens: readonly
 type DepoimentoOrdenavel = { id: string };
 
 /**
+ * Compara dois nomes de arquivo byte a byte, e não por locale, para que a sequência do build
+ * seja a mesma em qualquer máquina.
+ */
+const pelosNomes = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
  * A sequência dos Depoimentos no carrossel, que é a do nome do arquivo — daí o prefixo
  * numérico de `src/content/depoimentos/`. Um Depoimento não tem Ordem própria como o Projeto
  * porque nada mais depende da posição dele: ela não vira URL nem navegação, só a vez de
- * aparecer. A comparação é byte a byte, e não por locale, para que a sequência do build seja
- * a mesma em qualquer máquina.
+ * aparecer.
  */
 export function ordenarDepoimentos<T extends DepoimentoOrdenavel>(depoimentos: readonly T[]): T[] {
-  return [...depoimentos].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return [...depoimentos].sort((a, b) => pelosNomes(a.id, b.id));
 }
 
 type ProjetoOrdenavel = { id: string; data: { ordem: number } };
@@ -143,9 +148,7 @@ type ProjetoOrdenavel = { id: string; data: { ordem: number } };
  * Projetos, e uma publicação que falha ela não tem como ver.
  */
 export function ordenarProjetos<T extends ProjetoOrdenavel>(projetos: readonly T[]): T[] {
-  return [...projetos].sort(
-    (a, b) => a.data.ordem - b.data.ordem || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
-  );
+  return [...projetos].sort((a, b) => a.data.ordem - b.data.ordem || pelosNomes(a.id, b.id));
 }
 
 type ProjetoIlustrado<T> = { data: { capa?: T | undefined; galeria: readonly T[] } };
