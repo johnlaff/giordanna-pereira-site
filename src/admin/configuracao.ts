@@ -97,18 +97,21 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
       name: 'projetos',
       label: 'Projetos',
       label_singular: 'Projeto',
-      description: 'As obras do portfólio. A Ordem define a posição de cada uma na grade.',
+      // No computador, a descrição cabe numa linha ao lado do título; no celular, não aparece, e o
+      // botão Reordenar fala por si.
+      description:
+        'As obras do portfólio, na ordem da grade. Para mudar a ordem, use **Reordenar**.',
       folder: 'src/content/projetos',
       format: 'yaml',
       extension: 'yml',
       identifier_field: 'titulo',
       slug: '{{slug}}',
       summary: '{{titulo}}',
-      // A lista aparece na Ordem do site, a mesma da grade.
-      sortable_fields: {
-        fields: ['ordem', 'titulo'],
-        default: { field: 'ordem', direction: 'ascending' },
-      },
+      // A Ordem muda arrastando a lista, e não num campo: ao concluir, o Sveltia numera todos os
+      // Projetos de 1 em diante, num commit só, e um Projeto novo nasce com a maior Ordem mais
+      // um, no fim da grade. Assim duas Ordens nunca se repetem. A lista abre nessa ordem.
+      reorder: { key: 'ordem' },
+      sortable_fields: ['titulo'],
       fields: [
         { name: 'titulo', label: 'Título', widget: 'string', pattern: semHtml },
         {
@@ -165,13 +168,6 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
           required: false,
           hint: 'Opcional. Com link, o nome da equipe vira um link na página do projeto.',
           pattern: [/^https:\/\/[^\s<>]+$/, 'Use o endereço completo, começando com https://'],
-        },
-        {
-          name: 'ordem',
-          label: 'Ordem',
-          widget: 'number',
-          value_type: 'int',
-          hint: 'A posição na grade, de 10 em 10: 10 é o primeiro. Não repita a de outro projeto.',
         },
         {
           name: 'galeria',

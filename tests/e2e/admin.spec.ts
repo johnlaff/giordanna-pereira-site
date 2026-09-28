@@ -5,7 +5,12 @@ import { join } from 'node:path';
 import sharp from 'sharp';
 import { parse } from 'yaml';
 import { z } from 'astro/zod';
-import { esquemaDeFamiliaridade, esquemaDeProjeto } from '../../src/content.schema.ts';
+import {
+  esquemaDeFamiliaridade,
+  esquemaDeProjeto,
+  ordenarProjetos,
+} from '../../src/content.schema.ts';
+import { projetos } from './projetos.ts';
 
 /**
  * O CMS em `/admin` (ADR 0002 e 0014), no seam de sempre: a página construída, servida pelo
@@ -213,7 +218,8 @@ test.describe('cadastrar pelo CMS', () => {
     await preencher('Local', 'Uberlândia · MG');
     await preencher('Ano', '2026');
     await preencher('Área', '120 metros');
-    await preencher('Ordem', '110');
+    // A Ordem não se digita: o CMS a dá ao salvar (ver "reordenar os Projetos pelo CMS").
+    await expect(campo('Ordem')).toHaveCount(0);
 
     // Sem Equipe e com a área fora do padrão, o CMS não salva e diz o que corrigir.
     await page.getByRole('button', { name: 'Salvar', exact: true }).click();
@@ -244,9 +250,10 @@ test.describe('cadastrar pelo CMS', () => {
     expect(projeto).toMatchObject({
       titulo: 'Casa do Teste',
       area: '120,5 m²',
-      ordem: 110,
       galeria: ['/src/assets/foto-do-celular.webp'],
     });
+    // O Projeto novo entra no fim da grade, depois de todos os que já estavam.
+    expect(projeto.ordem).toBeGreaterThan(projetos.at(-1)!.dados.ordem);
 
     const webp = await lerDoRepositorio(page, 'src/assets/foto-do-celular.webp');
     expect(webp).toBeDefined();
@@ -286,7 +293,6 @@ test.describe('cadastrar pelo CMS', () => {
     await preencher('Ano', '2026');
     await preencher('Área', '48 m²');
     await preencher('Equipe', 'Giordanna Pereira');
-    await preencher('Ordem', '120');
 
     const escolher = async (grupo: RegExp, foto: string) => {
       await page
@@ -316,6 +322,83 @@ test.describe('cadastrar pelo CMS', () => {
     expect(parse(Buffer.from(yml!, 'base64').toString('utf8'))).toMatchObject({
       capa: '/src/assets/aparecer-r02.webp',
       galeria: ['/src/assets/aparecer-r05.webp'],
+    });
+  });
+});
+
+test.describe('reordenar os Projetos pelo CMS', () => {
+  // A ordem da grade muda na própria lista de Projetos: arrastando, ou pelas setas, que são o que
+  // funciona no celular. Ao concluir, o CMS dá a cada Projeto uma Ordem nova, de 1 em diante, e o
+  // que conta é o que chega ao repositório: a sequência nova, que o build aceita sem Ordem repetida.
+  test('descer um Projeto na lista muda a Ordem de todos, sem repetir nenhuma', async ({
+    page,
+  }) => {
+    test.slow();
+    await prepararCms(page);
+    await abrirRepositorioLocal(page);
+    await page.getByRole('treeitem', { name: 'Projetos' }).click();
+    await page.getByRole('button', { name: 'Reordenar Entradas' }).click();
+
+    // O primeiro da grade desce uma posição, e o segundo passa a abrir a grade.
+    const [primeiro, segundo, ...resto] = projetos;
+    await page
+      .getByRole('row')
+      .filter({ has: page.getByText(primeiro!.dados.titulo, { exact: true }) })
+      .getByRole('button', { name: 'Mover para Baixo' })
+      .click();
+    await page.getByRole('button', { name: 'Concluir Reordenação de Entradas' }).click();
+    // Gravada a ordem, a lista sai do modo de reordenar.
+    await expect(page.getByRole('button', { name: 'Reordenar Entradas' })).toBeVisible({
+      timeout: 30_000,
+    });
+
+    const gravados = await Promise.all(
+      projetos.map(async ({ slug }) => {
+        const yml = await lerDoRepositorio(page, `src/content/projetos/${slug}.yml`);
+        expect(yml, slug).toBeDefined();
+        return {
+          id: slug,
+          data: esquemaDeProjeto(() => z.string()).parse(
+            parse(Buffer.from(yml!, 'base64').toString('utf8')),
+          ),
+        };
+      }),
+    );
+    // `ordenarProjetos` é o que o build chama, e recusa Ordem repetida.
+    const naGrade = ordenarProjetos(gravados);
+    expect(naGrade.map(({ id }) => id)).toEqual([
+      segundo!.slug,
+      primeiro!.slug,
+      ...resto.map(({ slug }) => slug),
+    ]);
+    expect(naGrade.map(({ data }) => data.ordem)).toEqual(projetos.map((_, i) => i + 1));
+  });
+
+  // O caminho mais comum dela: abrir um Projeto e mudar o texto. Sem campo no formulário, a
+  // Ordem ainda precisa chegar ao arquivo como estava, ou o build pararia por falta dela.
+  test('editar um Projeto mantém a Ordem dele', async ({ page }) => {
+    test.slow();
+    await prepararCms(page);
+    await abrirRepositorioLocal(page);
+    await page.getByRole('treeitem', { name: 'Projetos' }).click();
+    const [, segundo] = projetos;
+    await page.getByText(segundo!.dados.titulo, { exact: true }).click();
+
+    const descricao = page.getByLabel('Descrição', { exact: true });
+    await expect(async () => {
+      await descricao.fill('Um texto novo, escrito pelo CMS.');
+      await expect(descricao).toHaveValue('Um texto novo, escrito pelo CMS.', { timeout: 1_000 });
+    }).toPass();
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+    await expect(page.getByText('Entrada salva.')).toBeVisible({ timeout: 30_000 });
+
+    const yml = await lerDoRepositorio(page, `src/content/projetos/${segundo!.slug}.yml`);
+    expect(yml).toBeDefined();
+    expect(
+      esquemaDeProjeto(() => z.string()).parse(parse(Buffer.from(yml!, 'base64').toString('utf8'))),
+    ).toMatchObject({
+      descricao: 'Um texto novo, escrito pelo CMS.',
+      ordem: segundo!.dados.ordem,
     });
   });
 });

@@ -71,7 +71,7 @@ O convite que fecha a home, com uma frase e o botão para a Grade de projetos.
 _Avoid_: chamada, call to action, banner
 
 **Ordem**:
-A posição de um Projeto na grade e na navegação anterior/próximo. Número inteiro, único entre os Projetos, numerado de 10 em 10 para inserir um novo sem renumerar os demais.
+A posição de um Projeto na grade e na navegação anterior/próximo. Número inteiro, único entre os Projetos. Giordanna não o digita: arrasta os Projetos no modo Reordenar do CMS, que numera todos de 1 em diante, e um Projeto novo entra no fim (ADR 0016).
 _Avoid_: posição, índice, peso
 
 **Grade de projetos**:
@@ -131,7 +131,7 @@ Identificadores sem acento nem cedilha; acentos só no rótulo que Giordanna vê
 | Equipe         | `equipe`      | Equipe        |
 | Link da equipe | `equipeUrl`   | Link da equipe |
 | Galeria        | `galeria`     | Galeria       |
-| Ordem          | `ordem`       | Ordem         |
+| Ordem          | `ordem`       | (Reordenar)   |
 
 ## Campos do Depoimento
 
