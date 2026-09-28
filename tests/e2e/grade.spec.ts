@@ -22,6 +22,23 @@ const linhasDaGrade = (page: Page) =>
     return linhas;
   });
 
+/**
+ * As linhas que a grade deve formar com `colunas` colunas, pelo total de Projetos do conteúdo.
+ * A sobra da divisão não fica no fim: vira destaque no começo. Em três colunas, sobrando um,
+ * o primeiro Projeto ocupa a linha inteira; sobrando dois, os dois primeiros dividem a linha.
+ * Em duas colunas, com um total ímpar, o primeiro ocupa as duas. O total vem do conteúdo, e
+ * não de um número escrito aqui, porque a Giordanna cadastra Projetos pelo CMS.
+ */
+const linhasEsperadas = (colunas: number): number[][] => {
+  const indices = projetos.map((_, i) => i);
+  const sobra = indices.length % colunas;
+  const primeira = indices.slice(0, sobra === 0 ? colunas : sobra);
+  const linhas = [primeira];
+  for (let i = primeira.length; i < indices.length; i += colunas)
+    linhas.push(indices.slice(i, i + colunas));
+  return linhas;
+};
+
 test('a Grade lista todos os Projetos na Ordem, cada um levando à sua página', async ({ page }) => {
   await page.goto('/projetos');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(textos.titulo);
@@ -36,14 +53,21 @@ test('a Grade lista todos os Projetos na Ordem, cada um levando à sua página',
   }
 });
 
-test('só a Capa que abre a Grade carrega de imediato e com prioridade', async ({ page }) => {
+test('só as Capas da primeira linha carregam de imediato, e a que abre a Grade com prioridade', async ({
+  page,
+}) => {
   await page.goto('/projetos');
-  // Com dez Projetos o destaque ocupa a linha inteira, e é sozinho na primeira linha: as
-  // demais Capas estão abaixo da dobra e não podem disputar banda com ela.
-  const capas = page.locator('.grade .card img');
-  await expect(capas.first()).toHaveAttribute('loading', 'eager');
-  await expect(capas.first()).toHaveAttribute('fetchpriority', 'high');
-  await expect(capas.nth(1)).toHaveAttribute('loading', 'lazy');
+  // A primeira linha da grade de três colunas é a que aparece antes de rolar: as Capas abaixo
+  // dela não podem disputar banda com as de cima. Quantas são depende do destaque.
+  const naPrimeiraLinha = linhasEsperadas(3)[0]!.length;
+  const cards = page.locator('.grade .card');
+  for (const [i, projeto] of projetos.entries()) {
+    if (!temCapa(projeto)) continue;
+    const capa = cards.nth(i).locator('img');
+    await expect(capa).toHaveAttribute('loading', i < naPrimeiraLinha ? 'eager' : 'lazy');
+    if (i === 0) await expect(capa).toHaveAttribute('fetchpriority', 'high');
+    else await expect(capa).not.toHaveAttribute('fetchpriority');
+  }
 });
 
 test('o item Projetos do cabeçalho marca a página atual', async ({ page }) => {
@@ -51,30 +75,26 @@ test('o item Projetos do cabeçalho marca a página atual', async ({ page }) => 
   await expect(page.locator('.nav a[aria-current="page"]')).toHaveText('Projetos');
 });
 
-// Com dez Projetos sobra um na grade de três colunas, e é ele que abre a página na linha
-// inteira; em duas colunas o total é par e ninguém se destaca; numa coluna, cada um na sua.
-test('em 1440 px a grade tem três colunas, com o primeiro Projeto na linha inteira', async ({
-  page,
-}) => {
+// Numa coluna, cada Projeto fica na sua linha; em duas e três, a sobra vira destaque no começo.
+test('em 1440 px a grade tem três colunas, com a sobra destacada no começo', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/projetos');
-  expect(await linhasDaGrade(page)).toEqual([[0], [1, 2, 3], [4, 5, 6], [7, 8, 9]]);
+  const linhas = linhasEsperadas(3);
+  expect(await linhasDaGrade(page)).toEqual(linhas);
 
+  // A primeira linha fecha: do começo do primeiro card ao fim do último, a grade inteira.
   const grade = await page.locator('.grade').boundingBox();
-  const destaque = await page.locator('.card-wrap').first().boundingBox();
-  expect(destaque?.width).toBeCloseTo(grade?.width ?? 0, 0);
+  const cards = page.locator('.card-wrap');
+  const primeiro = await cards.first().boundingBox();
+  const ultimo = await cards.nth(linhas[0]!.length - 1).boundingBox();
+  expect(primeiro!.x).toBeCloseTo(grade!.x, 0);
+  expect(ultimo!.x + ultimo!.width).toBeCloseTo(grade!.x + grade!.width, 0);
 });
 
 test('em 768 px a grade tem duas colunas', async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 900 });
   await page.goto('/projetos');
-  expect(await linhasDaGrade(page)).toEqual([
-    [0, 1],
-    [2, 3],
-    [4, 5],
-    [6, 7],
-    [8, 9],
-  ]);
+  expect(await linhasDaGrade(page)).toEqual(linhasEsperadas(2));
 });
 
 test('em 375 px a grade vira uma coluna', async ({ page }) => {

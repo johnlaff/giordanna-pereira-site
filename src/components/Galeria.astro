@@ -40,7 +40,9 @@ const { imagens, titulo } = Astro.props;
  * A Abertura carrega de imediato — é a imagem que mede o carregamento da página — e as demais
  * só ao se aproximarem da tela, quando o arranjo já mediu a caixa de cada uma e o navegador
  * pede a variante certa. Carregá-las cedo pediria a variante pela estimativa abaixo, que para
- * um retrato numa linha cheia chega a ser o dobro do necessário.
+ * um retrato numa linha cheia chega a ser o dobro do necessário. Isso vale também para a
+ * primeira imagem quando ela não é paisagem: sem Abertura, ela divide a linha com as vizinhas
+ * e espera o arranjo como elas.
  */
 const LARGURA_TOTAL = porFaixa([
   ['(min-width: 1240px)', '1136px'],
@@ -111,9 +113,9 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
           quality={qualidadeDeImagem}
           sizes={i === 0 && abreEmFaixa ? LARGURA_TOTAL : METADE}
           alt={`${titulo} — imagem ${i + 1}`}
-          loading={i === 0 ? 'eager' : 'lazy'}
+          loading={i === 0 && abreEmFaixa ? 'eager' : 'lazy'}
           decoding="async"
-          fetchpriority={i === 0 ? 'high' : undefined}
+          fetchpriority={i === 0 && abreEmFaixa ? 'high' : undefined}
         />
       </button>
     ))}
