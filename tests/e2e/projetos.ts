@@ -34,7 +34,10 @@ export const projetos = readdirSync(pasta)
       dados: parse(readFileSync(`${pasta}/${arquivo}`, 'utf8')) as Projeto,
     };
   })
-  .sort((a, b) => a.dados.ordem - b.dados.ordem);
+  // Empate na Ordem sai pelo nome do arquivo, como em `ordenarProjetos`.
+  .sort(
+    (a, b) => a.dados.ordem - b.dados.ordem || (a.slug < b.slug ? -1 : a.slug > b.slug ? 1 : 0),
+  );
 
 /**
  * O Projeto tem imagem para mostrar fora da própria página: a Capa definida no arquivo ou,

@@ -6,8 +6,9 @@
  *
  * O formulário espelha o schema das collections (`src/content.schema.ts`): cada campo que o
  * build exige é obrigatório aqui, exceto a Ordem do Projeto, que o próprio CMS grava (ADR
- * 0016), e as regras de forma — área, ano, nada de HTML — são as mesmas, importadas de lá. É a primeira barreira, a que mostra o erro a Giordanna antes do
- * commit; o schema é a segunda, a que para o build se algo passar por fora do CMS (ADR 0002).
+ * 0016), e as regras de forma — área, ano, nada de HTML — são as mesmas, importadas de lá. É a
+ * primeira barreira, a que mostra o erro a Giordanna antes do commit; o schema é a segunda, a
+ * que para o build se algo passar por fora do CMS (ADR 0002).
  * `tests/unit/admin.test.ts` confere que as duas não divergem.
  *
  * A configuração é um objeto, e não um `config.yml`, por dois motivos: o TypeScript a confere

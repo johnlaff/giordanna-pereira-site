@@ -4,7 +4,7 @@ A Ordem de cada Projeto era um campo numérico no formulário do CMS, de 10 em 1
 
 Agora a coleção de Projetos usa o modo Reordenar do próprio Sveltia (`reorder: { key: 'ordem' }`, em `src/admin/configuracao.ts`): na lista do CMS, ela toca em Reordenar, arrasta os Projetos ou usa as setas (que são o que funciona no celular) e conclui. O Sveltia grava a Ordem de todos de 1 em diante, na sequência da lista, num commit só, e dá a um Projeto novo a maior Ordem mais um, no fim da grade. Ao excluir um Projeto, renumera os que ficam. O campo Ordem sai do formulário: se ficasse, o Projeto novo seria barrado por um campo obrigatório vazio antes de o Sveltia numerá-lo.
 
-O arquivo continua com a chave `ordem`, e o schema continua exigindo um inteiro único: a grade, a navegação anterior/próximo e o sitemap não mudam, e um arquivo editado fora do CMS com Ordem repetida ainda para o build.
+O arquivo continua com a chave `ordem`, e a grade, a navegação anterior/próximo e o sitemap não mudam. Uma Ordem repetida, que o CMS não gera mais, também não para o build: desde 2026-09-28 o empate sai pelo nome do arquivo (`ordenarProjetos`, em `src/content.schema.ts`).
 
 ## Considered Options
 

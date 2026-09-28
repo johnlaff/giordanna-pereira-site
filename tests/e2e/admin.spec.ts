@@ -350,7 +350,7 @@ test.describe('reordenar os Projetos pelo CMS', () => {
   /**
    * Conclui a reordenação e confere o que chegou ao repositório: os Projetos na sequência que a
    * lista mostrava, com a Ordem de 1 em diante, e nada mais mudado nos arquivos. A sequência
-   * passa por `ordenarProjetos`, o que o build chama, e que recusa Ordem repetida.
+   * passa por `ordenarProjetos`, o que o build chama, e a Ordem de 1 a n prova que não há empate.
    */
   const concluirEConferir = async (page: Page, esperada: typeof projetos) => {
     await page.getByRole('button', { name: 'Concluir Reordenação de Entradas' }).click();
@@ -426,7 +426,7 @@ test.describe('reordenar os Projetos pelo CMS', () => {
   });
 
   // Duplicar é o atalho para um Projeto parecido com outro. Com o campo antigo, a cópia levava a
-  // Ordem do original, e o build recusava as duas; agora a cópia entra no fim da grade.
+  // Ordem do original e empatava com ele; agora a cópia entra no fim da grade.
   test('duplicar um Projeto põe a cópia no fim da grade, com Ordem própria', async ({ page }) => {
     test.slow();
     await prepararCms(page);
