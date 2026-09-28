@@ -1,9 +1,10 @@
 /**
  * Contrato do conteúdo editável: a forma de cada arquivo que Giordanna edita no CMS — Projeto,
- * Depoimento, Sobre e Familiaridade —, as invariantes entre eles — a Ordem única dos Projetos,
- * a sequência dos Depoimentos, os níveis da Familiaridade — e as leituras que derivam delas: a
- * sequência, os vizinhos de cada Projeto, a Capa e a ordem da Familiaridade. Tudo vale no build
- * e muda pelo mesmo motivo — uma mudança no que o CMS deixa editar —, por isso mora junto.
+ * Depoimento, Sobre e Familiaridade —, as invariantes entre eles — a Ordem dos Projetos e o
+ * desempate dela, a sequência dos Depoimentos, os níveis da Familiaridade — e as leituras que
+ * derivam delas: a sequência, os vizinhos de cada Projeto, a Capa e a ordem da Familiaridade.
+ * Tudo vale no build e muda pelo mesmo motivo — uma mudança no que o CMS deixa editar —, por
+ * isso mora junto.
  *
  * O módulo fica fora de `content.config.ts` para o teste de contrato carregá-lo sem o runtime
  * do Astro: o validador de imagem entra por parâmetro, e é o `image()` do Astro em produção
@@ -122,34 +123,32 @@ export function ordenarFamiliaridade<T extends { nivel: Nivel }>(itens: readonly
 type DepoimentoOrdenavel = { id: string };
 
 /**
+ * Compara dois nomes de arquivo byte a byte, e não por locale, para que a sequência do build
+ * seja a mesma em qualquer máquina.
+ */
+const pelosNomes = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
  * A sequência dos Depoimentos no carrossel, que é a do nome do arquivo — daí o prefixo
  * numérico de `src/content/depoimentos/`. Um Depoimento não tem Ordem própria como o Projeto
  * porque nada mais depende da posição dele: ela não vira URL nem navegação, só a vez de
- * aparecer. A comparação é byte a byte, e não por locale, para que a sequência do build seja
- * a mesma em qualquer máquina.
+ * aparecer.
  */
 export function ordenarDepoimentos<T extends DepoimentoOrdenavel>(depoimentos: readonly T[]): T[] {
-  return [...depoimentos].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+  return [...depoimentos].sort((a, b) => pelosNomes(a.id, b.id));
 }
 
 type ProjetoOrdenavel = { id: string; data: { ordem: number } };
 
 /**
- * A Ordem posiciona o Projeto na grade e na navegação anterior/próximo, então precisa ser
- * única: duas Ordens iguais deixariam a sequência à mercê da ordem de leitura dos arquivos.
- * Chamada no build, uma duplicata derruba a publicação em vez de embaralhar o site.
+ * A Ordem posiciona o Projeto na grade e na navegação anterior/próximo. Dois Projetos com a
+ * mesma Ordem entram pelo nome do arquivo (o slug do título), comparado byte a byte como nos
+ * Depoimentos, para a sequência não ficar à mercê da ordem de leitura dos arquivos. Uma Ordem
+ * repetida não derruba a publicação: a Giordanna a edita pelo CMS, que não enxerga os outros
+ * Projetos, e uma publicação que falha ela não tem como ver.
  */
 export function ordenarProjetos<T extends ProjetoOrdenavel>(projetos: readonly T[]): T[] {
-  const vistos = new Map<number, string>();
-  for (const projeto of projetos) {
-    const anterior = vistos.get(projeto.data.ordem);
-    if (anterior !== undefined)
-      throw new Error(
-        `Ordem ${projeto.data.ordem} repetida em "${anterior}" e "${projeto.id}": cada Projeto precisa de uma Ordem única.`,
-      );
-    vistos.set(projeto.data.ordem, projeto.id);
-  }
-  return [...projetos].sort((a, b) => a.data.ordem - b.data.ordem);
+  return [...projetos].sort((a, b) => a.data.ordem - b.data.ordem || pelosNomes(a.id, b.id));
 }
 
 type ProjetoIlustrado<T> = { data: { capa?: T | undefined; galeria: readonly T[] } };

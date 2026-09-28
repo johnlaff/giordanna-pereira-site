@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { parse } from 'yaml';
+import { ordenarProjetos } from '../../src/content.schema.ts';
 
 /**
  * Os Projetos da collection, lidos do disco e postos na Ordem. A fonte da verdade dos testes
@@ -24,17 +25,16 @@ export type Projeto = {
 
 const pasta = 'src/content/projetos';
 
-export const projetos = readdirSync(pasta)
-  .filter((arquivo) => arquivo.endsWith('.yml'))
-  .map((arquivo) => {
-    const slug = arquivo.replace(/\.yml$/, '');
-    return {
-      slug,
-      rota: `/projetos/${slug}`,
-      dados: parse(readFileSync(`${pasta}/${arquivo}`, 'utf8')) as Projeto,
-    };
-  })
-  .sort((a, b) => a.dados.ordem - b.dados.ordem);
+export const projetos = ordenarProjetos(
+  readdirSync(pasta)
+    .filter((arquivo) => arquivo.endsWith('.yml'))
+    .map((arquivo) => {
+      const slug = arquivo.replace(/\.yml$/, '');
+      const dados = parse(readFileSync(`${pasta}/${arquivo}`, 'utf8')) as Projeto;
+      // `id` e `data` são o que `ordenarProjetos` lê: a mesma sequência do build, desempate incluído.
+      return { slug, rota: `/projetos/${slug}`, dados, id: slug, data: dados };
+    }),
+);
 
 /**
  * O Projeto tem imagem para mostrar fora da própria página: a Capa definida no arquivo ou,

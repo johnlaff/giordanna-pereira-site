@@ -120,14 +120,23 @@ test('nenhum campo de conteúdo aceita HTML', async () => {
   assert.equal((await validar({ ferramentas: [comTag] })).success, false);
 });
 
-test('Ordem repetida entre Projetos falha', () => {
-  assert.throws(
-    () =>
-      ordenarProjetos([
-        { id: 'consultorio-ginecocare', data: { ordem: 20 } },
-        { id: 'edificio-vitalis', data: { ordem: 20 } },
-      ]),
-    /ordem 20/i,
+test('Ordem repetida entre Projetos não derruba o build: o empate sai pelo nome do arquivo', () => {
+  // A Giordanna edita a Ordem pelo CMS, que não enxerga os outros Projetos, e uma publicação
+  // que falha ela não tem como ver. O empate precisa de uma regra que não dependa da ordem de
+  // leitura dos arquivos, e em qualquer ordem de entrada a saída é a mesma.
+  const empatados = [
+    { id: 'trattoria-incanto-residence-club', data: { ordem: 7 } },
+    { id: 'quarto-essencia-serena', data: { ordem: 6 } },
+    { id: 'mirante-cestes', data: { ordem: 7 } },
+  ];
+  const esperado = ['quarto-essencia-serena', 'mirante-cestes', 'trattoria-incanto-residence-club'];
+  assert.deepEqual(
+    ordenarProjetos(empatados).map(({ id }) => id),
+    esperado,
+  );
+  assert.deepEqual(
+    ordenarProjetos([...empatados].reverse()).map(({ id }) => id),
+    esperado,
   );
 });
 

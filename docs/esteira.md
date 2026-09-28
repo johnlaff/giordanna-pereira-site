@@ -27,7 +27,7 @@ Detalhes que não são óbvios:
 
 ### Orçamento do Lighthouse
 
-`lighthouserc.yml`: emulação mobile com throttling simulado (o perfil padrão do Lighthouse e o cenário mais lento), três rodadas por URL, mediana. Falha o job: LCP acima de 2,5 s, CLS acima de 0,1, acessibilidade abaixo de 100. Performance abaixo de 95 é aviso, não erro, porque a nota varia com a carga do runner. A lista de URLs cobre uma rota por padrão de página, no pior caso de cada um — a Galeria mais pesada, uma Galeria média e o estado Em breve —, e não as dez páginas de Projeto: medir todas repetiria o mesmo veredito por minutos de CI. A cobertura rota a rota de acessibilidade é do `axe`, em `tests/e2e/rotas.ts`.
+`lighthouserc.yml`: emulação mobile com throttling simulado (o perfil padrão do Lighthouse e o cenário mais lento), três rodadas por URL, mediana. Falha o job: LCP acima de 2,5 s, CLS acima de 0,1, acessibilidade abaixo de 100. Performance abaixo de 95 é aviso, não erro, porque a nota varia com a carga do runner. A lista de URLs cobre uma rota por padrão de página, no pior caso de cada um — a Galeria mais pesada, uma Galeria média e uma Galeria sem Abertura —, e não todas as páginas de Projeto: medir todas repetiria o mesmo veredito por minutos de CI. A cobertura rota a rota de acessibilidade é do `axe`, em `tests/e2e/rotas.ts`.
 
 ## Deploy: Workers Builds
 

@@ -188,6 +188,26 @@ test('o script da Galeria não espera outro arquivo para arranjar as imagens', a
   expect(codigo).not.toMatch(/(?:^|[;}\s])import\s*[{\w*][^;]*?from\s*["']/);
 });
 
+// Só a Abertura sabe a própria caixa antes do arranjo: ela ocupa a largura toda. Uma primeira
+// imagem quadrada ou em pé divide a linha com as vizinhas, e carregá-la de imediato pediria a
+// variante pela estimativa de meia largura, até o dobro da caixa que o arranjo dá a ela.
+for (const { slug, rota: rotaDoProjeto } of projetos.filter(
+  ({ dados: { galeria } }) => galeria.length > 0,
+)) {
+  test(`${slug}: só a Abertura carrega de imediato, e com prioridade`, async ({ page }) => {
+    await page.goto(rotaDoProjeto);
+    const itens = page.locator('.gal .item');
+    // A Abertura é uma primeira imagem paisagem: largura maior que altura.
+    const temAbertura = Number(await itens.first().getAttribute('data-proporcao')) > 1;
+    const primeira = itens.first().locator('img');
+    await expect(primeira).toHaveAttribute('loading', temAbertura ? 'eager' : 'lazy');
+    if (temAbertura) await expect(primeira).toHaveAttribute('fetchpriority', 'high');
+    else await expect(primeira).not.toHaveAttribute('fetchpriority');
+    const demais = await itens.locator('img').all();
+    for (const img of demais.slice(1)) await expect(img).toHaveAttribute('loading', 'lazy');
+  });
+}
+
 // A caixa de cada imagem sai do arranjo em linhas, não de uma fração fixa da largura: uma
 // imagem sozinha na linha ocupa a Galeria inteira. Vale para todo Projeto, porque é o arranjo
 // que decide, e ele muda com as proporções do conteúdo. Numa tela sem retina, a imagem pedida
