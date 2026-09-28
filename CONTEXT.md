@@ -131,7 +131,10 @@ Identificadores sem acento nem cedilha; acentos só no rótulo que Giordanna vê
 | Equipe         | `equipe`      | Equipe        |
 | Link da equipe | `equipeUrl`   | Link da equipe |
 | Galeria        | `galeria`     | Galeria       |
-| Ordem          | `ordem`       | (Reordenar)   |
+| Ordem          | `ordem`       | —             |
+
+A Ordem não tem campo no formulário: Giordanna a muda pelo botão Reordenar da lista do CMS,
+que grava `ordem` em todos os Projetos (ADR 0016).
 
 ## Campos do Depoimento
 

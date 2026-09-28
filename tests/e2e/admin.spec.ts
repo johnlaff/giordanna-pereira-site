@@ -327,51 +327,78 @@ test.describe('cadastrar pelo CMS', () => {
 });
 
 test.describe('reordenar os Projetos pelo CMS', () => {
-  // A ordem da grade muda na própria lista de Projetos: arrastando, ou pelas setas, que são o que
-  // funciona no celular. Ao concluir, o CMS dá a cada Projeto uma Ordem nova, de 1 em diante, e o
-  // que conta é o que chega ao repositório: a sequência nova, que o build aceita sem Ordem repetida.
-  test('descer um Projeto na lista muda a Ordem de todos, sem repetir nenhuma', async ({
-    page,
-  }) => {
-    test.slow();
+  /** Um Projeto como o CMS o deixou na pasta, lido do YAML sem passar pelo schema. */
+  const lerProjeto = async (page: Page, slug: string) => {
+    const yml = await lerDoRepositorio(page, `src/content/projetos/${slug}.yml`);
+    expect(yml, slug).toBeDefined();
+    return parse(
+      Buffer.from(yml!, 'base64').toString('utf8'),
+    ) as (typeof projetos)[number]['dados'];
+  };
+
+  /** A linha de um Projeto na lista do CMS, pelo título. */
+  const linha = (page: Page, titulo: string) =>
+    page.getByRole('row').filter({ has: page.getByText(titulo, { exact: true }) });
+
+  const abrirReordenar = async (page: Page) => {
     await prepararCms(page);
     await abrirRepositorioLocal(page);
     await page.getByRole('treeitem', { name: 'Projetos' }).click();
     await page.getByRole('button', { name: 'Reordenar Entradas' }).click();
+  };
 
-    // O primeiro da grade desce uma posição, e o segundo passa a abrir a grade.
-    const [primeiro, segundo, ...resto] = projetos;
-    await page
-      .getByRole('row')
-      .filter({ has: page.getByText(primeiro!.dados.titulo, { exact: true }) })
-      .getByRole('button', { name: 'Mover para Baixo' })
-      .click();
+  /**
+   * Conclui a reordenação e confere o que chegou ao repositório: os Projetos na sequência que a
+   * lista mostrava, com a Ordem de 1 em diante, e nada mais mudado nos arquivos. A sequência
+   * passa por `ordenarProjetos`, o que o build chama, e que recusa Ordem repetida.
+   */
+  const concluirEConferir = async (page: Page, esperada: typeof projetos) => {
     await page.getByRole('button', { name: 'Concluir Reordenação de Entradas' }).click();
     // Gravada a ordem, a lista sai do modo de reordenar.
     await expect(page.getByRole('button', { name: 'Reordenar Entradas' })).toBeVisible({
       timeout: 30_000,
     });
-
     const gravados = await Promise.all(
-      projetos.map(async ({ slug }) => {
-        const yml = await lerDoRepositorio(page, `src/content/projetos/${slug}.yml`);
-        expect(yml, slug).toBeDefined();
-        return {
-          id: slug,
-          data: esquemaDeProjeto(() => z.string()).parse(
-            parse(Buffer.from(yml!, 'base64').toString('utf8')),
-          ),
-        };
-      }),
+      projetos.map(async ({ slug }) => ({ id: slug, data: await lerProjeto(page, slug) })),
     );
-    // `ordenarProjetos` é o que o build chama, e recusa Ordem repetida.
     const naGrade = ordenarProjetos(gravados);
-    expect(naGrade.map(({ id }) => id)).toEqual([
-      segundo!.slug,
-      primeiro!.slug,
-      ...resto.map(({ slug }) => slug),
-    ]);
-    expect(naGrade.map(({ data }) => data.ordem)).toEqual(projetos.map((_, i) => i + 1));
+    expect(naGrade.map(({ id }) => id)).toEqual(esperada.map(({ slug }) => slug));
+    expect(naGrade.map(({ data }) => data.ordem)).toEqual(esperada.map((_, i) => i + 1));
+    // Reordenar reescreve cada arquivo: a Capa, o link da equipe e o resto chegam como estavam.
+    for (const { id, data } of gravados) {
+      const antes = projetos.find(({ slug }) => slug === id)!.dados;
+      expect({ ...data, ordem: undefined }, id).toEqual({ ...antes, ordem: undefined });
+    }
+  };
+
+  // As setas são o que funciona no celular, e também no computador: um toque desce o Projeto
+  // uma posição.
+  test('descer um Projeto pelas setas muda a Ordem de todos, sem repetir nenhuma', async ({
+    page,
+  }) => {
+    test.slow();
+    await abrirReordenar(page);
+    const [primeiro, segundo, ...resto] = projetos;
+    await linha(page, primeiro!.dados.titulo)
+      .getByRole('button', { name: 'Mover para Baixo' })
+      .click();
+    await concluirEConferir(page, [segundo!, primeiro!, ...resto]);
+  });
+
+  // Com o mouse, o Projeto se arrasta direto para o lugar dele, como as fotos da Galeria.
+  test('arrastar um Projeto para o topo da lista o põe no início da grade', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(isMobile, 'arrastar é só com o mouse: na tela de toque, o CMS mostra as setas');
+    test.slow();
+    await abrirReordenar(page);
+    const [primeiro, segundo, terceiro, ...resto] = projetos;
+    // Solto na metade de cima da primeira linha, o terceiro passa à frente de todos.
+    await linha(page, terceiro!.dados.titulo).dragTo(linha(page, primeiro!.dados.titulo), {
+      targetPosition: { x: 40, y: 4 },
+    });
+    await concluirEConferir(page, [terceiro!, primeiro!, segundo!, ...resto]);
   });
 
   // O caminho mais comum dela: abrir um Projeto e mudar o texto. Sem campo no formulário, a
@@ -392,13 +419,37 @@ test.describe('reordenar os Projetos pelo CMS', () => {
     await page.getByRole('button', { name: 'Salvar', exact: true }).click();
     await expect(page.getByText('Entrada salva.')).toBeVisible({ timeout: 30_000 });
 
-    const yml = await lerDoRepositorio(page, `src/content/projetos/${segundo!.slug}.yml`);
-    expect(yml).toBeDefined();
-    expect(
-      esquemaDeProjeto(() => z.string()).parse(parse(Buffer.from(yml!, 'base64').toString('utf8'))),
-    ).toMatchObject({
+    expect(await lerProjeto(page, segundo!.slug)).toMatchObject({
       descricao: 'Um texto novo, escrito pelo CMS.',
       ordem: segundo!.dados.ordem,
+    });
+  });
+
+  // Duplicar é o atalho para um Projeto parecido com outro. Com o campo antigo, a cópia levava a
+  // Ordem do original, e o build recusava as duas; agora a cópia entra no fim da grade.
+  test('duplicar um Projeto põe a cópia no fim da grade, com Ordem própria', async ({ page }) => {
+    test.slow();
+    await prepararCms(page);
+    await abrirRepositorioLocal(page);
+    await page.getByRole('treeitem', { name: 'Projetos' }).click();
+    const [primeiro] = projetos;
+    await page.getByText(primeiro!.dados.titulo, { exact: true }).click();
+    await page.getByRole('button', { name: 'Mostrar Opções do Editor' }).click();
+    await page.getByRole('menuitem', { name: 'Duplicar Entrada' }).click();
+    await expect(page.getByText('Entrada duplicada como novo rascunho.')).toBeVisible();
+
+    const titulo = page.getByLabel('Título', { exact: true });
+    await expect(async () => {
+      await titulo.fill('Casa Duplicada');
+      await expect(titulo).toHaveValue('Casa Duplicada', { timeout: 1_000 });
+    }).toPass();
+    await page.getByRole('button', { name: 'Salvar', exact: true }).click();
+    await expect(page.getByText('Entrada salva.')).toBeVisible({ timeout: 30_000 });
+
+    const copia = await lerProjeto(page, 'casa-duplicada');
+    expect(copia.ordem).toBeGreaterThan(projetos.at(-1)!.dados.ordem);
+    expect(await lerProjeto(page, primeiro!.slug)).toMatchObject({
+      ordem: primeiro!.dados.ordem,
     });
   });
 });

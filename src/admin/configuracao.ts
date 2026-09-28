@@ -5,8 +5,8 @@
  * fora do CMS, por decisão (HANDOFF §12).
  *
  * O formulário espelha o schema das collections (`src/content.schema.ts`): cada campo que o
- * build exige é obrigatório aqui, e as regras de forma — área, ano, nada de HTML — são as
- * mesmas, importadas de lá. É a primeira barreira, a que mostra o erro a Giordanna antes do
+ * build exige é obrigatório aqui, exceto a Ordem do Projeto, que o próprio CMS grava (ADR
+ * 0016), e as regras de forma — área, ano, nada de HTML — são as mesmas, importadas de lá. É a primeira barreira, a que mostra o erro a Giordanna antes do
  * commit; o schema é a segunda, a que para o build se algo passar por fora do CMS (ADR 0002).
  * `tests/unit/admin.test.ts` confere que as duas não divergem.
  *
@@ -100,16 +100,15 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
       // No computador, a descrição cabe numa linha ao lado do título; no celular, não aparece, e o
       // botão Reordenar fala por si.
       description:
-        'As obras do portfólio, na ordem da grade. Para mudar a ordem, use **Reordenar**.',
+        'Os projetos do portfólio, na ordem da grade. Para mudar a ordem, use **Reordenar**.',
       folder: 'src/content/projetos',
       format: 'yaml',
       extension: 'yml',
       identifier_field: 'titulo',
       slug: '{{slug}}',
       summary: '{{titulo}}',
-      // A Ordem muda arrastando a lista, e não num campo: ao concluir, o Sveltia numera todos os
-      // Projetos de 1 em diante, num commit só, e um Projeto novo nasce com a maior Ordem mais
-      // um, no fim da grade. Assim duas Ordens nunca se repetem. A lista abre nessa ordem.
+      // A Ordem muda arrastando a lista do CMS, e não num campo, para que duas nunca se repitam:
+      // o Sveltia numera todos os Projetos ao concluir, e um novo entra no fim (ADR 0016).
       reorder: { key: 'ordem' },
       sortable_fields: ['titulo'],
       fields: [
