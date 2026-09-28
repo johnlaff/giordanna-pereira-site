@@ -71,7 +71,7 @@ O convite que fecha a home, com uma frase e o botão para a Grade de projetos.
 _Avoid_: chamada, call to action, banner
 
 **Ordem**:
-A posição de um Projeto na grade e na navegação anterior/próximo. Número inteiro, único entre os Projetos, numerado de 10 em 10 para inserir um novo sem renumerar os demais.
+A posição de um Projeto na grade e na navegação anterior/próximo. Número inteiro, numerado de 10 em 10 para inserir um novo sem renumerar os demais. Dois Projetos com a mesma Ordem entram pelo nome do arquivo.
 _Avoid_: posição, índice, peso
 
 **Grade de projetos**:

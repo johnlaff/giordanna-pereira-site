@@ -171,7 +171,7 @@ export const configuracaoDoCms = (origem: string): CmsConfig => ({
           label: 'Ordem',
           widget: 'number',
           value_type: 'int',
-          hint: 'A posição na grade, de 10 em 10: 10 é o primeiro. Não repita a de outro projeto.',
+          hint: 'A posição na grade, de 10 em 10: 10 é o primeiro. Dois projetos com a mesma Ordem entram em ordem alfabética.',
         },
         {
           name: 'galeria',
