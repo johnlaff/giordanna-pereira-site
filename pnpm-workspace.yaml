@@ -20,4 +20,6 @@ minimumReleaseAgeExclude:
   - wrangler@4.135.0
 # Versões forçadas em dependências transitivas com advisory alto e correção publicada.
 overrides:
+  miniflare>sharp: ^0.35.5
+  miniflare>undici: ^7.29.1
   tmp: '>=0.2.6'
