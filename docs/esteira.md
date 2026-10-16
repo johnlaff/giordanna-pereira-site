@@ -137,7 +137,7 @@ Configurações do repositório que completam a proteção: merge só por squash
 
 ## Dependências: Renovate
 
-`renovate.json`, executado pela GitHub App do Renovate instalada no repositório. Toda segunda-feira antes das 6h (horário de Brasília), com três dias de carência após cada release:
+`renovate.json`, executado pela GitHub App do Renovate instalada no repositório. Nos fins de semana (horário de Brasília), com três dias de carência após cada release. A agenda cobre o sábado e o domingo inteiros porque o Renovate hospedado roda aqui só de vez em quando: entre setembro e outubro de 2026 ele passou aos domingos de madrugada, e a janela antiga, segunda antes das 6h, nunca chegou a abrir um PR.
 
 - patches, pins e digests de actions em um PR agrupado (`patches`), com automerge quando o CI passa;
 - minors em um PR agrupado (`minors`), merge manual;
