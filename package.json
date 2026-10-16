@@ -26,7 +26,7 @@
     "@sveltia/cms": "^0.218.1",
     "astro": "^7.3.3",
     "photoswipe": "^5.4.4",
-    "sharp": "^0.35.4",
+    "sharp": "^0.35.5",
     "yaml": "^2.9.1"
   },
   "devDependencies": {
