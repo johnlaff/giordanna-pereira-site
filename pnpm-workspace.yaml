@@ -1,7 +1,3 @@
-# Dependências autorizadas a rodar scripts de instalação (pnpm bloqueia as demais). As três
-# com `false` vêm com o HTTP Observatory (ADR 0013) e ficam barradas de propósito: os scripts
-# delas baixam listas da internet a cada instalação, inclusive no Workers Builds, e o teste
-# não precisa de nenhuma.
 allowBuilds:
   '@mdn/mdn-http-observatory': false
   esbuild: true
@@ -21,5 +17,5 @@ minimumReleaseAgeExclude:
 # Versões forçadas em dependências transitivas com advisory alto e correção publicada.
 overrides:
   miniflare>sharp: ^0.35.5
-  miniflare>undici: ^7.29.1
+  miniflare>undici: ^7.30.0
   tmp: '>=0.2.6'
