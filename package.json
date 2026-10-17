@@ -22,9 +22,9 @@
     "lighthouse": "node scripts/lighthouse.ts"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^14.3.2",
+    "@astrojs/cloudflare": "^14.3.4",
     "@sveltia/cms": "^0.218.1",
-    "astro": "^7.3.3",
+    "astro": "^7.3.8",
     "photoswipe": "^5.4.4",
     "sharp": "^0.35.5",
     "yaml": "^2.9.1"
@@ -41,7 +41,7 @@
     "eslint-plugin-astro": "^3.2.1",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "globals": "^17.12.0",
-    "prettier": "^3.9.8",
+    "prettier": "^3.9.10",
     "prettier-plugin-astro": "^1.0.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.70.0",
