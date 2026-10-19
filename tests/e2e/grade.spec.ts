@@ -166,6 +166,19 @@ test.describe('tela de toque', () => {
     }
   });
 
+  // Aqui o nome é texto visível dentro do link, e quem navega por voz diz o que lê: o rótulo
+  // do card precisa conter esse texto (WCAG 2.5.3). O título e o tipo vinham colados no HTML,
+  // e o texto lido era "Edifício VitalisComercial", que o rótulo não contém (axe 4.14).
+  test('o rótulo do card contém o nome que ele mostra', async ({ page }) => {
+    await page.goto('/projetos');
+    for (const projeto of projetos) {
+      const card = page.locator(`.grade .card[href="${projeto.rota}"]`);
+      const palavras = ((await card.locator('.texto').textContent()) ?? '').trim().split(/\s+/);
+      const escapadas = palavras.map((palavra) => palavra.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      await expect(card).toHaveAccessibleName(new RegExp(escapadas.join('[\\s\\p{P}]+'), 'u'));
+    }
+  });
+
   test('a marca sobre a Capa aparece montada, com os quatro pontos no lugar', async ({ page }) => {
     await page.goto('/projetos');
     const marca = page.locator('.grade .card:has(img) .marca').first();

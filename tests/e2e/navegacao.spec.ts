@@ -51,3 +51,16 @@ test('a navegação leva da home à Grade e de lá à página de um Projeto', as
   await expect(page).toHaveURL(destino ?? '');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 });
+
+// A marca levava um aria-label ("Início — Giordanna Pereira") que deixava o CAU visível fora do
+// nome do link; quem navega por voz e diz o que vê não o alcançava (WCAG 2.5.3, regra
+// label-content-name-mismatch do axe 4.14).
+test('a marca é nomeada pelo texto que mostra, no cabeçalho e no rodapé', async ({ page }) => {
+  await page.goto('/');
+  for (const marca of await page.locator('a.brand').all()) {
+    const visivel = (await marca.innerText()).replace(/\s+/g, ' ').trim();
+    expect(visivel).not.toBe('');
+    await expect(marca).toHaveAccessibleName(visivel);
+  }
+  await expect(page.locator('a.brand')).toHaveCount(2);
+});

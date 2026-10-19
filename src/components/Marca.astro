@@ -1,16 +1,18 @@
 ---
-/** Marca em texto: monograma em CSS + nome + linha secundária (CAU no cabeçalho, área no rodapé). */
+/**
+ * Marca em texto: monograma em CSS + nome + linha secundária (CAU no cabeçalho, área no rodapé).
+ * O nome acessível do link é o próprio texto visível: quem navega por voz diz o que lê (WCAG 2.5.3).
+ */
 import { marca } from '../config';
 
 interface Props {
   linha: 'cau' | 'area';
-  rotulo?: string;
 }
 
-const { linha, rotulo } = Astro.props;
+const { linha } = Astro.props;
 ---
 
-<a class="brand" href="/" aria-label={rotulo}>
+<a class="brand" href="/">
   <span class="mark" aria-hidden="true">
     <i></i>
     <i></i>
