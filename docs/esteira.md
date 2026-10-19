@@ -54,13 +54,15 @@ zona, e por isso nenhuma delas vale lá).
 - **Always Use HTTPS** (SSL/TLS → Edge Certificates): é o que redireciona `http://` para
   `https://`. O Observatory do CI não mede esse redirecionamento (ADR 0013); sem ele, a nota do
   domínio no site da MDN cai 20 pontos.
-- **Rate limit do formulário** (Security → WAF → Rate limiting rules, uma regra no plano
-  gratuito): se a requisição casar com `(http.request.uri.path eq "/api/contato" and
-  http.request.method eq "POST")`, contar por IP e, acima de **3 pedidos em 10 segundos**,
-  **bloquear por 10 segundos** (o máximo do plano gratuito), com a resposta padrão, que é 429.
-  O formulário trata o 429 como qualquer recusa e mostra o e-mail alternativo
-  (`tests/e2e/contato.spec.ts`). Verificação: quatro envios seguidos pelo formulário, o quarto
-  recusado; ou quatro `curl -X POST` para `/api/contato`, o quarto com 429.
+- **Rate limit das rotas do Worker** (Security → WAF → Rate limiting rules, uma regra no plano
+  gratuito): se a requisição casar com `(starts_with(http.request.uri.path, "/api/"))`, contar
+  por IP e, acima de **5 pedidos em 10 segundos**, **bloquear por 10 segundos** (o máximo do
+  plano gratuito), com a resposta padrão, que é 429. Cobre o formulário e o login do CMS, as
+  únicas rotas que invocam o Worker: o resto é estático, grátis e sem limite, e um pedido
+  bloqueado aqui não chega ao Worker nem conta na franquia do plano pago (até 2026-10-19 a regra
+  cobria só o `POST /api/contato`, com 3 pedidos). O formulário trata o 429 como qualquer recusa
+  e mostra o e-mail alternativo (`tests/e2e/contato.spec.ts`). Verificação: seis pedidos
+  seguidos para `/api/contato` na mesma conexão (`curl` com o URL repetido), o sexto com 429.
 - **Web Analytics** (Analytics & Logs → Web Analytics → Add a site, com o domínio): na zona
   proxied a Cloudflare injeta o beacon sozinha, e ele reporta para `/cdn-cgi/rum` na própria
   origem, que a CSP já admite. Verificação: abrir duas ou três páginas e ver as visitas no painel.
