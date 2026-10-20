@@ -509,9 +509,15 @@ test.describe('com mouse', () => {
     await expect(nivel).toHaveText('100%');
     await expect(menos).toBeDisabled();
 
+    // O nome acessível começa pela porcentagem à vista, e a acompanha (WCAG 2.5.3).
+    await expect(nivel).toHaveAccessibleName('100%, ajustar à tela (tecla 0)');
+
     // O primeiro degrau é 150%, ou o teto, quando a imagem não chega a tanto.
     await mais.click();
     await expect(nivel).not.toHaveText('100%');
+    await expect(nivel).toHaveAccessibleName(
+      `${await nivel.textContent()}, ajustar à tela (tecla 0)`,
+    );
     const degrau = parseInt((await nivel.textContent()) ?? '', 10) / 100;
     expect(degrau).toBeLessThanOrEqual(1.5);
     // A porcentagem é arredondada: a largura bate com ela a menos de 1% do ajuste.
