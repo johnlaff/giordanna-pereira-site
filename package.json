@@ -30,7 +30,7 @@
     "yaml": "^2.9.1"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.10",
+    "@astrojs/check": "^0.9.12",
     "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^10.0.1",
     "@lhci/cli": "0.15.1",
