@@ -371,7 +371,12 @@ const abreEmFaixa = imagens[0] !== undefined && imagens[0].width > imagens[0].he
             if (!ampliavel) return;
             const { currZoomLevel: atual, zoomLevels } = slide;
             const texto = porcentagem(atual, zoomLevels.initial);
-            if (nivel.textContent !== texto) nivel.textContent = texto;
+            if (nivel.textContent !== texto) {
+              nivel.textContent = texto;
+              // O nome do botão começa pelo que ele mostra: quem navega por voz diz a
+              // porcentagem que lê na tela (WCAG 2.5.3).
+              nivel.setAttribute('aria-label', `${texto}, ajustar à tela (tecla 0)`);
+            }
             menos.disabled = atual <= zoomLevels.initial * 1.01;
             mais.disabled = atual >= zoomLevels.max * 0.99;
             nivel.disabled = menos.disabled;
