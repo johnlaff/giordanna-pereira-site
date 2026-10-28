@@ -21,6 +21,11 @@
       "description": "O astro check não roda com o compilador nativo do TypeScript 7 (withastro/roadmap#1321). Tirar quando o Astro suportar.",
       "matchPackageNames": ["typescript"],
       "allowedVersions": "<7"
+    },
+    {
+      "description": "O override só corrige advisories do undici que o miniflare traz, e o miniflare depende do undici 7. Subir de major no override troca a dependência dele por uma que ele não declara.",
+      "matchDepNames": ["miniflare>undici"],
+      "allowedVersions": "<8"
     }
   ]
 }

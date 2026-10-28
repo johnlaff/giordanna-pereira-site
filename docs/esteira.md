@@ -145,5 +145,6 @@ Configurações do repositório que completam a proteção: merge só por squash
 - minors em um PR agrupado (`minors`), merge manual;
 - majors em PRs individuais;
 - `typescript` travado abaixo da 7 (`allowedVersions`): o `astro check` para na abertura com o compilador nativo do TypeScript 7, que ainda não publica a API que o `@astrojs/language-server` usa (medido no PR #39; acompanhamento na [discussão 1321 do roadmap do Astro](https://github.com/withastro/roadmap/discussions/1321)). A trava sai quando o suporte chegar.
+- o override `miniflare>undici` de `pnpm-workspace.yaml` travado abaixo da 8 (`allowedVersions`): ele existe só para puxar os advisories do undici que o miniflare traz, e o miniflare depende do undici 7. Um major ali trocaria a dependência do miniflare por uma que ele não declara. A trava sai junto com o override, quando o miniflare publicar a correção.
 
 `rangeStrategy: bump` mantém o `package.json` com a versão instalada, não só o lockfile. O painel de dependências é a issue "Dependency Dashboard".
