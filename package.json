@@ -22,9 +22,9 @@
     "lighthouse": "node scripts/lighthouse.ts"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^14.4.2",
+    "@astrojs/cloudflare": "^14.4.3",
     "@sveltia/cms": "^0.252.0",
-    "astro": "^7.4.2",
+    "astro": "^7.4.4",
     "photoswipe": "^5.4.4",
     "sharp": "^0.35.5",
     "yaml": "^2.9.1"
