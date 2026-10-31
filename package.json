@@ -6,7 +6,7 @@
   "description": "Portfólio de Giordanna Pereira, arquiteta e urbanista",
   "packageManager": "pnpm@12.15.0",
   "engines": {
-    "node": ">=24.22.2"
+    "node": ">=26.13.0"
   },
   "scripts": {
     "dev": "astro dev",
@@ -36,7 +36,7 @@
     "@lhci/cli": "0.15.1",
     "@mdn/mdn-http-observatory": "1.7.2",
     "@playwright/test": "^1.64.1",
-    "@types/node": "^24.19.2",
+    "@types/node": "^26.6.6",
     "eslint": "^10.13.0",
     "eslint-plugin-astro": "^3.2.1",
     "eslint-plugin-jsx-a11y": "^6.10.2",
