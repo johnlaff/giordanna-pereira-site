@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Portfólio de Giordanna Pereira, arquiteta e urbanista",
-  "packageManager": "pnpm@12.15.0",
+  "packageManager": "pnpm@12.16.1",
   "engines": {
     "node": ">=24.22.2"
   },
@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.2",
-    "@sveltia/cms": "^0.252.0",
+    "@sveltia/cms": "^0.253.2",
     "astro": "^7.4.2",
     "photoswipe": "^5.4.4",
     "sharp": "^0.35.5",
@@ -45,6 +45,6 @@
     "prettier-plugin-astro": "^1.1.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",
-    "wrangler": "^4.152.0"
+    "wrangler": "^4.154.0"
   }
 }
