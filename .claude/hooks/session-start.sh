@@ -11,7 +11,10 @@ set -euo pipefail
 
 cd "${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
 
-pedido="$(tr -dc '0-9' < .node-version)"
+# A .node-version traz a versão inteira (26.13.0); a comparação é pela major, e o nvm instala
+# exatamente a pedida.
+versao="$(tr -dc '0-9.' < .node-version)"
+pedido="${versao%%.*}"
 atual="$(node -v 2>/dev/null | sed 's/^v//; s/\..*//')"
 
 if [ -z "$atual" ] || [ "$atual" -lt "$pedido" ]; then
@@ -19,10 +22,10 @@ if [ -z "$atual" ] || [ "$atual" -lt "$pedido" ]; then
   if [ -s "$NVM_DIR/nvm.sh" ]; then
     # shellcheck disable=SC1091
     . "$NVM_DIR/nvm.sh"
-    nvm install "$pedido"
-    nvm use "$pedido"
+    nvm install "$versao"
+    nvm use "$versao"
   else
-    echo "Node $pedido é necessário (.node-version) e não há nvm em $NVM_DIR: instale-o à mão."
+    echo "Node $versao é necessário (.node-version) e não há nvm em $NVM_DIR: instale-o à mão."
     exit 0
   fi
 fi
