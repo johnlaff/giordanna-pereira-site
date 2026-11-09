@@ -47,7 +47,7 @@ Documento de decisão completo (análise de mercado 2026, comparações, fontes)
 
 ## 4. Decisões tomadas (viram ADRs; todas fechadas com o João em 18/09/2026)
 
-1. **Framework**: Astro 7 + TypeScript estrito, site estático (`output: 'static'`) com uma única rota on-demand (`/api/contato`) via `@astrojs/cloudflare`. Node 24 LTS, pnpm. Prettier + ESLint com plugins oficiais do Astro; `astro check` no CI.
+1. **Framework**: Astro 7 + TypeScript estrito, site estático (`output: 'static'`) com uma única rota on-demand (`/api/contato`) via `@astrojs/cloudflare`. Node 26 LTS, pnpm. Prettier + ESLint com plugins oficiais do Astro; `astro check` no CI.
 2. **Hospedagem**: Cloudflare Workers com static assets (não Pages). Deploy por **Workers Builds** ligado ao GitHub: `main` → produção; branches/PRs → preview URL comentada no PR.
 3. **Repositório**: GitHub, **público**, nome `giordanna-pereira-site` (https://github.com/johnlaff/giordanna-pereira-site). Branch `main` protegida com checks obrigatórios. Nenhum segredo no repo (chaves ficam em variáveis do Worker). Renovate agrupado com automerge de patch; `pnpm audit`.
 4. **CI**: GitHub Actions em todo PR: `pnpm install` → `astro check` → `astro build` → Playwright (suíte migrada de `tests/`) → axe → Lighthouse CI (orçamento: LCP < 2,5 s, CLS < 0,1, a11y 100).

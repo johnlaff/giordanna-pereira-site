@@ -6,7 +6,7 @@ Leia primeiro: `docs/HANDOFF.md` (contexto, decisões, glossário, tickets). Dep
 
 ## Comandos
 
-- `pnpm install` — Node 24 LTS, pnpm (lockfile commitado)
+- `pnpm install` — Node 26 LTS, pnpm (lockfile commitado)
 - `pnpm dev` — dev server
 - `pnpm check` — `astro check` (tipos) + ESLint + Prettier (`pnpm format` corrige)
 - `pnpm build` — build de produção em `dist/` (`dist/client/` são os assets estáticos)

@@ -4,7 +4,7 @@ Portfólio de [Giordanna Pereira](https://giordannapereira.arq.br), arquiteta e 
 
 ## Requisitos
 
-- Node 24 LTS (`.node-version`)
+- Node 26 LTS (`.node-version`)
 - pnpm 11 (`packageManager` no `package.json`; `corepack enable` resolve)
 
 ## Comandos
