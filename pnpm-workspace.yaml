@@ -19,3 +19,7 @@ overrides:
   miniflare>sharp: ^0.35.5
   miniflare>undici: ^7.30.1
   tmp: '>=0.2.7'
+  # O emnapi fica na 1: a binding wasm do rolldown pede o 2.0.0-beta, o pnpm o repassa como
+  # peer ao @astrojs/check, e com ele o `astro check` não carrega.
+  '@emnapi/core': ^1.11.3
+  '@emnapi/runtime': ^1.11.3
