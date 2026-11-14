@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.6",
-    "@sveltia/cms": "^0.261.0",
+    "@sveltia/cms": "^0.262.4",
     "astro": "^7.4.7",
     "photoswipe": "^5.4.4",
     "sharp": "^0.35.5",
@@ -45,6 +45,6 @@
     "prettier-plugin-astro": "^1.1.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.1",
-    "wrangler": "^4.158.0"
+    "wrangler": "^4.160.0"
   }
 }
