@@ -24,7 +24,7 @@
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.7",
     "@sveltia/cms": "^0.261.0",
-    "astro": "^7.4.10",
+    "astro": "^7.4.11",
     "photoswipe": "^5.4.4",
     "sharp": "^0.35.5",
     "yaml": "^2.9.1"
