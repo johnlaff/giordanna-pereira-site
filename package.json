@@ -33,7 +33,7 @@
     "@astrojs/check": "^0.9.12",
     "@axe-core/playwright": "^4.14.0",
     "@eslint/js": "^10.0.1",
-    "@lhci/cli": "0.16.0",
+    "@lhci/cli": "0.16.1",
     "@mdn/mdn-http-observatory": "1.7.2",
     "@playwright/test": "^1.65.0",
     "@types/node": "^26.6.6",
