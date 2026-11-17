@@ -14,6 +14,12 @@ minimumReleaseAgeExclude:
   - miniflare@5.20260918.0-alpha
   - workerd@1.20260918.1
   - wrangler@4.135.0
+# Advisories altos sem versão corrigida publicada, fora do `pnpm audit` até sair a correção.
+auditConfig:
+  ignoreGhsas:
+    # picomatch <=4.0.7 (ReDoS por extglob, via astro e @astrojs/cloudflare): só recebe padrões
+    # de glob escritos no código, nunca texto de visitante. Tirar quando houver versão corrigida.
+    - GHSA-fc5q-39xc-vjpf
 # Versões forçadas em dependências transitivas com advisory alto e correção publicada.
 overrides:
   miniflare>sharp: ^0.35.5
