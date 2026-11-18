@@ -41,11 +41,23 @@ const resposta = (status: number, corpo: object): Response =>
     },
   });
 
-const recusa = (status: number, erro: Recusa, extra: { campos?: readonly Campo[] } = {}) => {
-  // Só o motivo vai para o log do Worker, nunca o que o visitante escreveu.
-  console.warn(`contato recusado: ${erro}`);
-  return resposta(status, { ok: false, erro, ...extra });
-};
+/** O que aconteceu com um pedido: o e-mail saiu, ou o motivo da recusa. É o que se conta. */
+export type Desfecho = 'enviado' | Recusa;
+
+/** Quem anota cada Desfecho; no Worker, o Analytics Engine (ver `src/pages/api/contato.ts`). */
+export type Contador = (desfecho: Desfecho) => void;
+
+type Saida = { status: number; desfecho: Desfecho; campos?: readonly Campo[] };
+
+const recusa = (
+  status: number,
+  erro: Recusa,
+  extra: { campos?: readonly Campo[] } = {},
+): Saida => ({
+  status,
+  desfecho: erro,
+  ...extra,
+});
 
 /**
  * Lê o corpo até o teto e para ali. O `Content-Length` declarado basta para recusar cedo, mas
@@ -77,11 +89,11 @@ const lerAteOTeto = async (pedido: Request, teto: number): Promise<string | unde
   }
 };
 
-export const receberContato = async (
+const decidir = async (
   pedido: Request,
   modo: Modo,
-  servicos: Servicos | undefined = servicosDe(modo),
-): Promise<Response> => {
+  servicos: Servicos | undefined,
+): Promise<Saida> => {
   if (modo.tipo === 'incompleto') {
     // O João lê isto no log do Worker (observability ligado no wrangler.jsonc): é o sinal de
     // que falta cadastrar uma chave no painel.
@@ -117,5 +129,27 @@ export const receberContato = async (
     .catch(() => false);
   if (!enviado) return recusa(502, 'envio');
 
-  return resposta(200, { ok: true });
+  return { status: 200, desfecho: 'enviado' };
+};
+
+/**
+ * Responde ao pedido e conta o Desfecho. A contagem é anotação: se o contador falhar, o
+ * visitante recebe a mesma resposta.
+ */
+export const receberContato = async (
+  pedido: Request,
+  modo: Modo,
+  servicos: Servicos | undefined = servicosDe(modo),
+  contar: Contador = () => {},
+): Promise<Response> => {
+  const { status, desfecho, campos } = await decidir(pedido, modo, servicos);
+  try {
+    contar(desfecho);
+  } catch {
+    // Sem contagem desta vez; o envio em si não depende dela.
+  }
+  if (desfecho === 'enviado') return resposta(status, { ok: true });
+  // Só o motivo vai para o log do Worker, nunca o que o visitante escreveu.
+  console.warn(`contato recusado: ${desfecho}`);
+  return resposta(status, { ok: false, erro: desfecho, ...(campos && { campos }) });
 };

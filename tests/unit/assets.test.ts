@@ -57,3 +57,34 @@ test('apple-touch-icon.png é o favicon.svg em 180 px, sem canto transparente', 
     `difere do favicon em ${(soma / data.length).toFixed(2)} por canal`,
   );
 });
+
+// Robôs e navegadores antigos pedem /favicon.ico sem olhar o <link rel="icon">; o robô de
+// imagens do Google recebia 404 ali. O Google quer um lado múltiplo de 48 px: um ICO com uma
+// única imagem PNG de 48 px, que é o favicon.svg rasterizado, cantos arredondados incluídos.
+test('favicon.ico é o favicon.svg em 48 px, num ICO com um PNG', async () => {
+  const { default: sharp } = await import('sharp');
+  const ico = readFileSync('public/favicon.ico');
+  // Cabeçalho ICONDIR: reservado 0, tipo 1 (ícone), uma imagem.
+  assert.deepEqual([ico.readUInt16LE(0), ico.readUInt16LE(2), ico.readUInt16LE(4)], [0, 1, 1]);
+  // ICONDIRENTRY: 48 × 48, e o PNG ocupa o resto do arquivo logo depois dos 22 bytes de cabeçalho.
+  assert.deepEqual([ico[6], ico[7]], [48, 48]);
+  const tamanho = ico.readUInt32LE(14);
+  const inicio = ico.readUInt32LE(18);
+  assert.deepEqual([inicio, inicio + tamanho], [22, ico.length]);
+  const png = ico.subarray(inicio);
+  assert.deepEqual([...png.subarray(1, 4)], [...Buffer.from('PNG')]);
+
+  const esperado = await sharp('public/favicon.svg', { density: 72 * (48 / 64) })
+    .resize(48, 48)
+    .ensureAlpha()
+    .raw()
+    .toBuffer();
+  const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  assert.deepEqual([info.width, info.height, info.channels], [48, 48, 4]);
+  let soma = 0;
+  for (let i = 0; i < data.length; i++) soma += Math.abs(data[i]! - esperado[i]!);
+  assert.ok(
+    soma / data.length < 1,
+    `difere do favicon em ${(soma / data.length).toFixed(2)} por canal`,
+  );
+});

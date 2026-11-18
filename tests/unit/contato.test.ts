@@ -237,6 +237,33 @@ test('falha no serviço de envio responde 502, e o formulário mostra a alternat
   }
 });
 
+// ——— a contagem ———
+
+// Cada pedido conta uma vez, com o desfecho: é o número de envios que o João consulta no
+// Analytics Engine da Cloudflare, já que o Web Analytics não conta eventos (ADR 0017).
+test('cada pedido conta o seu desfecho uma vez: enviado ou o motivo da recusa', async () => {
+  const casos: [Parameters<typeof receberContato>, string][] = [
+    [[pedido(valido()), real, espioes().servicos], 'enviado'],
+    [[pedido(valido()), lerModo({})], 'indisponivel'],
+    [[pedido(valido({ empresa: 'ACME' })), real, espioes().servicos], 'isca'],
+    [[pedido(valido({ email: 'x' })), real, espioes().servicos], 'campos'],
+    [[pedido(valido()), real, espioes({ verifica: false }).servicos], 'verificacao'],
+    [[pedido(valido()), real, espioes({ envia: false }).servicos], 'envio'],
+  ];
+  for (const [[pedidoDoCaso, modo, servicos], esperado] of casos) {
+    const contados: string[] = [];
+    await receberContato(pedidoDoCaso, modo, servicos, (desfecho) => contados.push(desfecho));
+    assert.deepEqual(contados, [esperado]);
+  }
+});
+
+test('uma contagem que falha não muda a resposta ao visitante', async () => {
+  const resposta = await receberContato(pedido(valido()), real, espioes().servicos, () => {
+    throw new Error('dataset fora do ar');
+  });
+  assert.equal(resposta.status, 200);
+});
+
 // ——— os dublês do modo de teste ———
 
 test('o dublê do Turnstile aceita o vazio e o token de teste, e recusa qualquer outro', async () => {

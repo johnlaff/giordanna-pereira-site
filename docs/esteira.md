@@ -66,6 +66,13 @@ zona, e por isso nenhuma delas vale lá).
 - **Web Analytics** (Analytics & Logs → Web Analytics → Add a site, com o domínio): na zona
   proxied a Cloudflare injeta o beacon sozinha, e ele reporta para `/cdn-cgi/rum` na própria
   origem, que a CSP já admite. Verificação: abrir duas ou três páginas e ver as visitas no painel.
+- **Envios do formulário** (ADR 0017): o Web Analytics não conta eventos, então cada `POST
+  /api/contato` grava um ponto no dataset `contato_envios` do Analytics Engine, criado na
+  primeira escrita, sem cadastro no painel. `blob1` é o desfecho (`enviado` ou o motivo da
+  recusa) e `blob2` o Modo (`real` ou `teste`). Consulta, pela API de SQL da conta
+  (`POST /accounts/{conta}/analytics_engine/sql`, token com Account Analytics Read):
+  `SELECT blob1 AS desfecho, SUM(_sample_interval) AS envios FROM contato_envios WHERE blob2 =
+  'real' AND timestamp > NOW() - INTERVAL '90' DAY GROUP BY desfecho`.
 
 ### Domínio e e-mail
 
