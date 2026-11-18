@@ -19,4 +19,7 @@
     "run_worker_first": ["/api/*"],
   },
   "observability": { "enabled": true },
+  // Um ponto por envio do formulário, com o desfecho (ADR 0017). O Web Analytics não conta
+  // eventos, e a análise HTTP da zona só guarda 31 dias; o Analytics Engine guarda 3 meses.
+  "analytics_engine_datasets": [{ "binding": "CONTATO_ENVIOS", "dataset": "contato_envios" }],
 }
